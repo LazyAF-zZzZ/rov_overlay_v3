@@ -8,29 +8,6 @@ using RovOverlay.Desktop.Services;
 
 namespace RovOverlay.Desktop.ViewModels;
 
-// A screen that has not been rebuilt in the desktop app yet. It points at the v2-style
-// HTML page, which is served by the same backend and so works on the same data.
-// Each one disappears as its native screen lands; see docs/PLAN.md.
-public sealed class LegacyPageViewModel : ObservableObject
-{
-    public LegacyPageViewModel(AppServices services, string key, string route, string glyph)
-    {
-        Key = key;
-        Glyph = glyph;
-        Url = services.Url(route);
-        OpenCommand = new RelayCommand(() => Browser.Open(Url));
-        CopyCommand = new RelayCommand(() => Clip.Copy(Url));
-        Loc.Instance.Changed += () => OnPropertyChanged(nameof(Title));
-    }
-
-    public string Key { get; }
-    public string Glyph { get; }
-    public string Url { get; }
-    public string Title => Loc.T("Nav." + Key);
-    public ICommand OpenCommand { get; }
-    public ICommand CopyCommand { get; }
-}
-
 public sealed class ObsSourceRow : ObservableObject
 {
     // Same list and order as v2's public/js/lib/obs-sources.js. The per-tournament ones

@@ -59,6 +59,10 @@ public sealed class BackendHost : IDisposable
 
     public async Task StartAsync(CancellationToken ct = default)
     {
+        // Found whoever starts the server: screens that read files shipped with the
+        // backend (the guide) need this even when we only attach to a running one.
+        BackendDir ??= FindBackendDir();
+
         if (_process is { HasExited: false } && Info is not null) return;
 
         var existing = await ProbeAsync(ct);
@@ -72,7 +76,7 @@ public sealed class BackendHost : IDisposable
 
         if (await IsPortTakenAsync()) throw new BackendException(Loc.F("Error.PortBusy", Port));
 
-        BackendDir = FindBackendDir() ?? throw new BackendException(Loc.T("Error.NoBackend"));
+        if (BackendDir is null) throw new BackendException(Loc.T("Error.NoBackend"));
         if (!File.Exists(Path.Combine(BackendDir, "build", "server", "index.js")))
             throw new BackendException(Loc.F("Error.NotBuilt", BackendDir));
         NodePath = FindNode(BackendDir) ?? throw new BackendException(Loc.T("Error.NoNode"));

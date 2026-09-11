@@ -77,9 +77,9 @@ public sealed class ShellViewModel : ObservableObject
             new NavItem(this, "Control", "\uE7FC", () => new ControlViewModel(services)),
             new NavItem(this, "Teams", "\uE716", () => new TeamsViewModel(services, this)),
             new NavItem(this, "Analytics", "\uE9D2", () => new AnalyticsViewModel(services)),
-            Legacy("Design", "/design", "\uE790"),
-            Legacy("Hotkeys", "/hotkeys", "\uE765"),
-            Legacy("Guide", "/guide", "\uE897")
+            new NavItem(this, "Design", "\uE790", () => new DesignViewModel(services)),
+            new NavItem(this, "Hotkeys", "\uE765", () => new HotkeysViewModel(services)),
+            new NavItem(this, "Guide", "\uE897", () => new GuideViewModel(services))
         ];
         SettingsItem = new NavItem(this, "Settings", "\uE713", () => new SettingsViewModel(services));
         ObsSources = ObsSourceRow.Create(services);
@@ -122,9 +122,6 @@ public sealed class ShellViewModel : ObservableObject
             OnPropertyChanged(nameof(LiveMatchText));
             OnPropertyChanged(nameof(LanguageCode));
         };
-
-        NavItem Legacy(string key, string route, string glyph) =>
-            new(this, key, glyph, () => new LegacyPageViewModel(services, key, route, glyph));
     }
 
     public IReadOnlyList<NavItem> NavItems { get; }

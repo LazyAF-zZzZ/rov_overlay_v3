@@ -63,3 +63,9 @@ public sealed record HeroStat(
 public sealed record AnalyticsSummary(int Games, int DecidedGames, int HeroesSeen, int SlotsPerGame);
 public sealed record AnalyticsScope(string? TournamentId, string? TeamId);
 public sealed record AnalyticsReply(AnalyticsScope Scope, AnalyticsSummary Summary, List<HeroStat>? Heroes);
+
+// ---- System-wide hotkeys ---------------------------------------------------
+
+// accelerators: action -> the string Windows is asked for ("Control+Alt+H").
+// held: what the desktop app reported it actually holds, or null before it has said.
+public sealed record GlobalHotkeysReply(bool Enabled, Dictionary<string, string>? Accelerators, List<string>? Held);

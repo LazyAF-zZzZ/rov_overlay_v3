@@ -62,12 +62,20 @@ public sealed class AppServices : IAsyncDisposable
 
         Socket = socket;
         socket.Start();
+
+        // System-wide hotkeys live for as long as the app does, not just while the
+        // Hotkeys screen is open.
+        Hotkeys = new GlobalHotkeyHost(Api);
+        Hotkeys.Start();
     }
+
+    public GlobalHotkeyHost? Hotkeys { get; private set; }
 
     public string Url(string route) => new Uri(Backend.BaseUri, route.TrimStart('/')).ToString();
 
     public async ValueTask DisposeAsync()
     {
+        Hotkeys?.Dispose();
         if (Socket is not null) await Socket.DisposeAsync();
         Backend.Dispose();
     }
