@@ -1,0 +1,393 @@
+/* No @import: overlay.html links overlay.css and this file separately so the
+   1440 overrides can be toggled at runtime by the shared size setting. */
+body {
+    width: 2560px;
+    height: 1440px;
+    font-family: 'Kanit', "Segoe UI", Arial, sans-serif;
+}
+
+.overlay-container {
+    width: 2560px;
+    height: 1440px;
+    position: relative;
+}
+
+.ban-section {
+    top: 14px;
+    height: 220px;
+    padding: 26px 64px 20px;
+    align-items: flex-start;
+}
+
+.ban-left,
+.ban-right {
+    width: 660px;
+    padding-top: 60px;
+}
+
+.ban-right {
+    justify-content: flex-end;
+}
+
+.ban-label {
+    font-size: 30px;
+    padding: 10px 26px;
+    letter-spacing: 4px;
+}
+
+.ban-heroes {
+    gap: 14px;
+}
+
+.ban-slot {
+    width: 96px;
+    height: 96px;
+}
+
+.match-center {
+    width: 1120px;
+    padding-top: 0;
+}
+
+.tournament-name {
+    min-height: 28px;
+    font-size: 21px;
+    line-height: 28px;
+    letter-spacing: 5px;
+    margin-bottom: 10px;
+}
+
+.match-score-container {
+    margin-bottom: 10px;
+}
+
+.team-logo-score {
+    min-width: 250px;
+    padding: 12px 26px;
+}
+
+.team-logo {
+    width: 64px;
+    height: 64px;
+}
+
+.team-name {
+    max-width: 150px;
+    font-size: 38px;
+}
+
+.score-display {
+    padding: 10px 34px;
+}
+
+.score-number {
+    font-size: 54px;
+}
+
+#draftLabel {
+    min-height: 22px;
+    font-size: 18px !important;
+    line-height: 22px;
+}
+
+.timer {
+    min-width: 150px;
+    font-size: 48px;
+    padding: 8px 30px;
+}
+
+.match-title {
+    font-size: 34px;
+    margin-top: 12px;
+}
+
+.pick-section {
+    left: 0;
+    right: 0;
+    bottom: 28px;
+    height: 520px;
+    padding: 28px;
+    --side-inset: 0px;
+    padding-left: var(--side-inset);
+    padding-right: var(--side-inset);
+    border-radius: 0;
+    background:
+        linear-gradient(180deg, rgba(226, 232, 240, 0.92) 0, rgba(148, 163, 184, 0.42) 60px, rgba(15, 23, 42, 0.92) 100%),
+        linear-gradient(90deg, rgba(14, 165, 233, 0.22), rgba(15, 23, 42, 0.18) 50%, rgba(239, 68, 68, 0.22));
+    border-top: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 -22px 70px rgba(15, 23, 42, 0.35);
+}
+
+.team-center-info {
+    bottom: 180px;
+    gap: 18px;
+}
+
+.team-center-card {
+    min-width: 170px;
+    min-height: 78px;
+    padding: 14px 20px;
+    gap: 8px;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.team-center-logo {
+    width: 54px;
+    height: 54px;
+}
+
+.team-center-name {
+    max-width: 96px;
+    font-size: 26px;
+}
+
+.match-score-container {
+    grid-template-columns: 250px auto 250px !important;
+    gap: 24px !important;
+}
+
+.team-logo-score {
+    width: 250px !important;
+    min-width: 250px !important;
+    height: 78px !important;
+    padding: 0 28px !important;
+}
+
+.team-name {
+    max-width: 100% !important;
+    font-size: 38px;
+}
+
+.score-display {
+    min-width: 220px;
+}
+
+.team-center-card {
+    min-height: 56px;
+}
+
+.team-picks {
+    width: 1050px;
+    gap: 16px;
+}
+
+.pick-slot {
+    width: 198px;
+    height: 452px;
+    border-radius: 9px;
+}
+
+.hero-image {
+    background-position: center top;
+}
+
+.player-info {
+    padding: 18px 12px;
+}
+
+.position-indicator {
+    width: 42px;
+    height: 42px;
+    bottom: 62px;
+    font-size: 20px;
+}
+
+.player-name {
+    min-height: 34px;
+    font-size: 21px;
+}
+
+/* 1440p tuning for the animated overlay frame lights. */
+.ban-section::before {
+    width: 24%;
+    height: 3px;
+    animation-duration: 6.4s;
+}
+
+.pick-section::before {
+    width: 22%;
+    height: 4px;
+    animation-duration: 7.4s;
+}
+
+.pick-section::after {
+    width: 22%;
+    height: 3px;
+    animation-duration: 8s;
+}
+
+.pick-slot::before {
+    inset: -3px;
+    padding: 3px;
+    opacity: 0.42;
+}
+
+/* 1440p: keep animated frame lights on the frame edge only. */
+.pick-section {
+    overflow: hidden;
+}
+
+.pick-section::before,
+.pick-section::after {
+    left: 0 !important;
+    width: 30% !important;
+    transform: translateX(-110%);
+    animation-name: frameLightSweepInside !important;
+}
+
+.ban-section::before {
+    display: none !important;
+}
+
+.ban-section {
+    overflow: visible !important;
+}
+
+.pick-section::before {
+    top: 0 !important;
+    height: 4px !important;
+}
+
+.pick-section::after {
+    bottom: 0 !important;
+    height: 3px !important;
+}
+
+/* ============================================================
+   UNIFIED BOTTOM BANNER  (1440p)
+   Same structure as 1080p, scaled up. This file loads after
+   overlay.css, so these values win - without them 1440p would
+   keep the old two-bar geometry.
+   ============================================================ */
+
+.pick-section {
+    display: block;
+    bottom: 0;
+    height: 573px;
+    padding: 0;
+    --side-inset: 18px;
+}
+
+.ban-left,
+.ban-right {
+    position: absolute;
+    top: 13px;
+    width: auto;
+    padding-top: 0;
+    gap: 13px;
+    align-items: center;
+    z-index: 6;
+}
+
+.ban-left  { left: var(--side-inset); }
+.ban-right { right: var(--side-inset); flex-direction: row-reverse; justify-content: flex-start; }
+
+.ban-label {
+    font-size: 53px;
+    padding: 0 8px;
+    letter-spacing: 3px;
+}
+
+.ban-heroes { gap: 8px; }
+
+.ban-slot {
+    width: 77px;
+    height: 77px;
+}
+
+.team-picks {
+    position: absolute;
+    bottom: 11px;
+    width: auto;
+}
+
+.blue-team { left: var(--side-inset); }
+.red-team  { right: var(--side-inset); }
+
+.pick-slot { height: 427px; }
+
+.match-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 11px;
+    width: 506px;
+    padding-top: 0;
+    text-align: center;
+    z-index: 6;
+}
+
+.tournament-name { font-size: 20px; margin-bottom: 11px; }
+
+.match-score-container {
+    grid-template-columns: none !important;
+    gap: 13px !important;
+    margin-bottom: 8px;
+}
+
+.team-logo-score {
+    width: auto !important;
+    min-width: 128px !important;
+    height: auto !important;
+    padding: 8px 16px !important;
+}
+
+.team-name { font-size: 27px; }
+
+.score-display { min-width: 0; gap: 11px; padding: 5px 13px; }
+.score-number { font-size: 40px; min-width: 59px; }
+.score-separator { font-size: 20px; }
+
+.timer {
+    min-width: 0;
+    font-size: 56px;
+    padding: 0;
+}
+
+.match-title {
+    font-size: 25px;
+    margin-top: 3px;
+    padding: 5px 13px;
+}
+
+.ban-left,
+.ban-right {
+    padding: 0;
+    height: auto;
+}
+
+.match-center { width: 474px; }
+
+/* Cards were collapsing to their 1080p width at 1440p. .team-picks is
+   absolutely positioned with width:auto, and its shrink-to-fit width came
+   out too small, so flex-shrink squeezed each 198px card down to 144px.
+   Pinning the row width and stopping the cards shrinking removes the
+   guesswork - the row is exactly 5 cards plus 4 gaps. */
+body[data-size="1440"] .team-picks {
+    width: 1054px;
+    flex-shrink: 0;
+}
+
+body[data-size="1440"] .pick-slot {
+    width: 198px;
+    height: 427px;
+    flex-shrink: 0;
+}
+
+/* !important is deliberate and I am not happy about it. The rule above
+   matches the element (verified with Element.matches) and is present in
+   the loaded stylesheet, yet none of its declarations take effect -
+   flex-shrink still computes to 1 where the rule says 0. I could not
+   identify what overrides it. Forcing the three values that matter gets
+   1440p correct; the underlying cause is still open. */
+body[data-size="1440"] .pick-slot {
+    width: 198px !important;
+    height: 427px !important;
+    flex-shrink: 0 !important;
+}
+
+body[data-size="1440"] .ban-slot {
+    width: 77px !important;
+    height: 77px !important;
+}

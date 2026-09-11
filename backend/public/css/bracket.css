@@ -1,0 +1,224 @@
+/* สายการแข่งแบบเห็นภาพ
+ *
+ * การจัดวางใช้หลักเดียว: ทุกรอบสูงเท่ากัน แล้วให้ช่องในรอบนั้นแบ่งความสูง
+ * เท่าๆ กันด้วย flex:1 รอบที่ 2 มีช่องครึ่งหนึ่งของรอบแรก แต่ละช่องจึงสูงเป็น
+ * สองเท่า และเมื่อจัดกล่องไว้กลางช่อง มันจะไปอยู่กึ่งกลางระหว่างสองคู่ที่
+ * ป้อนเข้ามาพอดีโดยอัตโนมัติ ไม่ต้องคำนวณตำแหน่งเป็นพิกเซลเลย
+ *
+ * เส้นเชื่อมวาดด้วย pseudo-element:
+ *   .slot::after   เส้นนอนที่ยื่นออกไปทางขวา
+ *   .slot::before  เส้นตั้งครึ่งบน/ครึ่งล่าง ที่ไปบรรจบกับคู่ของมัน
+ *   .mbox::before  เส้นนอนที่รับเข้ามาทางซ้าย
+ *
+ * ใช้ร่วมกับ theme.css และ app.css เสมอ
+ */
+
+.bracket-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--s1);
+}
+.bracket-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+.bracket-hint { font-size: 11px; color: var(--muted); }
+
+/* คำอธิบายวิธีใช้ แยกลงมาอีกแถว
+   แถวบนมีปุ่มควบคุมจนเต็มแล้ว ถ้ายัดรวมกันคำอธิบายจะโดนดันตกบรรทัดแบบไม่ตั้งใจ */
+.bracket-subhead {
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* ต้องเลื่อนได้ทั้งสองแกน
+   สาย 128 ทีมมีรอบแรก 64 คู่ สูงหลายพันพิกเซล ถ้าซ่อนแกนตั้งจะถูกตัดหายไปเฉยๆ
+   ตัวลบคือความสูงของแถบบน + แถบควบคุม + แถบคำอธิบาย รวมกัน
+   เพิ่มแถวบนหัวเมื่อไหร่ ต้องบวกตัวเลขนี้ตามด้วย ไม่งั้นสายจะยาวเกินจอไปเงียบๆ */
+.bracket-scroll {
+  overflow: auto;
+  padding: 20px;
+  max-height: calc(100vh - 150px);
+}
+
+.bracket-section { margin-bottom: 28px; }
+.bracket-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+.bracket { display: flex; align-items: stretch; min-width: min-content; }
+
+.round { display: flex; flex-direction: column; min-width: 208px; }
+.round-title {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  margin: 0 24px 10px 0;
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+}
+.round-body { flex: 1; display: flex; flex-direction: column; }
+
+/* ช่องต้องสูงกว่ากล่องเสมอ ส่วนต่างคือช่องว่างระหว่างคู่
+   ถ้าสองค่านี้เท่ากัน กล่องจะชนกันจนดูเป็นก้อนเดียว แยกไม่ออกว่าคู่ไหนเป็นคู่ไหน
+   ความสูงรวมตั้งจาก bracket.js (SLOT_HEIGHT) ให้มากกว่าความสูงกล่องไว้เสมอ */
+.slot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding-right: 24px;
+}
+
+/* เส้นนอนที่ยื่นออกไปทางขวาของกล่อง */
+.round:not(:last-child) .slot::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  width: 24px;
+  top: 50%;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* เส้นตั้งที่ไปบรรจบกับคู่ของมัน
+   ช่องบนของคู่ลากลง ช่องล่างลากขึ้น มาเจอกันที่รอยต่อระหว่างสองช่องพอดี */
+.round:not(:last-child) .slot.pair-top::before,
+.round:not(:last-child) .slot.pair-bottom::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  height: 50%;
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
+}
+.round:not(:last-child) .slot.pair-top::before { top: 50%; }
+.round:not(:last-child) .slot.pair-bottom::before { bottom: 50%; }
+
+/* เส้นนอนที่รับเข้ามาทางซ้าย */
+.round:not(:first-child) .mbox::before {
+  content: '';
+  position: absolute;
+  left: -24px;
+  top: 50%;
+  width: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* กล่องคู่แข่ง ---------------------------------------------------------- */
+
+.mbox {
+  position: relative;
+  width: 100%;
+  background: var(--s1);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  cursor: default;
+  transition: border-color 0.15s, background 0.15s;
+}
+.mbox.playable { cursor: pointer; }
+.mbox.playable:hover { border-color: var(--gold-line); background: var(--s2); }
+.mbox.complete { border-color: var(--border2); }
+/* คู่ที่ออกอากาศอยู่ตอนนี้ เป็นที่เดียวในหน้านี้ที่ได้สีทองเต็มๆ */
+.mbox.live { border-color: var(--gold); background: var(--gold-soft); }
+.mbox.bye { opacity: 0.4; }
+
+.mrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  min-height: 24px;
+}
+.mrow + .mrow { border-top: 1px solid var(--border); }
+
+.mrow .seed {
+  flex: 0 0 16px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: right;
+}
+.mrow .nm {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mrow .nm.tbd { color: var(--muted); font-style: italic; font-weight: 400; }
+.mrow.won .nm { color: var(--gold); font-weight: 700; }
+.mrow.lost .nm { color: var(--muted); }
+
+.mrow .sc {
+  flex: 0 0 20px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted2);
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 3px;
+  padding: 1px 0;
+}
+.mrow.won .sc { color: var(--gold); }
+
+/* ช่องกรอกคะแนนในกล่อง ต้องหน้าตาเหมือน .sc เดิมทุกอย่างตอนไม่ได้แตะ
+   กล่องเล็กมาก ถ้าทำให้ดูเป็นฟอร์มเต็มรูปแบบ สายทั้งสายจะกลายเป็นตารางกรอกข้อมูล */
+.mrow .sc-input {
+  flex: 0 0 24px;
+  width: 24px;
+  border: 1px solid transparent;
+  cursor: text;
+  font-family: var(--bf);
+  /* ปุ่มลูกศรขึ้นลงเล็กเกินกว่าจะกดถูกในกล่องขนาดนี้ และกินที่ของตัวเลข */
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.mrow .sc-input::-webkit-outer-spin-button,
+.mrow .sc-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.mrow .sc-input:hover { border-color: var(--border2); }
+.mrow .sc-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--text);
+}
+
+/* เลขคู่ วางบนเส้นเชื่อม เหมือนที่ Challonge ทำ
+   ไว้อ้างอิงตอนคุยกันว่า "คู่ที่ 21" */
+.mno {
+  position: absolute;
+  right: -21px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--bg);
+  padding: 1px 3px;
+  pointer-events: none;
+}
+.round:last-child .mno { display: none; }
+
+/* พบกันหมด / แบ่งกลุ่ม --------------------------------------------------- */
+/* ไม่มีสายให้ไหลต่อ จึงไม่มีเส้นเชื่อม แค่จัดเป็นคอลัมน์ตามรอบ */
+
+.bracket.flat .slot { padding-right: 14px; min-height: 0; flex: 0 0 auto; margin-bottom: 7px; }
+.bracket.flat .round-title { margin-right: 14px; }

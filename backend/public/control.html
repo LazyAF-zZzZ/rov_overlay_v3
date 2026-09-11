@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROV Control Panel</title>
+<link rel="stylesheet" href="/css/theme.css">
+<style>
+/* เฉพาะของหน้า Control Panel
+   เปลือกที่ใช้ร่วมกับหน้าอื่น (สี ตัวอักษร แถบบน ปุ่ม แผง ช่องกรอก กล่องยืนยัน
+   toast) อยู่ใน /css/theme.css ซึ่งโหลดไว้ก่อนหน้านี้แล้ว */
+
+/* แถบบนของหน้านี้ต้องขึ้นบรรทัดใหม่ได้ เพราะมีทั้งชื่อแมตช์ สวิตช์ออกอากาศ
+   และเมนู ของเดิมเคยตรึงความสูงไว้แล้วมันชนกันเองที่จอต่ำกว่าราว 1400px */
+.topbar{height:auto;min-height:52px;flex-wrap:wrap;padding:8px 20px;gap:10px 16px;}
+.match-inputs{display:flex;align-items:center;gap:8px;flex:1 1 340px;min-width:0;}
+.match-inputs input{background:var(--s3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);padding:6px 10px;font-family:var(--bf);font-size:13px;min-width:0;transition:border-color 0.15s;}
+.match-inputs input:focus{outline:none;border-color:var(--gold);}
+.match-inputs input:nth-child(1){flex:1 1 150px;}
+.match-inputs input:nth-child(2){flex:1.5 1 200px;}
+
+/* สวิตช์ที่ถูกแตะระหว่างออกอากาศ อยู่รวมกันและแยกจากเมนู
+   ลิงก์เปลี่ยนหน้าจะได้ไม่มาอยู่ติดปุ่มที่มีผลกับสิ่งที่คนดูเห็น */
+.live-switches{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.size-switch{display:flex;align-items:center;gap:3px;padding:3px 5px 3px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);}
+.size-switch-label{font-size:9px;font-weight:700;letter-spacing:0.16em;color:var(--muted);margin-right:4px;}
+.size-btn{padding:4px 11px;border-radius:4px;border:1px solid transparent;background:none;color:var(--muted2);font-family:var(--bf);font-size:12px;font-weight:600;cursor:pointer;transition:color 0.15s,background 0.15s;}
+.size-btn:hover{color:var(--text);}
+.size-btn.active{background:var(--gold);color:#141209;}
+/* ปิดแบนเนอร์ไม่ใช่สถานะเดียวกับ "อันนี้ถูกเลือกอยู่" มันคือไม่ได้ออกอากาศ */
+.size-btn.hide-btn.active{background:var(--red);color:#141209;}
+
+/* โครงหลัก -------------------------------------------------------------- */
+
+.main{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px;max-width:1600px;margin:0 auto;}
+.panel.full{grid-column:1/-1;}
+/* ฝั่งทีมใช้สีของฝั่งเป็นเส้นบางๆ ไม่ใช่แถบหนา หน้าที่ของมันคือบอกว่าใครเป็นใคร
+   ไม่ใช่การตกแต่ง */
+.panel.blue-panel{border-top:2px solid var(--blue);}
+.panel.red-panel{border-top:2px solid var(--red);}
+.panel.draft-panel{border-top:2px solid var(--gold-line);}
+
+/* ตัวเดินรอบ อยู่ในหัวแผงดราฟต์
+   หน้าตาเดียวกับ .size-switch บนแถบบน เพราะเป็นของประเภทเดียวกัน:
+   สวิตช์ที่ถูกแตะระหว่างออกอากาศ ไม่ใช่ปุ่มสั่งงานหรือลิงก์เปลี่ยนหน้า */
+.round-switch{margin-left:auto;display:flex;align-items:center;gap:4px;padding:3px 8px 3px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);}
+.round-switch-label{font-size:9px;font-weight:700;letter-spacing:0.16em;color:var(--muted);margin-right:4px;}
+.round-btn{width:26px;height:26px;border-radius:4px;border:1px solid transparent;background:none;color:var(--muted2);font-family:var(--bf);font-size:17px;line-height:1;cursor:pointer;transition:color 0.15s,background 0.15s;}
+.round-btn:hover{color:var(--text);background:var(--s3);}
+.round-value{min-width:26px;text-align:center;font-family:var(--bf);font-size:17px;font-weight:700;color:var(--gold);}
+.round-note{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-left:6px;white-space:nowrap;}
+.score-badge{margin-left:auto;display:flex;align-items:center;gap:9px;}
+.score-badge label{font-size:10px;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase;}
+.score-input{width:52px;text-align:center;font-family:var(--bf);font-size:19px;font-weight:700;padding:3px 4px;background:var(--s3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);}
+.score-input:focus{outline:none;border-color:var(--gold);}
+
+/* ชื่อทีม โลโก้ ผู้เล่น -------------------------------------------------- */
+
+.team-meta{display:grid;grid-template-columns:1fr minmax(0,180px) auto;gap:10px;align-items:end;margin-bottom:14px;}
+.team-load{width:100%;height:33px;background:var(--s3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);padding:0 8px;font-family:var(--bf);font-size:13px;transition:border-color 0.15s;}
+.team-load:focus{outline:none;border-color:var(--gold);}
+.team-load option{background:var(--s2);color:var(--text);}
+@media (max-width:700px){.team-meta{grid-template-columns:1fr;}}
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.logo-preview{width:52px;height:52px;flex:0 0 52px;border-radius:var(--r-sm);border:1px dashed var(--border2);background:var(--s3) center/contain no-repeat;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:var(--muted);text-align:center;cursor:help;}
+.logo-preview.filled{border-style:solid;font-size:0;}
+.logo-actions{flex:1;min-width:0;}
+.logo-buttons{display:flex;gap:6px;}
+
+/* แทนที่ปุ่ม SAVE อยู่ในช่องเดียวกันเพื่อไม่ให้แถวขยับ
+   และกะพริบสั้นๆ ตอนค่าถูกเขียนขึ้นเซิร์ฟเวอร์แล้ว */
+.save-state{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;transition:color 0.2s;align-self:center;}
+.save-state.saved{color:var(--gold);}
+
+.pp-table{width:100%;border-collapse:separate;border-spacing:0 4px;}
+.pp-table thead th{font-size:10px;letter-spacing:0.14em;color:var(--muted);text-transform:uppercase;padding:0 4px 6px;font-weight:700;text-align:left;}
+.pp-row td{padding:0 3px;}
+.pp-row .player-input{width:100%;padding:7px 10px;background:var(--s3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);font-family:var(--bf);font-size:13px;transition:border-color 0.15s;}
+.pp-row .player-input:focus{outline:none;border-color:var(--gold);}
+
+/* ช่องเลือกฮีโร่ --------------------------------------------------------- */
+
+.hero-select-wrap{min-width:110px;}
+.hero-native-select,.hero-search-input{width:100%;height:33px;background:var(--s3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);font-family:var(--bf);font-size:13px;transition:border-color 0.15s;}
+.hero-native-select{padding:0 8px;}
+.hero-search-input{padding:0 9px;font-weight:600;}
+.hero-native-select:focus,.hero-search-input:focus{outline:none;border-color:var(--gold);}
+.hero-native-select option{background:var(--s2);color:var(--text);}
+.hero-search-input::placeholder{color:var(--muted);font-weight:400;}
+/* ไอคอนของฮีโร่ที่กรอกไปแล้ว อยู่ในช่องเลย จะได้เห็นว่าเลือกถูกตัวไหมโดยไม่ต้องอ่าน
+   ใช้ background-image เพราะ <input> ใส่ <img> ข้างในไม่ได้ */
+.hero-search-input.has-art{padding-left:34px;background-repeat:no-repeat;background-position:5px center;background-size:23px 23px;}
+
+/* รายการฮีโร่ที่แนะนำ
+   สูงพอจะกวาดตาทั้งรายการ ที่เหลือเลื่อนเอา overscroll-behavior กันไม่ให้
+   ล้อเมาส์เลื่อนหน้าต่อเมื่อรายการเลื่อนจนสุดแล้ว */
+.hero-dd{position:absolute;z-index:500;max-height:340px;overflow-y:auto;overscroll-behavior:contain;background:var(--s2);border:1px solid var(--border2);border-radius:var(--r-sm);box-shadow:0 14px 34px rgba(0,0,0,0.65);padding:4px;}
+.hero-dd[hidden]{display:none;}
+.hero-dd-item{display:flex;align-items:center;gap:9px;padding:4px 8px;border-radius:4px;font-family:var(--bf);font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap;}
+/* ไอคอนฮีโร่ในรายการที่เลื่อนเลือก ดูรูปเร็วกว่าอ่านชื่อ 129 ชื่อที่คล้ายกัน */
+.hero-dd-art{width:28px;height:28px;flex:0 0 auto;border-radius:4px;object-fit:cover;background:var(--s3);}
+.hero-dd-name{overflow:hidden;text-overflow:ellipsis;}
+.hero-dd-item:hover{background:var(--s3);}
+.hero-dd-item.active,.hero-dd-item.active:hover{background:var(--gold);color:#141209;}
+.hero-dd::-webkit-scrollbar{width:9px;}
+.hero-dd::-webkit-scrollbar-thumb{background:var(--s3);border-radius:5px;}
+
+/* ปุ่มสลับ (SW) ---------------------------------------------------------- */
+
+.btn-sw{padding:5px 9px;border-radius:4px;font-family:var(--bf);font-size:11px;font-weight:600;border:1px solid var(--border2);cursor:pointer;background:none;color:var(--muted2);transition:color 0.15s,border-color 0.15s;white-space:nowrap;}
+.btn-sw:hover{color:var(--text);border-color:var(--muted);}
+/* กำลังรอให้เลือกช่องที่สอง กดอีกครั้งเพื่อยกเลิก */
+.btn-sw.cancel-mode{border-color:var(--red);color:var(--red);}
+/* ช่องเลือกตำแหน่งผู้เล่น หน้าตาเดียวกับ .team-load ที่อยู่เหนือขึ้นไป
+   เตี้ยกว่าเพราะอยู่ในแถวตาราง ไม่ใช่ในฟอร์ม */
+.pos-select{width:100%;height:29px;background:var(--s3);border:1px solid var(--border2);
+  color:var(--text);border-radius:4px;padding:0 4px;font-family:var(--bf);font-size:11px;
+  cursor:pointer;transition:border-color 0.15s;}
+.pos-select:focus{outline:none;border-color:var(--gold);}
+.pos-select option{background:var(--s2);color:var(--text);}
+.active-row .player-input{border-color:var(--gold) !important;}
+
+/* แบน ------------------------------------------------------------------- */
+
+.ban-section{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.ban-label-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+.ban-label-row span{font-size:10px;font-weight:700;letter-spacing:0.16em;color:var(--muted);text-transform:uppercase;}
+.ban-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+.ban-slot-wrap{display:flex;flex-direction:column;gap:4px;}
+.ban-slot-label{font-size:9px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;text-align:center;}
+/* ตัวที่ถูกแบนเขียนด้วยสีจางกว่าตัวที่ถูกเลือก คนละความหมายกัน */
+.ban-select-wrap .hero-native-select,.ban-select-wrap .hero-search-input{height:30px;color:var(--muted2);font-size:12px;padding:0 7px;}
+/* ช่องแบนเตี้ยกว่า ต้องเขียนทับ padding ของบรรทัดบน (specificity สูงกว่า .has-art เฉยๆ) */
+.ban-select-wrap .hero-search-input.has-art{padding-left:29px;background-size:20px 20px;background-position:4px center;}
+.ban-clear{font-size:10px;padding:2px 0;background:none;border:none;color:var(--muted);cursor:pointer;font-family:var(--bf);letter-spacing:0.06em;text-transform:uppercase;text-align:center;transition:color 0.15s;}
+.ban-clear:hover{color:var(--red);}
+
+/* นาฬิกาดราฟต์ ---------------------------------------------------------- */
+
+.draft-inner{display:grid;grid-template-columns:130px minmax(0,1fr) 276px;gap:16px;align-items:center;padding:14px 16px;}
+.draft-clock{text-align:center;}
+.draft-phase-name{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:4px;}
+.draft-time{font-size:42px;font-weight:300;color:var(--text);line-height:1;font-variant-numeric:tabular-nums;}
+/* ใกล้หมดเวลา เป็นที่เดียวในหน้าที่ตั้งใจให้แย่งสายตา */
+.draft-time.urgent{color:var(--red);animation:urgPulse 0.6s ease-in-out infinite alternate;}
+@keyframes urgPulse{from{opacity:1;}to{opacity:0.45;}}
+.draft-prog{font-size:11px;color:var(--muted);margin-top:5px;}
+.draft-seq{display:flex;flex-wrap:wrap;gap:4px;min-width:0;overflow:hidden;}
+.seq-badge{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;color:var(--muted);border:1px solid var(--border);transition:color 0.15s,border-color 0.15s,background 0.15s;}
+.seq-badge.done{color:var(--muted);border-color:transparent;opacity:0.5;}
+.seq-badge.current{background:var(--gold);border-color:var(--gold);color:#141209;}
+.draft-controls{display:flex;flex-direction:column;gap:7px;min-width:0;width:100%;}
+.draft-btn-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;width:100%;}
+.draft-btn-row:first-child{grid-template-columns:2fr 1fr;}
+.dbtn{min-width:0;width:100%;padding:8px 6px;border-radius:var(--r-sm);border:1px solid var(--border2);background:none;color:var(--muted2);cursor:pointer;font-family:var(--bf);font-size:12px;font-weight:600;letter-spacing:0.04em;transition:color 0.15s,border-color 0.15s,background 0.15s;display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;}
+.dbtn:hover{color:var(--text);border-color:var(--muted);}
+/* ปุ่มเดินเวลาเป็นปุ่มหลักของแผงนี้ จึงเป็นปุ่มเดียวที่ทึบ */
+.dbtn.start,.dbtn.resume{background:var(--gold);border-color:var(--gold);color:#141209;}
+.dbtn.start:hover,.dbtn.resume:hover{background:#e3c07c;color:#141209;}
+.dbtn.pause{color:var(--gold);border-color:var(--gold-line);}
+.dbtn.pause:hover{background:var(--gold-soft);color:var(--gold);}
+.dbtn.reset{color:var(--red);border-color:rgba(221,128,128,0.4);}
+.dbtn.reset:hover{background:rgba(221,128,128,0.12);color:var(--red);border-color:var(--red);}
+
+/* ระดับเสียงต่อเหตุการณ์ */
+.sfx-row{display:flex;align-items:center;gap:14px;padding:9px 0;border-bottom:1px solid var(--border);}
+.sfx-row:last-child{border-bottom:none;}
+.sfx-label{flex:0 0 90px;font-size:13px;font-weight:600;color:var(--text);}
+.sfx-row input[type=range]{flex:1;min-width:0;accent-color:var(--gold);cursor:pointer;}
+.sfx-value{flex:0 0 46px;text-align:right;font-size:12px;color:var(--muted2);font-variant-numeric:tabular-nums;}
+
+/* แถบล่าง --------------------------------------------------------------- */
+
+.bottom-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s1);border-top:1px solid var(--border);position:sticky;bottom:0;z-index:50;max-width:1600px;margin:0 auto;}
+.bbtn{padding:8px 18px;border-radius:var(--r-sm);border:1px solid var(--border2);background:none;color:var(--muted2);cursor:pointer;font-family:var(--bf);font-size:13px;font-weight:600;letter-spacing:0.03em;transition:color 0.15s,border-color 0.15s,background 0.15s;}
+.bbtn:hover{color:var(--text);border-color:var(--muted);}
+.bbtn.primary{background:var(--gold);border-color:var(--gold);color:#141209;}
+.bbtn.primary:hover{background:#e3c07c;color:#141209;}
+.bbtn.danger,.bbtn.danger-soft{color:var(--red);border-color:rgba(221,128,128,0.4);}
+.bbtn.danger:hover,.bbtn.danger-soft:hover{background:rgba(221,128,128,0.12);border-color:var(--red);color:var(--red);}
+.bb-sep{width:1px;height:24px;background:var(--border);}
+.bb-status{font-size:12px;color:var(--muted);margin-left:16px;white-space:nowrap;}
+.kbd-hint{margin-left:auto;display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--muted);}
+.kbd-hint b{color:var(--muted2);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;margin-right:4px;font-weight:600;}
+@media (max-width:1100px){.kbd-hint{display:none;}}
+
+/* ช่องที่ดราฟต์กำลังรออยู่ ทองแปลว่า "ตอนนี้ถึงตาช่องนี้" */
+.slot-active .hero-native-select,.slot-active .hero-search-input{border-color:var(--gold) !important;box-shadow:0 0 0 1px var(--gold);}
+
+/* แถบบอกแมตช์ที่กำลังคุมอยู่ ขึ้นเฉพาะตอนเปิดมาจากหน้าทัวร์นาเมนต์ */
+.live-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:var(--r-sm);padding:10px 14px;margin:12px 14px 0;font-size:13px;font-weight:600;color:var(--gold);}
+.live-bar .muted{color:var(--muted2);font-weight:400;}
+.live-bar a{margin-left:auto;}
+
+@media (max-width:1100px){
+  .main{grid-template-columns:1fr;}
+  .draft-inner{grid-template-columns:1fr;align-items:stretch;}
+  .match-inputs{flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">ROV <span>|</span> CONTROL</div>
+  <div class="match-inputs">
+    <input id="tournamentName" value="ROV Tournament" placeholder="Tournament" data-i18n-placeholder>
+    <input id="matchTitle" value="BLUE VS RED" placeholder="Match Title" data-i18n-placeholder>
+    <span class="save-state" id="matchInfoSaved">Auto-saves</span>
+  </div>
+  <!-- Live switches: the two things changed mid-broadcast. Kept together and
+       apart from navigation so a page link is never next to an on-air control. -->
+  <div class="live-switches">
+    <div class="size-switch" role="group" aria-label="Overlay size">
+      <span class="size-switch-label" data-i18n>SIZE</span>
+      <button class="size-btn" type="button" id="sizeBtn1080" onclick="setOverlaySize('1080')" title="Set every overlay and result screen to 1920x1080" data-i18n>1080p</button>
+      <button class="size-btn" type="button" id="sizeBtn1440" onclick="setOverlaySize('1440')" title="Set every overlay and result screen to 2560x1440" data-i18n>1440p</button>
+    </div>
+    <div class="size-switch" role="group" aria-label="Overlay on air">
+      <span class="size-switch-label" data-i18n>BANNER</span>
+      <button class="size-btn" type="button" id="overlayShowBtn" onclick="setOverlayVisible(true)" title="Show the overlay banner on air (tap Alt)" data-i18n>SHOW</button>
+      <button class="size-btn hide-btn" type="button" id="overlayHideBtn" onclick="setOverlayVisible(false)" title="Fade the overlay banner out for clean gameplay (tap Alt)" data-i18n>HIDE</button>
+    </div>
+  </div>
+  <nav class="topnav" aria-label="Pages">
+    <a class="tlink" href="/" data-i18n>HOME</a>
+    <a class="tlink" href="/teams" data-i18n>TEAMS</a>
+    <a class="tlink" href="/analytics" data-i18n>ANALYTICS</a>
+    <a class="tlink active" href="/control" aria-current="page" data-i18n>CONTROL</a>
+    <a class="tlink" href="/design" data-i18n>DESIGN</a>
+    <a class="tlink" href="/hotkeys" data-i18n>HOTKEYS</a>
+    <a class="tlink" href="/guide" data-i18n>GUIDE</a>
+  </nav>
+</div>
+
+<!-- แถบบอกว่ากำลังคุมแมตช์ไหนของทัวร์นาเมนต์ไหนอยู่
+     ซ่อนไว้เมื่อเป็นแมตช์เดี่ยวที่ไม่ได้ผูกกับทัวร์นาเมนต์ -->
+<div class="live-bar" id="liveBar" hidden></div>
+
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- BLUE TEAM -->
+  <div class="panel blue-panel">
+    <div class="panel-head">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0"></div>
+      <div class="panel-title" style="color:var(--blue)" data-i18n>Blue Team</div>
+      <div class="score-badge">
+        <label data-i18n>SCORE</label>
+        <input class="score-input" id="blueScore" type="number" value="0" min="0">
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="team-meta">
+        <div class="field"><label data-i18n>Team Name</label><input id="blueTeamName" value="BLUE"></div>
+        <div class="field">
+          <label for="blueTeamLoad" data-i18n>From registry</label>
+          <select class="team-load" id="blueTeamLoad" title="Fill this side from a saved team">
+            <option value="">Choose a team…</option>
+          </select>
+        </div>
+        <span class="save-state" id="blueSaved">Auto-saves</span>
+      </div>
+      <div class="logo-row">
+        <div class="logo-preview" id="blueLogoPreview">184 × 184</div>
+        <div class="logo-actions">
+          <label data-i18n>Team Logo</label>
+          <div class="logo-buttons">
+            <input type="file" id="blueLogoFile" accept="image/png,image/jpeg,image/webp" hidden>
+            <button class="tlink" type="button" onclick="pickTeamLogo('teamBlue')" data-i18n>UPLOAD</button>
+            <button class="tlink danger" type="button" onclick="clearTeamLogo('teamBlue')" data-i18n>CLEAR</button>
+          </div>
+        </div>
+      </div>
+      <table class="pp-table">
+        <thead><tr>
+          <th style="width:20px">#</th>
+          <th style="text-align:left" data-i18n>NICKNAME</th>
+          <th style="width:104px" data-i18n>LANE</th>
+          <th style="width:36px"></th>
+          <th style="text-align:center" data-i18n>HERO PICK</th>
+          <th style="width:36px"></th>
+        </tr></thead>
+        <tbody id="blue_pp"></tbody>
+      </table>
+      <div class="ban-section">
+        <div class="ban-label-row"><span>BAN</span></div>
+        <div class="ban-grid" id="blue_bans"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RED TEAM -->
+  <div class="panel red-panel">
+    <div class="panel-head">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+      <div class="panel-title" style="color:var(--red)" data-i18n>Red Team</div>
+      <div class="score-badge">
+        <label data-i18n>SCORE</label>
+        <input class="score-input" id="redScore" type="number" value="0" min="0">
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="team-meta">
+        <div class="field"><label data-i18n>Team Name</label><input id="redTeamName" value="RED"></div>
+        <div class="field">
+          <label for="redTeamLoad" data-i18n>From registry</label>
+          <select class="team-load" id="redTeamLoad" title="Fill this side from a saved team">
+            <option value="">Choose a team…</option>
+          </select>
+        </div>
+        <span class="save-state" id="redSaved">Auto-saves</span>
+      </div>
+      <div class="logo-row">
+        <div class="logo-preview" id="redLogoPreview">184 × 184</div>
+        <div class="logo-actions">
+          <label data-i18n>Team Logo</label>
+          <div class="logo-buttons">
+            <input type="file" id="redLogoFile" accept="image/png,image/jpeg,image/webp" hidden>
+            <button class="tlink" type="button" onclick="pickTeamLogo('teamRed')" data-i18n>UPLOAD</button>
+            <button class="tlink danger" type="button" onclick="clearTeamLogo('teamRed')" data-i18n>CLEAR</button>
+          </div>
+        </div>
+      </div>
+      <table class="pp-table">
+        <thead><tr>
+          <th style="width:20px">#</th>
+          <th style="text-align:left" data-i18n>NICKNAME</th>
+          <th style="width:104px" data-i18n>LANE</th>
+          <th style="width:36px"></th>
+          <th style="text-align:center" data-i18n>HERO PICK</th>
+          <th style="width:36px"></th>
+        </tr></thead>
+        <tbody id="red_pp"></tbody>
+      </table>
+      <div class="ban-section">
+        <div class="ban-label-row"><span>BAN</span></div>
+        <div class="ban-grid" id="red_bans"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DRAFT TIMER -->
+  <div class="panel full draft-panel">
+    <div class="panel-head">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0"></div>
+      <div class="panel-title" data-i18n>Draft Timer</div>
+      <!-- ตัวเดินรอบ อยู่ในแผงดราฟต์เพราะเปลี่ยนรอบ = ล้างกระดานแล้วเริ่มดราฟต์ใหม่
+           ROUND ที่เห็นตรงนี้คือเลขเดียวกับที่กราฟิก "รอบก่อนหน้า" ใช้แบ่งแถว -->
+      <div class="round-switch">
+        <span class="round-switch-label" data-i18n>ROUND</span>
+        <button class="round-btn" type="button" id="roundPrev" onclick="stepRound(-1)"
+                title="Go back to the previous round and put its draft back on the board" aria-label="Previous round">&#8249;</button>
+        <span class="round-value" id="roundValue">1</span>
+        <button class="round-btn" type="button" id="roundNext" onclick="stepRound(1)"
+                title="File this draft as a previous round and start the next one" aria-label="Next round">&#8250;</button>
+        <span class="round-note" id="roundNote"></span>
+      </div>
+    </div>
+    <div class="draft-inner">
+      <div class="draft-clock">
+        <div class="draft-phase-name" id="draftPhaseLabel">READY</div>
+        <div class="draft-time" id="timerDisplay">--</div>
+        <div class="draft-prog" id="draftPhaseIndex">Phase 0 / 16</div>
+      </div>
+      <div class="draft-seq" id="draftSequenceList"></div>
+      <div class="draft-controls">
+        <div class="draft-btn-row">
+          <button class="dbtn start" onclick="draftStart()" data-i18n>START</button>
+          <button class="dbtn reset" onclick="draftReset()" data-i18n>RESET</button>
+        </div>
+        <div class="draft-btn-row">
+          <button class="dbtn nav" onclick="draftPrev()" data-i18n>PREV</button>
+          <button class="dbtn pause" onclick="draftPause()" data-i18n>PAUSE</button>
+          <button class="dbtn resume" onclick="draftResume()" data-i18n>RESUME</button>
+          <button class="dbtn nav" onclick="draftNext()" data-i18n>NEXT</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOUND -->
+  <div class="panel full">
+    <div class="panel-head">
+      <div class="panel-title" data-i18n>Sound effects</div>
+      <span class="panel-note" data-i18n>Levels reach the overlay straight away - no need to refresh the OBS source. TEST plays here, not on stream.</span>
+    </div>
+    <div class="panel-body">
+      <div id="sfxLevels"></div>
+    </div>
+  </div>
+
+  <!-- OBS BROWSER SOURCES -->
+  <div class="panel full">
+    <div class="panel-head">
+      <div class="panel-title" data-i18n>OBS browser sources</div>
+      <span class="panel-note" data-i18n>Paste these into OBS as a Browser source. Sound is already switched on in the overlay URLs.</span>
+    </div>
+    <div class="panel-body">
+      <div id="sources"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <!-- Routine actions first, then one separator, then the two that throw work
+       away. RESET MATCH was styled neutral next to SWITCH TEAMS despite wiping
+       the whole match - it now reads as destructive, like the button beside it. -->
+  <button class="bbtn primary" onclick="undoLast()" title="Undo last pick / ban (Ctrl+Z)" data-i18n>&#8630; UNDO</button>
+  <button class="bbtn neutral" onclick="switchTeams()" data-i18n>SWITCH TEAMS</button>
+  <div class="bb-sep"></div>
+  <button class="bbtn danger-soft" onclick="resetMatchState()" title="Clear the whole match back to an empty state" data-i18n>RESET MATCH</button>
+  <button class="bbtn danger" onclick="clearAll()" title="Clear every pick and ban, keeping teams and score" data-i18n>CLEAR PICKS &amp; BANS</button>
+  <div class="kbd-hint" id="kbdHint"></div>
+  <div class="bb-status" id="bb_status">Ready</div>
+</div>
+
+<!-- Confirmation for the two destructive bottom-bar actions.
+     In-page rather than window.confirm(): the native dialog is modal to the
+     whole renderer in Electron and can leave the window unable to take
+     keyboard input after it closes. Same dialog as RovClient.confirmBox(). -->
+<div class="modal-backdrop" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" hidden>
+  <div class="modal">
+    <div class="modal-title" id="confirmTitle"></div>
+    <div class="modal-body" id="confirmBody"></div>
+    <div class="modal-actions">
+      <button class="bbtn neutral" type="button" id="confirmCancel" data-i18n>CANCEL</button>
+      <button class="bbtn danger" type="button" id="confirmOk" data-i18n>CONFIRM</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast_el"></div>
+
+<script src="/js/lib/i18n.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/lib/app-client.js"></script>
+<script src="/js/lib/obs-sources.js"></script>
+<script src="js/hotkey-utils.js"></script>
+<script src="js/control.js"></script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+/* หน้าสถิติ pick/ban
+ *
+ * ตารางทำด้วย grid ไม่ใช่ <table> เพราะแต่ละแถวมีทั้งภาพ ตัวเลข และแถบสัดส่วน
+ * ซึ่งจัดความกว้างให้คงที่ด้วย grid ง่ายกว่ามาก และยังใส่ hover ทั้งแถวได้ตรงๆ
+ *
+ * ใช้ร่วมกับ theme.css และ app.css เสมอ ไฟล์นี้มีเฉพาะส่วนที่หน้านี้ใช้ */
+
+.hero-search {
+  flex: 0 0 190px;
+  background: var(--s3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 7px 11px;
+  color: var(--text);
+  font-family: var(--bf);
+  font-size: 13px;
+}
+.hero-search:focus { border-color: var(--gold); outline: none; }
+
+/* ตาราง ----------------------------------------------------------------- */
+
+.stat-table {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 40px minmax(90px, 1fr) 74px minmax(70px, 1.4fr) 66px 66px 66px 74px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-row:not(.head):hover { background: var(--s2); }
+
+.stat-row.head {
+  border-bottom: 1px solid var(--border2);
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+.stat-row.head .col {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.col { min-width: 0; font-size: 12px; color: var(--muted2); }
+.col.img { display: flex; align-items: center; }
+.col.name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.col.num { text-align: right; font-variant-numeric: tabular-nums; }
+.col.strong { color: var(--text); font-weight: 700; font-size: 13px; }
+/* อัตราชนะเป็นตัวเลขเดียวในตารางที่ "ดี" กับ "ไม่ดี" ต่างกันจริง
+   จึงเป็นที่เดียวที่ยอมให้มีสีนอกเหนือจากทอง */
+.col.win.good { color: var(--gold); }
+.col.win.bad { color: var(--red); }
+.col.prio { color: var(--muted2); }
+
+.hero-img {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  background: var(--s3);
+  border: 1px solid var(--border);
+}
+
+/* แถบสัดส่วน เต็มแถบ = 40% ของเกม ไม่ใช่ 100%
+   ฮีโร่ที่ถูกใช้มากที่สุดยังไม่ถึง 40% ด้วยซ้ำ ถ้าสเกลเต็ม 100
+   ทุกแถบจะสั้นเท่ากันหมดจนเปรียบเทียบไม่ได้ */
+.meter {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.meter-fill { height: 100%; border-radius: 3px; }
+.meter-fill.presence { background: var(--gold); opacity: 0.85; }
+
+/* ชั้นที่กำลังเล่นอยู่ ---------------------------------------------------- */
+/* ดราฟต์ที่กำลังเล่น ต้องดูไม่เหมือนตัวเลขสะสมด้านล่างอย่างชัดเจน
+   ไม่งั้นคนอ่านจะนึกว่ามันถูกนับรวมไปแล้ว */
+
+.live-layer {
+  background: var(--gold-soft);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--r);
+  padding: 12px 15px;
+  margin-top: 4px;
+}
+.live-layer-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+.live-note {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted2);
+}
+
+.live-heroes { display: flex; gap: 6px; flex-wrap: wrap; }
+.live-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 3px;
+  border-radius: 999px;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+}
+.live-chip .hero-img { width: 20px; height: 20px; border-radius: 50%; }
+.live-chip.blue { border-color: rgba(127, 168, 221, 0.5); }
+.live-chip.red { border-color: rgba(221, 128, 128, 0.5); }
+/* ตัวที่ถูกแบนต้องอ่านออกว่าเป็นการแบน ไม่ใช่การเลือก */
+.live-chip.ban { opacity: 0.6; }
+.live-chip.ban .hero-img { filter: grayscale(1); }
+.live-chip.ban span { text-decoration: line-through; }
+
+@media (max-width: 720px) {
+  /* จอแคบ ตัดแถบสัดส่วนกับอันดับแบนออกก่อน สองอย่างนี้อ่านจากตัวเลขอื่นแทนได้
+     เหลือหกคอลัมน์ ต้องตรงกับจำนวนที่ไม่ได้ถูกซ่อน ไม่งั้น grid จะเลื่อนทั้งแถว */
+  .stat-row { grid-template-columns: 34px minmax(80px, 1fr) 64px 58px 58px 58px; }
+  .stat-row .meter-col, .stat-row .prio { display: none; }
+}

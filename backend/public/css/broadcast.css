@@ -1,0 +1,54 @@
+/* Shared broadcast motion.
+   @keyframes are global by name, so both the draft overlay and the result
+   screen pull from this one file. Previously the overlay owned them, which
+   meant the result screen either duplicated them or - as it did - simply
+   went without and drifted out of step visually.
+
+   Selector rules stay in each page's own stylesheet, because the two pages
+   use different class names for the same ideas (.pick-slot vs .pick-card).
+
+   Nothing here targets a whole slot on purpose. `animation` is a single
+   property, so a second declaration on an element replaces the first rather
+   than layering - that is what made the entrance animations fight the
+   existing activePulse. Attach these to children and pseudo-elements. */
+
+/* A pick should land, not blink into place.
+   Kept deliberately small and monotonic. The first version started at
+   scale(1.14) with a mid-keyframe, which read as a heavy zoom that then
+   snapped at the end rather than settling. Two stops, one direction, no
+   overshoot - the movement should be barely noticed. */
+@keyframes heroPickIn {
+    from { opacity: 0; transform: scale(1.05) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Flash overlay. Drives opacity only, so it can sit on a pseudo-element
+   without touching the slot's own box-shadow. */
+@keyframes pickFlash {
+    0%   { opacity: 0; }
+    22%  { opacity: 0.6; }
+    100% { opacity: 0; }
+}
+
+/* A ban still hits harder than a pick, but the punch now comes from the
+   brightness flash rather than from throwing the icon around.
+   The previous version scaled from 1.75 through 0.93 and back to 1, on a
+   cubic-bezier whose first control point was 1.5 - past 1, so it overshot
+   as well. Two bounces on top of a heavy zoom is what flicked at the end. */
+@keyframes banStampIn {
+    from { opacity: 0; transform: scale(1.25); filter: brightness(2.2); }
+    to   { opacity: 1; transform: scale(1);    filter: brightness(1); }
+}
+
+/* Under ten seconds the clock should read from across a room. */
+@keyframes timerUrgent {
+    from { color: #ff3b3b; text-shadow: 0 0 18px rgba(255, 59, 59, 0.9); }
+    to   { color: #fff;    text-shadow: 0 0 30px rgba(255, 59, 59, 1); }
+}
+
+/* Digits must not shift the layout as they change. Proportional figures
+   make a running clock visibly jitter; tabular ones hold their width. */
+.tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}

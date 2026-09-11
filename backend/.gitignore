@@ -1,0 +1,80 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+dist/
+build/
+release/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Runtime data and logs
+logs/
+*.log
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+Thumbs.db
+.DS_Store
+
+# Local backups and temporary files
+*.bak
+*.bak-*
+*.tmp
+temp/
+
+# Designs uploaded from the Control Panel are the user's own artwork,
+# not project source. The folder and its README stay tracked.
+public/images/skins/*
+!public/images/skins/README.md
+
+# Keep hero and team images committed when preparing a public release.
+# public/images/heroes/*.png
+# public/images/team-logos/*.png
+__oracle.js
+__original-server.js
+__difftest*/
+
+# ฐานข้อมูลทัวร์นาเมนต์เป็นข้อมูลของผู้ใช้ ไม่ใช่ซอร์ส
+data/tournament.db
+data/tournament.db-shm
+data/tournament.db-wal
+
+# เสียงเอฟเฟกต์เป็นของที่มากับตัวแอพ ไม่ใช่ข้อมูลของผู้ใช้
+# ตัวติดตั้งต้องมีเสียงติดไปด้วย คนที่โหลดไปจะได้ใช้ได้เลยโดยไม่ต้องไปหาไฟล์เอง
+# จึงคอมมิตเข้ามาเหมือนรูปฮีโร่ ต่างจากโลโก้ทีมกับ state.json ที่เป็นของผู้ใช้จริงๆ
+#
+# ยกเว้น README.txt ที่ ensureSoundDir() เขียนใหม่เองตอนเปิดเซิร์ฟเวอร์
+# ถ้าคอมมิตไว้ มันจะขึ้นเป็นไฟล์ที่ถูกแก้ทุกครั้งที่ข้อความในโค้ดเปลี่ยน
+public/images/sounds/README.txt
+
+# state.json คือสภาพ overlay ที่กำลังออกอากาศอยู่ (ชื่อทีม ผู้เล่น พิค คะแนน)
+# เป็นข้อมูลของผู้ใช้ ไม่ใช่ซอร์ส และแอพสร้างใหม่เองได้ถ้าไม่มีไฟล์
+# (ดู live-state.ts ที่ loadJson มี defaultState เป็นค่าสำรองอยู่แล้ว)
+data/state.json
+
+# โลโก้ทีมที่อัปโหลดเองเป็นภาพของผู้ใช้ ไม่ใช่ของที่มากับแอพ
+# ต่างจากรูปฮีโร่ใน public/images/heroes ซึ่งเป็นทรัพยากรของตัวแอพและต้องมีติดไปด้วย
+#
+# ต้องครบทั้งสามนามสกุล ไม่ใช่แค่ png
+# ตัวอัปโหลดรับ png/jpg/webp (ดู IMAGE_EXTS ใน domain/media.ts) แล้วตั้งชื่อไฟล์
+# ตามนามสกุลจริงของภาพ ปิดไว้แค่ *.png แปลว่าโลโก้ที่อัปโหลดเป็น jpg หรือ webp
+# หลุดเข้า git ไปเงียบๆ ซึ่งเป็นภาพของทีมจริงที่ผู้ใช้เอาขึ้นมาเอง
+public/images/team-logos/*.png
+public/images/team-logos/*.jpg
+public/images/team-logos/*.webp
+
+# สำเนาโค้ดเก่าที่เคยก๊อปเก็บไว้ตอนแก้งาน git เก็บประวัติให้อยู่แล้ว ไม่ต้องเก็บซ้ำ
+backups/

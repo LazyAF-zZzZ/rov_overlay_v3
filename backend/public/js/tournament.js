@@ -1,0 +1,1003 @@
+// หน้ารายละเอียดของทัวร์นาเมนต์หนึ่งรายการ
+//
+// เสิร์ฟที่ /tournament/:id หน้าเดียวใช้กับทุก id
+// อ่าน id จาก URL เอง ไม่ได้รับมาจากเซิร์ฟเวอร์ตอน render
+//
+// ทุกอย่างในหน้านี้ประกอบด้วย textContent / value ไม่มีการต่อ innerHTML
+// เพราะชื่อทัวร์นาเมนต์กับโน้ตเป็นข้อความที่ผู้ใช้พิมพ์เอง
+
+const { socket, fetchJson, absoluteUrl, withToken, showToast, onDataChange, deferWhileEditing } = window.RovClient;
+
+// การลบใช้ร่วมกับหน้าแรก คำเตือนจึงเป็นชุดเดียวกันทั้งสองที่
+const { confirmAndDelete } = window.RovTournamentUI;
+
+// รายการ browser source ใช้ร่วมกับหน้า Control
+
+// ช่องผู้เล่น โลโก้ และตัวอัปโหลด ใช้ร่วมกับหน้า /teams และ /teams/:id
+// อย่าก็อปกลับมาไว้ในไฟล์นี้อีก — สองชุดที่แก้คนละที่คือที่มาของบั๊กเดิม
+const { badge, buildPlayerRows, logoImage, sendLogo, hiddenFilePicker, on } = window.RovTeamUI;
+
+// /tournament/g3a1b2c3  ->  g3a1b2c3
+const tournamentId = decodeURIComponent(window.location.pathname.split('/').filter(Boolean)[1] || '');
+
+let options = null;
+let current = null;   // ทัวร์นาเมนต์ที่โหลดมาล่าสุด ใช้ตอนกด REVERT
+let roster = [];      // ทีมที่ลงแข่งในทัวร์นาเมนต์นี้
+let registry = [];    // ทีมทั้งหมดในทะเบียนกลาง ไว้ใส่ใน dropdown
+let newTeamPlayers = null; // ตัวอ่านค่าช่องผู้เล่นในฟอร์มสร้างทีมใหม่
+let pendingLogo = null;    // ไฟล์โลโก้ที่เลือกไว้ รออัปโหลดหลังทีมถูกสร้าง
+
+// HELPERS ------------------------------------------------------------
+
+function formatSpec(id) {
+  return options?.formats.find((f) => f.id === id) || null;
+}
+
+function fillSelect(select, items, value) {
+  select.textContent = '';
+  items.forEach((item) => {
+    const opt = document.createElement('option');
+    opt.value = String(item.value);
+    opt.textContent = item.label;
+    if (String(item.value) === String(value)) opt.selected = true;
+    select.appendChild(opt);
+  });
+}
+
+// RENDER -------------------------------------------------------------
+
+function renderHead(t) {
+  document.getElementById('headName').textContent = t.name;
+  document.title = `${t.name} - ROV Overlay Tool`;
+
+  const wrap = document.getElementById('headBadges');
+  wrap.textContent = '';
+  wrap.appendChild(badge(t.status === 'finished' ? 'Finished' : 'Active', t.status));
+  wrap.appendChild(badge(formatSpec(t.format)?.label || t.format));
+  wrap.appendChild(badge(`Bo${t.bestOf}`));
+}
+
+function renderForm(t) {
+  /** @type {HTMLInputElement} */ (document.getElementById('fName')).value = t.name;
+  /** @type {HTMLInputElement} */ (document.getElementById('fNote')).value = t.note || '';
+
+  fillSelect(
+    document.getElementById('fFormat'),
+    options.formats.map((f) => ({ value: f.id, label: f.label })),
+    t.format
+  );
+  fillSelect(
+    document.getElementById('fBestOf'),
+    options.bestOf.map((n) => ({ value: n, label: `Best of ${n}` })),
+    t.bestOf
+  );
+  /** @type {HTMLInputElement} */ (document.getElementById('fStatus')).value = t.status;
+
+  renderFormatHint();
+}
+
+// เตือนตั้งแต่ตอนเลือก ถ้ารูปแบบใหม่รับทีมได้น้อยกว่าที่มีอยู่
+// เซิร์ฟเวอร์ปฏิเสธอยู่แล้ว แต่รู้ก่อนกดเซฟย่อมดีกว่ารู้ตอนโดนปฏิเสธ
+function renderFormatHint() {
+  const spec = formatSpec(/** @type {HTMLInputElement} */ (document.getElementById('fFormat')).value);
+  const hint = document.getElementById('formatHint');
+  if (!spec) {
+    hint.textContent = '';
+    return;
+  }
+
+  const teams = current?.teamCount ?? 0;
+  if (teams > spec.maxTeams) {
+    hint.textContent = tf('{format} allows {max}, this has {count}', { format: spec.label, max: spec.maxTeams, count: teams });
+    hint.style.color = 'var(--red)';
+  } else {
+    hint.textContent = tf('{min}-{max} teams', { min: spec.minTeams, max: spec.maxTeams });
+    hint.style.color = '';
+  }
+}
+
+function renderTeams(t, teams) {
+  roster = teams;
+
+  const wrap = document.getElementById('teamBadges');
+  wrap.textContent = '';
+  const full = t.teamCount >= t.maxTeams;
+  wrap.appendChild(badge(`${t.teamCount} / ${t.maxTeams} teams`, full ? 'full' : 'count'));
+
+  // เต็มแล้วก็ปิดปุ่มไปเลย พร้อมบอกเหตุผลที่ tooltip
+  // เซิร์ฟเวอร์ก็ปฏิเสธอยู่แล้ว แต่ปุ่มที่กดไม่ได้ชัดกว่าปุ่มที่กดแล้วขึ้น error
+  const addBtn = /** @type {HTMLButtonElement} */ (document.getElementById('addTeamBtn'));
+  addBtn.disabled = full;
+  addBtn.style.opacity = full ? '0.45' : '';
+  addBtn.style.cursor = full ? 'not-allowed' : '';
+  addBtn.title = full ? `This tournament is full (${t.maxTeams} teams max)` : '';
+
+  const body = document.getElementById('teamsBody');
+  body.textContent = '';
+
+  if (teams.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = tf('No teams yet. This format holds up to {max} teams.', { max: t.maxTeams });
+    body.appendChild(empty);
+    return;
+  }
+
+  teams.forEach((team) => body.appendChild(teamCard(team)));
+}
+
+// แถวแบบแน่น (.compact) ชื่อกับ badge อยู่บรรทัดเดียวกัน
+// โครงเหมือนการ์ดในหน้าทะเบียนทีมทุกอย่าง ต่างกันแค่ CSS
+function teamCard(team) {
+  const card = document.createElement('div');
+  card.className = 'team compact';
+
+  const row = document.createElement('div');
+  row.className = 'team-row';
+
+  const id = document.createElement('div');
+  id.className = 'team-id';
+  const name = document.createElement('div');
+  name.className = 'team-name';
+  name.textContent = team.name;
+  const sub = document.createElement('div');
+  sub.className = 'team-sub';
+  if (team.tag) sub.appendChild(badge(team.tag));
+  sub.appendChild(badge(`Seed ${team.seed}`));
+  const named = team.players.filter((p) => p.name).length;
+  sub.appendChild(badge(`${named} / ${team.players.length} players`));
+  id.append(name, sub);
+
+  const actions = document.createElement('div');
+  actions.className = 'team-actions';
+
+  const editBtn = document.createElement('button');
+  editBtn.type = 'button';
+  editBtn.className = 'tlink';
+  editBtn.textContent = t('EDIT');
+
+  // โปรไฟล์ทีมคือที่ที่เห็นประวัติข้ามทัวร์นาเมนต์ ซึ่งหน้านี้ไม่มีทางแสดงได้
+  // หน้านี้เห็นแค่ทัวร์นาเมนต์เดียว
+  const profileLink = document.createElement('a');
+  profileLink.className = 'tlink';
+  profileLink.textContent = t('PROFILE');
+  profileLink.href = withToken(`/teams/${encodeURIComponent(team.id)}`);
+  profileLink.title = 'Roster, record and match history across every tournament';
+
+  // กากบาทแทนคำว่า REMOVE เพื่อประหยัดที่ในแถวแบบแน่น
+  // ความหมายเต็มอยู่ที่ title กับ aria-label และยังมีกล่องยืนยันคั่นก่อนลบจริง
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'tlink danger icon';
+  removeBtn.textContent = '✕';
+  removeBtn.title = 'Take this team out of the tournament. The team stays in the registry.';
+  removeBtn.setAttribute('aria-label', `Remove ${team.name} from this tournament`);
+  removeBtn.addEventListener('click', () => removeFromTournament(team));
+
+  actions.append(editBtn, profileLink, removeBtn);
+  row.append(logoImage(team), id, actions);
+  card.appendChild(row);
+
+  const editor = document.createElement('div');
+  editor.className = 'team-edit';
+  editor.hidden = true;
+  card.appendChild(editor);
+
+  editBtn.addEventListener('click', () => {
+    editor.hidden = !editor.hidden;
+    editBtn.textContent = editor.hidden ? 'EDIT' : 'CLOSE';
+    if (!editor.hidden && editor.childElementCount === 0) buildEditor(editor, team);
+  });
+
+  return card;
+}
+
+// ตัวแก้ไขทีม สร้างตอนกดเปิดครั้งแรกเท่านั้น
+// ทัวร์นาเมนต์ที่มี 128 ทีมจะได้ไม่ต้องสร้าง input 128 x 5 ช่องทิ้งไว้ตั้งแต่ต้น
+function buildEditor(editor, team) {
+  const nameRow = document.createElement('div');
+  nameRow.className = 'frow';
+
+  const nameFld = document.createElement('div');
+  nameFld.className = 'fld';
+  const nameLabel = document.createElement('label');
+  nameLabel.textContent = t('Team name');
+  const nameInput = document.createElement('input');
+  nameInput.type = 'text';
+  nameInput.maxLength = 24;
+  nameInput.value = team.name;
+  nameFld.append(nameLabel, nameInput);
+
+  const tagFld = document.createElement('div');
+  tagFld.className = 'fld';
+  tagFld.style.flex = '0 0 130px';
+  const tagLabel = document.createElement('label');
+  tagLabel.textContent = t('Tag');
+  const tagInput = document.createElement('input');
+  tagInput.type = 'text';
+  tagInput.maxLength = 6;
+  tagInput.value = team.tag || '';
+  tagFld.append(tagLabel, tagInput);
+
+  const seedFld = document.createElement('div');
+  seedFld.className = 'fld';
+  seedFld.style.flex = '0 0 110px';
+  const seedLabel = document.createElement('label');
+  seedLabel.textContent = t('Seed');
+  const seedInput = document.createElement('input');
+  seedInput.type = 'number';
+  seedInput.min = '0';
+  seedInput.max = '9999';
+  seedInput.value = String(team.seed ?? 0);
+  seedFld.append(seedLabel, seedInput);
+
+  nameRow.append(nameFld, tagFld, seedFld);
+
+  const playersWrap = document.createElement('div');
+  const playersLabel = document.createElement('label');
+  playersLabel.className = 'section-title';
+  playersLabel.textContent = t('Players');
+  playersLabel.style.display = 'block';
+  playersLabel.style.marginBottom = '8px';
+  playersWrap.appendChild(playersLabel);
+
+  // ช่องผู้เล่นชุดเดียวกับที่ใช้ในฟอร์มสร้างทีมใหม่
+  const playerRows = document.createElement('div');
+  playersWrap.appendChild(playerRows);
+  const players = buildPlayerRows(playerRows, team.players, `captain-${team.id}`);
+
+  // LOGO ---------------------------------------------------------------
+  const logoRow = document.createElement('div');
+  logoRow.className = 'frow';
+  logoRow.style.alignItems = 'center';
+
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/png,image/jpeg,image/webp';
+  fileInput.hidden = true;
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (file) uploadLogo(team, file);
+    fileInput.value = '';
+  });
+
+  const uploadBtn = document.createElement('button');
+  uploadBtn.type = 'button';
+  uploadBtn.className = 'tlink';
+  uploadBtn.textContent = t('UPLOAD LOGO');
+  uploadBtn.addEventListener('click', () => fileInput.click());
+
+  const clearLogoBtn = document.createElement('button');
+  clearLogoBtn.type = 'button';
+  clearLogoBtn.className = 'tlink';
+  clearLogoBtn.textContent = t('CLEAR LOGO');
+  clearLogoBtn.addEventListener('click', () => clearLogo(team));
+
+  const hint = document.createElement('span');
+  hint.className = 'hint';
+  hint.style.color = 'var(--muted)';
+  hint.textContent = t('PNG, JPG or WEBP, up to 4 MB');
+
+  logoRow.append(fileInput, uploadBtn, clearLogoBtn, hint);
+
+  // SAVE / DELETE ------------------------------------------------------
+  const saveRow = document.createElement('div');
+  saveRow.className = 'frow';
+  saveRow.style.marginBottom = '0';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.type = 'button';
+  saveBtn.className = 'tlink primary';
+  saveBtn.textContent = t('SAVE TEAM');
+  saveBtn.addEventListener('click', () => saveTeam(team, {
+    name: nameInput.value,
+    tag: tagInput.value,
+    seed: Number(seedInput.value),
+    players: players.read()
+  }));
+
+  const spacer = document.createElement('div');
+  spacer.className = 'spacer';
+  spacer.style.marginLeft = 'auto';
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.type = 'button';
+  deleteBtn.className = 'tlink danger';
+  deleteBtn.textContent = t('DELETE FROM REGISTRY');
+  deleteBtn.title = 'Remove the team everywhere, including other tournaments';
+  deleteBtn.addEventListener('click', () => deleteTeam(team));
+
+  saveRow.append(saveBtn, spacer, deleteBtn);
+
+  editor.append(nameRow, playersWrap, logoRow, saveRow);
+}
+
+function showMissing(message) {
+  document.getElementById('headName').textContent = t('Tournament not found');
+  const body = document.createElement('div');
+  body.className = 'empty';
+  body.textContent = message;
+  document.querySelector('.wrap').appendChild(body);
+}
+
+// ACTIONS ------------------------------------------------------------
+
+async function save() {
+  try {
+    const { tournament } = await fetchJson(`/api/tournaments/${encodeURIComponent(tournamentId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: /** @type {HTMLInputElement} */ (document.getElementById('fName')).value,
+        format: /** @type {HTMLInputElement} */ (document.getElementById('fFormat')).value,
+        bestOf: Number(/** @type {HTMLInputElement} */ (document.getElementById('fBestOf')).value),
+        status: /** @type {HTMLInputElement} */ (document.getElementById('fStatus')).value,
+        note: /** @type {HTMLInputElement} */ (document.getElementById('fNote')).value
+      })
+    });
+    current = tournament;
+    renderHead(tournament);
+    renderForm(tournament);
+    showToast(t('Saved'), 'green');
+  } catch (error) {
+    // เซิร์ฟเวอร์ปฏิเสธเมื่อรูปแบบใหม่รับทีมได้น้อยกว่าที่มีอยู่
+    // ไม่ตัดทีมทิ้งให้เอง ผู้ใช้ต้องเอาทีมออกเองก่อน
+    showToast(error.message || 'Could not save', 'red');
+  }
+}
+
+// ลบถาวร ถามยืนยันในกล่องของแอพเอง ไม่ใช่ window.confirm ของระบบ
+// (เหตุผลเดียวกับหน้า Control เขียนไว้ใน lib/app-client.js)
+async function remove() {
+  const deleted = await confirmAndDelete({
+    id: tournamentId,
+    name: current?.name || 'this tournament'
+  });
+  // ทัวร์นาเมนต์ที่เปิดอยู่ไม่มีแล้ว หน้านี้จึงไม่เหลืออะไรให้แสดง
+  if (deleted) window.location.href = '/';
+}
+
+// TEAM ACTIONS -------------------------------------------------------
+
+// ผลลัพธ์จาก endpoint ของ roster ส่ง tournament กับ teams กลับมาพร้อมกัน
+// จะได้ไม่ต้องยิงซ้ำเพื่ออัปเดตตัวเลข x / y teams
+function applyRoster(data) {
+  if (data.tournament) {
+    current = data.tournament;
+    renderHead(current);
+    renderFormatHint();
+  }
+  renderTeams(current, data.teams || []);
+}
+
+async function refreshRegistry() {
+  try {
+    registry = (await fetchJson('/api/teams')).teams || [];
+  } catch (error) {
+    showToast(error.message || 'Could not load the team registry', 'red');
+    registry = [];
+  }
+  renderPicker();
+}
+
+// เอาเฉพาะทีมที่ยังไม่ได้อยู่ในทัวร์นาเมนต์นี้
+function renderPicker() {
+  const picker = /** @type {HTMLSelectElement} */ (document.getElementById('pickTeam'));
+  const inRoster = new Set(roster.map((t) => t.id));
+  const available = registry.filter((t) => !inRoster.has(t.id));
+
+  picker.textContent = '';
+  if (available.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = registry.length === 0
+      ? 'No teams in the registry yet'
+      : 'Every registered team is already in';
+    picker.appendChild(opt);
+    picker.disabled = true;
+    /** @type {HTMLButtonElement} */ (document.getElementById('addExistingBtn')).disabled = true;
+    return;
+  }
+
+  picker.disabled = false;
+  /** @type {HTMLButtonElement} */ (document.getElementById('addExistingBtn')).disabled = false;
+  available.forEach((team) => {
+    const opt = document.createElement('option');
+    opt.value = team.id;
+    opt.textContent = team.tag ? `${team.name} (${team.tag})` : team.name;
+    picker.appendChild(opt);
+  });
+}
+
+async function addTeamToTournament(teamId) {
+  const data = await fetchJson(`/api/tournaments/${encodeURIComponent(tournamentId)}/teams`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ teamId })
+  });
+  applyRoster(data);
+  renderPicker();
+}
+
+async function addExisting() {
+  const teamId = /** @type {HTMLInputElement} */ (document.getElementById('pickTeam')).value;
+  if (!teamId) return;
+  try {
+    await addTeamToTournament(teamId);
+    showToast(t('Team added'), 'green');
+  } catch (error) {
+    showToast(error.message || 'Could not add the team', 'red');
+  }
+}
+
+// สร้างทีม + ผู้เล่น + โลโก้ ในการกดครั้งเดียว
+//
+// โลโก้ต้องอัปโหลดหลังสร้างเสมอ เพราะชื่อไฟล์มาจาก id ที่เซิร์ฟเวอร์เพิ่งออกให้
+// ฝั่งผู้ใช้ไม่ต้องรู้เรื่องนี้ เลือกไฟล์ไว้ก่อนแล้วกดปุ่มเดียวจบ
+async function createAndAdd() {
+  const nameInput = /** @type {HTMLInputElement} */ (document.getElementById('newTeamName'));
+  const tagInput = /** @type {HTMLInputElement} */ (document.getElementById('newTeamTag'));
+  const name = nameInput.value.trim();
+  if (!name) {
+    showToast(t('Team name is required'), 'red');
+    nameInput.focus();
+    return;
+  }
+
+  let team;
+  try {
+    ({ team } = await fetchJson('/api/teams', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        tag: tagInput.value,
+        players: newTeamPlayers ? newTeamPlayers.read() : []
+      })
+    }));
+  } catch (error) {
+    showToast(error.message || 'Could not create the team', 'red');
+    return;
+  }
+
+  // ทีมมีตัวตนแล้ว ตั้งแต่จุดนี้ไปพลาดตรงไหนก็ไม่ลบทีมทิ้ง
+  // ผู้ใช้ตั้งใจสร้างมันจริงๆ แค่ขั้นตอนถัดไปไม่สำเร็จ
+  if (pendingLogo) {
+    try {
+      await sendLogo(team.id, pendingLogo);
+    } catch (error) {
+      showToast(tf('{name} created, but the logo failed: {reason}', { name: team.name, reason: error.message }), 'red');
+    }
+  }
+
+  try {
+    await refreshRegistry();
+    await addTeamToTournament(team.id);
+    resetNewTeamForm();
+    nameInput.focus();
+    showToast(tf('{name} added', { name: team.name }), 'green');
+  } catch (error) {
+    // เช่นทัวร์นาเมนต์เต็ม ทีมยังอยู่ในทะเบียน หยิบไปใส่ทัวร์นาเมนต์อื่นได้
+    await refreshRegistry();
+    showToast(tf('{name} is in the registry, but {reason}', {
+      name: team.name,
+      reason: (error.message || 'could not be added').toLowerCase()
+    }), 'red');
+  }
+}
+
+function resetNewTeamForm() {
+  /** @type {HTMLInputElement} */ (document.getElementById('newTeamName')).value = '';
+  /** @type {HTMLInputElement} */ (document.getElementById('newTeamTag')).value = '';
+  if (newTeamPlayers) newTeamPlayers.clear();
+  setPendingLogo(null);
+}
+
+function setPendingLogo(file) {
+  pendingLogo = file;
+  const btn = document.getElementById('newTeamLogoBtn');
+  if (!btn) return;
+  btn.textContent = file ? `LOGO: ${file.name.slice(0, 14)}` : 'CHOOSE LOGO';
+  btn.classList.toggle('primary', Boolean(file));
+}
+
+async function removeFromTournament(team) {
+  if (!window.confirm(`Take "${team.name}" out of this tournament?\n\nThe team stays in the registry.`)) return;
+  try {
+    const data = await fetchJson(
+      `/api/tournaments/${encodeURIComponent(tournamentId)}/teams/${encodeURIComponent(team.id)}`,
+      { method: 'DELETE' }
+    );
+    applyRoster(data);
+    renderPicker();
+    showToast(t('Removed from tournament'), 'blue');
+  } catch (error) {
+    showToast(error.message || 'Could not remove the team', 'red');
+  }
+}
+
+async function saveTeam(team, values) {
+  try {
+    await fetchJson(`/api/teams/${encodeURIComponent(team.id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: values.name, tag: values.tag, players: values.players })
+    });
+    if (values.seed !== team.seed) {
+      await fetchJson(
+        `/api/tournaments/${encodeURIComponent(tournamentId)}/teams/${encodeURIComponent(team.id)}/seed`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seed: values.seed })
+        }
+      );
+    }
+    await reloadTeams();
+    await refreshRegistry();
+    showToast(t('Team saved'), 'green');
+  } catch (error) {
+    showToast(error.message || 'Could not save the team', 'red');
+  }
+}
+
+async function deleteTeam(team) {
+  if (!window.confirm(
+    `Delete "${team.name}" from the registry?\n\n` +
+    'It is removed from every tournament it entered, not just this one.'
+  )) return;
+
+  try {
+    await fetchJson(`/api/teams/${encodeURIComponent(team.id)}`, { method: 'DELETE' });
+    await reloadTeams();
+    await refreshRegistry();
+    showToast(t('Team deleted'), 'blue');
+  } catch (error) {
+    showToast(error.message || 'Could not delete the team', 'red');
+  }
+}
+
+async function uploadLogo(team, file) {
+  try {
+    await sendLogo(team.id, file);
+    await reloadTeams();
+    await refreshRegistry();
+    showToast(t('Logo uploaded'), 'green');
+  } catch (error) {
+    showToast(error.message || 'Upload failed', 'red');
+  }
+}
+
+async function clearLogo(team) {
+  try {
+    await fetchJson(`/api/teams/${encodeURIComponent(team.id)}/logo`, { method: 'DELETE' });
+    await reloadTeams();
+    await refreshRegistry();
+    showToast(t('Logo cleared'), 'blue');
+  } catch (error) {
+    showToast(error.message || 'Could not clear the logo', 'red');
+  }
+}
+
+// FOLD ----------------------------------------------------------------
+//
+// หัวข้อทีมพับเก็บได้ ทัวร์นาเมนต์เต็ม 128 ทีมดันหัวข้อ Match session
+// กับ OBS ลงไปอยู่ใต้สุดของหน้า พับแล้วสองหัวข้อนั้นกลับมาอยู่ในจอเดียว
+//
+// จำสถานะไว้ เพราะการจัดทีมทำครั้งเดียวตอนต้น แต่หน้านี้ถูกเปิดซ้ำทั้งงาน
+// ต้องมาพับใหม่ทุกครั้งที่เปิดคือสิ่งที่น่ารำคาญกว่าการไม่มีปุ่มพับเสียอีก
+const TEAMS_FOLD_KEY = 'rovTournamentTeamsFolded';
+const DETAIL_FOLD_KEY = 'rovTournamentDetailFolded';
+
+function readFoldPreference() {
+  // localStorage โยน error ได้ในโหมดส่วนตัวบางเบราว์เซอร์ ค่าเริ่มต้นคือกางไว้
+  try {
+    return localStorage.getItem(TEAMS_FOLD_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+// แผงรายละเอียดพับเก็บเป็นค่าเริ่มต้น ตรงข้ามกับหัวข้อทีมที่กางไว้
+// ค่าที่จำไว้จึงอ่านกลับด้าน: ไม่มีค่าที่จำ = พับ
+function readDetailFoldPreference() {
+  try {
+    return localStorage.getItem(DETAIL_FOLD_KEY) !== '0';
+  } catch {
+    return true;
+  }
+}
+
+function setDetailFolded(folded, remember = true) {
+  const fold = document.getElementById('detailFold');
+  const button = document.getElementById('detailToggle');
+  if (!fold || !button) return;
+
+  fold.hidden = folded;
+  button.textContent = folded ? '▸' : '▾';
+  button.title = folded ? 'Show the tournament details' : 'Hide the tournament details';
+  button.setAttribute('aria-expanded', folded ? 'false' : 'true');
+
+  if (!remember) return;
+  try {
+    localStorage.setItem(DETAIL_FOLD_KEY, folded ? '1' : '0');
+  } catch {
+    /* จำไม่ได้ก็ไม่เป็นไร ปุ่มยังใช้ได้ในหน้านี้ */
+  }
+}
+
+function detailIsFolded() {
+  return document.getElementById('detailFold')?.hidden === true;
+}
+
+function setTeamsFolded(folded, remember = true) {
+  const fold = document.getElementById('teamsFold');
+  const button = document.getElementById('teamsToggle');
+  if (!fold || !button) return;
+
+  fold.hidden = folded;
+  button.textContent = folded ? '▸' : '▾';
+  button.title = folded ? 'Show the team list' : 'Hide the team list';
+  button.setAttribute('aria-expanded', folded ? 'false' : 'true');
+
+  if (!remember) return;
+  try {
+    localStorage.setItem(TEAMS_FOLD_KEY, folded ? '1' : '0');
+  } catch {
+    /* จำไม่ได้ก็ไม่เป็นไร ปุ่มยังใช้ได้ในหน้านี้ */
+  }
+}
+
+function teamsAreFolded() {
+  return document.getElementById('teamsFold')?.hidden === true;
+}
+
+// MATCH SESSION ------------------------------------------------------
+//
+// การจับคู่ การกรอกผล และการเอาแมตช์ขึ้นจอ ย้ายไปหน้า /tournament/:id/bracket
+// หน้านี้เหลือไว้แค่ "ถึงไหนแล้ว" กับทางเข้า
+//
+// เหตุผลที่ยังโหลดตารางแข่งมาทั้งชุด ทั้งที่ใช้แค่ตัวเลข:
+// endpoint เดียวกันนี้ถูกเรียกอยู่แล้วตอนอยู่หน้านี้ และการนับต้องแยกบายออก
+// ซึ่งเซิร์ฟเวอร์ไม่ได้ส่งตัวเลขสรุปมาให้ การนับเองจึงถูกกว่าการเพิ่ม endpoint
+function renderMatchSummary(list) {
+  const badges = document.getElementById('matchBadges');
+  badges.textContent = '';
+
+  const played = list.filter((m) => m.status === 'complete' && !m.isBye).length;
+  const total = list.filter((m) => !m.isBye).length;
+  if (total > 0) {
+    badges.appendChild(badge(`${played} / ${total} played`, played === total ? 'active' : 'count'));
+  }
+
+  const link = document.getElementById('bracketLink');
+  link.title = list.length === 0
+    ? 'Nothing drawn yet - draw the bracket in the match session'
+    : 'Run the matches: draw, record scores, put a match on air';
+
+  const body = document.getElementById('matchesBody');
+  body.textContent = '';
+
+  const note = document.createElement('div');
+  note.className = 'empty';
+  if (list.length === 0) {
+    note.textContent = current && current.teamCount < 2
+      ? 'Add at least two teams, then open the match session to draw the bracket.'
+      : t('No bracket drawn yet. Open the match session to draw it.');
+  } else {
+    // ภาษาไทยไม่มีรูปพหูพจน์ กรอบเดียวจึงใช้ได้ทั้งหนึ่งคู่และหลายคู่
+    note.textContent = tf('{count} matches drawn. Scores, the bracket and putting a match on air all live in the match session.', { count: total });
+  }
+  body.appendChild(note);
+}
+
+async function loadMatchSummary() {
+  try {
+    const data = await fetchJson(`/api/tournaments/${encodeURIComponent(tournamentId)}/matches`);
+    renderMatchSummary(data.matches || []);
+  } catch (error) {
+    showToast(error.message || 'Could not load the match summary', 'red');
+  }
+}
+
+async function reloadTeams() {
+  const data = await fetchJson(`/api/tournaments/${encodeURIComponent(tournamentId)}`);
+  current = data.tournament;
+  renderHead(current);
+  renderTeams(current, data.teams || []);
+}
+
+async function load() {
+  const data = await fetchJson(`/api/tournaments/${encodeURIComponent(tournamentId)}`);
+  current = data.tournament;
+  renderHead(current);
+  renderForm(current);
+  renderTeams(current, data.teams || []);
+  await refreshRegistry();
+  await loadMatchSummary();
+  await loadStandings();
+
+  ['detailSection', 'teamsSection', 'matchesSection'].forEach((id) => {
+    document.getElementById(id).hidden = false;
+  });
+}
+
+function renderFoot() {
+  // ย่อหน้านี้เคยอธิบายวิธีเอา URL ไปใส่ OBS ตอนที่รายการ browser source
+  // ยังอยู่บนหน้านี้ ตอนนี้รายการนั้นอยู่ที่หน้า Control ที่เดียว คำอธิบายจึงชี้ไปที่นั่น
+  document.getElementById('foot').textContent = t(
+    'The OBS browser source URLs are on the Control Panel.'
+  );
+}
+
+// BOOT ---------------------------------------------------------------
+//
+// ผูก event ผ่าน on() (จาก team-ui.js) เสมอ
+// อย่าเรียก getElementById(...).addEventListener ตรงๆ — เหตุผลอยู่ในไฟล์นั้น
+
+function boot() {
+  on('saveBtn', 'click', save);
+  on('deleteBtn', 'click', remove);
+  on('revertBtn', 'click', () => {
+    if (current) {
+      renderForm(current);
+      showToast(t('Reverted to saved values'), 'blue');
+    }
+  });
+  on('fFormat', 'change', renderFormatHint);
+
+  // ช่องผู้เล่นของฟอร์มสร้างทีมใหม่ สร้างครั้งเดียวตอนเปิดหน้า
+  const playersBox = document.getElementById('newTeamPlayers');
+  if (playersBox) newTeamPlayers = buildPlayerRows(playersBox, [], 'captain-new-team');
+
+  // ตัวเลือกไฟล์โลโก้ ซ่อนไว้ ใช้ปุ่มที่จัดสไตล์แล้วกดแทน
+  const logoPicker = hiddenFilePicker(setPendingLogo);
+  on('newTeamLogoBtn', 'click', () => logoPicker.click());
+  on('clearNewTeamBtn', 'click', () => {
+    resetNewTeamForm();
+    showToast(t('Form cleared'), 'blue');
+  });
+
+  setTeamsFolded(readFoldPreference(), false);
+  setDetailFolded(readDetailFoldPreference(), false);
+  on('teamsToggle', 'click', () => setTeamsFolded(!teamsAreFolded()));
+  on('detailToggle', 'click', () => setDetailFolded(!detailIsFolded()));
+
+  on('addTeamBtn', 'click', () => {
+    const panel = document.getElementById('addPanel');
+    if (!panel) return;
+    // ฟอร์มเพิ่มทีมอยู่ในส่วนที่พับ กดเพิ่มทีมตอนพับอยู่จึงต้องกางให้ก่อน
+    // ไม่งั้นปุ่มจะดูเหมือนเสีย ทั้งที่ฟอร์มเปิดแล้วแต่ซ่อนอยู่
+    setTeamsFolded(false);
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) {
+      renderPicker();
+      document.getElementById('newTeamName')?.focus();
+    }
+  });
+  on('closeAddBtn', 'click', () => {
+    const panel = document.getElementById('addPanel');
+    if (panel) panel.hidden = true;
+  });
+
+  const bracketLink = document.getElementById('bracketLink');
+  if (bracketLink) {
+    /** @type {HTMLAnchorElement} */ (bracketLink).href = withToken(`/tournament/${encodeURIComponent(tournamentId)}/bracket`);
+  }
+
+  const draftsLink = document.getElementById('draftsLink');
+  if (draftsLink) {
+    /** @type {HTMLAnchorElement} */ (draftsLink).href = withToken(`/tournament/${encodeURIComponent(tournamentId)}/drafts`);
+  }
+
+  on('addExistingBtn', 'click', addExisting);
+  on('createTeamBtn', 'click', createAndAdd);
+  on('newTeamName', 'keydown', (event) => {
+    if (event.key === 'Enter') createAndAdd();
+  });
+
+  // ข้อมูลหน้านี้ถูกแก้จากที่อื่นได้ตลอด: หน้าจัดการแข่งจับคู่ใหม่ โปรไฟล์ทีมแก้ชื่อ
+  // หรือคนคุมอีกคนเปิดอีกจออยู่ เดิมหน้านี้อ่านครั้งเดียวตอนเปิดแล้วค้างอยู่อย่างนั้น
+  //
+  // กฎเดียวที่ห้ามพลาด: ห้ามวาดทับส่วนที่กำลังถูกกรอก
+  // ฟอร์มรายละเอียดกับตัวแก้ทีมมีคนพิมพ์ค้างไว้ได้ ถ้าวาดใหม่ทับ ที่พิมพ์หายหมด
+  onDataChange((change) => {
+    const mine = !change.tournamentId || change.tournamentId === tournamentId;
+
+    if (change.topic === 'matches' && mine) loadMatchSummary();
+
+    if ((change.topic === 'roster' && mine) || change.topic === 'teams') {
+      deferWhileEditing(document.getElementById('teamsFold'), () => {
+        reloadTeams().then(refreshRegistry).catch(() => { /* สัญญาณรอบหน้าจะพามาเอง */ });
+      });
+    }
+
+    if (change.topic === 'tournaments' && mine) {
+      deferWhileEditing(document.getElementById('detailSection'), () => {
+        reloadTeams().catch(() => { /* สัญญาณรอบหน้าจะพามาเอง */ });
+      });
+    }
+  });
+
+  socket.on('connect_error', (error) => showToast(error.message || 'Connection error', 'red'));
+  renderFoot();
+}
+
+(async () => {
+  try {
+    boot();
+  } catch (error) {
+    // ผูก event ไม่สำเร็จ ยังพยายามโหลดข้อมูลต่อ แต่ต้องบอกให้รู้
+    console.error('tournament.js boot failed', error);
+    showToast(t('Some controls on this page failed to start - try a hard reload'), 'red');
+  }
+
+  if (!tournamentId) {
+    showMissing('No tournament id in the address.');
+    return;
+  }
+  try {
+    options = await fetchJson('/api/tournament-options');
+    await load();
+  } catch (error) {
+    showMissing(error.message || 'Could not load this tournament.');
+  }
+})();
+
+// ตารางคะแนน และการเลื่อนชั้นเข้ารอบน็อกเอาต์ ---------------------------
+//
+// แสดงเฉพาะรูปแบบที่แข่งพบกันหมด สายน็อกเอาต์ดูจากสายเอาได้อยู่แล้ว
+//
+// ทุกอย่างประกอบด้วย textContent ไม่มีการต่อ innerHTML
+// ชื่อทีมเป็นข้อความที่ผู้ใช้พิมพ์เอง (กฎเดียวกับที่หัวไฟล์นี้เขียนไว้)
+
+const STANDINGS_FORMATS = ['round_robin', 'group_stage'];
+
+const ST_COLUMNS = [
+  { key: 'played', label: 'P' },
+  { key: 'won', label: 'W' },
+  { key: 'lost', label: 'L' },
+  { key: 'gameDiff', label: '+/-' },
+  { key: 'points', label: 'PTS', cls: 'stpts' }
+];
+
+function stCell(text, cls) {
+  const td = document.createElement('td');
+  if (cls) td.className = cls;
+  td.textContent = text;
+  return td;
+}
+
+function stHeader() {
+  const tr = document.createElement('tr');
+  const rank = document.createElement('th');
+  rank.className = 'strank';
+  rank.textContent = '#';
+  const name = document.createElement('th');
+  name.className = 'stname';
+  name.textContent = t('Team');
+  tr.append(rank, name);
+  ST_COLUMNS.forEach((col) => {
+    const th = document.createElement('th');
+    th.textContent = col.label;
+    tr.appendChild(th);
+  });
+  return tr;
+}
+
+function renderStandings(groups) {
+  const box = document.getElementById('standingsBody');
+  if (!box) return;
+  box.textContent = '';
+
+  if (groups.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'stnote';
+    empty.textContent = t('Draw the matches first, then the table fills in as results come in.');
+    box.appendChild(empty);
+    return;
+  }
+
+  const field = /** @type {HTMLInputElement|null} */ (document.getElementById('perGroup'));
+  const through = Number(field?.value) || 0;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'stgroups';
+
+  groups.forEach((group) => {
+    const card = document.createElement('div');
+    card.className = 'stgroup';
+
+    const name = document.createElement('div');
+    name.className = 'stgroup-name';
+    name.textContent = group.bracket === 'main' ? t('Table') : `${t('Group')} ${group.bracket}`;
+    if (group.remaining > 0) {
+      const left = document.createElement('span');
+      left.className = 'stgroup-left';
+      left.textContent = tf('{n} still to play', { n: group.remaining });
+      name.appendChild(left);
+    }
+
+    const table = document.createElement('table');
+    table.className = 'sttable';
+    table.appendChild(stHeader());
+
+    group.rows.forEach((row, position) => {
+      const tr = document.createElement('tr');
+      // เส้นตัดขีดตามตำแหน่งจริง ไม่ใช่ตาม rank
+      // สองทีมที่เสมอกันได้ rank เท่ากัน ขีดตาม rank จะได้เกินโควตา
+      if (through > 0 && position < through) tr.classList.add('through');
+      if (row.tied) tr.classList.add('tied');
+
+      tr.appendChild(stCell(String(row.rank), 'strank'));
+      tr.appendChild(stCell(row.name || '—', 'stname'));
+      ST_COLUMNS.forEach((col) => {
+        const value = row[col.key];
+        const text = col.key === 'gameDiff' && value > 0 ? `+${value}` : String(value);
+        tr.appendChild(stCell(text, col.cls));
+      });
+      table.appendChild(tr);
+    });
+
+    card.append(name, table);
+    wrap.appendChild(card);
+  });
+
+  box.appendChild(wrap);
+
+  const anyTied = groups.some((g) => g.rows.some((r) => r.tied));
+  if (anyTied) {
+    const hint = document.createElement('div');
+    hint.className = 'stnote';
+    hint.textContent = t('Rows marked = are level on every measure. Settle those by your own rules before drawing the playoff.');
+    box.appendChild(hint);
+  }
+}
+
+async function loadStandings() {
+  const section = document.getElementById('standingsSection');
+  if (!section || !current) return;
+
+  // สายน็อกเอาต์ไม่ต้องมีตารางคะแนน สายบอกทุกอย่างอยู่แล้ว
+  if (!STANDINGS_FORMATS.includes(current.format)) {
+    section.hidden = true;
+    return;
+  }
+
+  try {
+    const data = await fetchJson(`/api/tournaments/${encodeURIComponent(tournamentId)}/standings`);
+    renderStandings(data.groups || []);
+    section.hidden = false;
+  } catch (error) {
+    section.hidden = true;
+  }
+}
+
+document.getElementById('perGroup')?.addEventListener('input', () => loadStandings());
+
+document.getElementById('promoteBtn')?.addEventListener('click', async () => {
+  const field = /** @type {HTMLInputElement|null} */ (document.getElementById('perGroup'));
+  const perGroup = Number(field?.value) || 2;
+
+  const ok = await window.RovClient.confirmBox({
+    title: t('Draw the playoff bracket?'),
+    body: [
+      tf('The top {n} of each group go through to a knockout bracket.', { n: perGroup }),
+      t('The group stage is not touched. Drawing again replaces the playoff, but only while none of it has been played.')
+    ],
+    confirmLabel: t('DRAW PLAYOFF')
+  });
+  if (!ok) return;
+
+  try {
+    const data = await fetchJson(
+      `/api/tournaments/${encodeURIComponent(tournamentId)}/playoffs`,
+      { method: 'POST', body: JSON.stringify({ perGroup }) }
+    );
+    showToast(tf('{n} teams are through', { n: data.promoted }), 'green');
+    await loadMatchSummary();
+    await loadStandings();
+  } catch (error) {
+    showToast(t(error.message || 'Could not draw the playoff'), 'red');
+  }
+});

@@ -1,0 +1,507 @@
+/* ส่วนที่เป็นของหน้ารายการ: หน้าแรก ทัวร์นาเมนต์ ทะเบียนทีม โปรไฟล์ทีม สาย สถิติ
+ *
+ * เปลือกที่ใช้ร่วมกันทุกหน้า (สี ตัวอักษร แถบบน ปุ่ม แผง ฟอร์ม กล่องยืนยัน toast)
+ * ย้ายไปอยู่ที่ css/theme.css แล้ว ไฟล์นี้เหลือเฉพาะของที่หน้าพวกนี้ใช้เท่านั้น
+ * ต้องโหลด theme.css ก่อนไฟล์นี้เสมอ
+ *
+ * หมายเหตุ: overlay.css / result.css เป็นคนละระบบ ไม่เกี่ยวกับไฟล์นี้ */
+
+/* หน้าพวกนี้ใช้ .panel เป็นกล่องมีขอบในธรรมดา ไม่มีหัวแผงกับตัวแผงแยกกัน
+   เหมือนหน้า Control / Presets จึงต้องมี padding ในตัวเอง */
+.panel { padding: 18px; }
+
+/* แถบสถานะ ------------------------------------------------------------- */
+
+.status {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 15px 18px;
+  margin-bottom: 26px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.status-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.status.online .status-dot { background: var(--gold); }
+.status.offline .status-dot { background: var(--red); }
+.status-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.status-match {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.sm-blue { color: var(--blue); }
+.sm-red { color: var(--red); }
+.sm-score { color: var(--text); font-weight: 700; }
+.status-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.stag {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted2);
+}
+.stag.on { color: var(--gold); border-color: var(--gold-line); }
+.stag.off { color: var(--muted); }
+
+/* รายการทัวร์นาเมนต์ ---------------------------------------------------- */
+
+.tlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+
+.tcard {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+.tcard:hover { border-color: var(--gold-line); background: var(--s2); }
+.tcard.finished { opacity: 0.72; }
+
+.tcard-wrap { position: relative; display: flex; }
+.tcard-wrap > .tcard { flex: 1; }
+
+/* ปุ่มลบวางทับมุมขวาบนของการ์ด ไม่ได้อยู่ข้างใน
+   การ์ดทั้งใบเป็น <a> ปุ่มที่ซ้อนอยู่ข้างในจะกดทีเดียวเด้งเข้าหน้าทัวร์นาเมนต์ */
+.tcard-del {
+  position: absolute;
+  top: 13px;
+  right: 14px;
+  z-index: 2;
+  padding: 3px 9px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  background: none;
+  color: var(--muted);
+  font-family: var(--bf);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.tcard-wrap:hover .tcard-del { border-color: var(--border2); }
+.tcard-del:hover { color: var(--red); border-color: var(--red); background: rgba(221, 128, 128, 0.1); }
+.tcard-del:disabled { opacity: 0.5; cursor: default; }
+
+/* เว้นที่ให้ปุ่มลบ ชื่อทัวร์นาเมนต์ยาวๆ จะได้ไม่ไหลไปอยู่ใต้ปุ่ม */
+.tcard-top { display: flex; align-items: flex-start; gap: 10px; padding-right: 62px; }
+.tcard-name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  line-height: 1.3;
+  word-break: break-word;
+}
+.tcard.finished .tcard-name { color: var(--muted2); }
+.tcard-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+.tcard-note { font-size: 12px; line-height: 1.65; color: var(--muted2); }
+.tcard-foot {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+  padding-top: 11px;
+}
+
+.foot {
+  margin-top: 34px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+/* เลือกหลายทีมแล้วลบทีเดียว --------------------------------------------- */
+
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  border: 1px solid var(--gold-line);
+  background: var(--gold-soft);
+  border-radius: var(--r-sm);
+}
+.bulk-bar[hidden] { display: none; }
+.bulk-count { font-size: 13px; font-weight: 600; color: var(--gold); }
+.bulk-bar .spacer { margin-left: auto; }
+
+.select-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px 2px;
+  font-size: 12px;
+  color: var(--muted2);
+  cursor: pointer;
+  user-select: none;
+  width: fit-content;
+}
+.select-all input { accent-color: var(--gold); cursor: pointer; }
+
+.team-tick {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+/* การ์ดทีม -------------------------------------------------------------- */
+
+.team {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 13px 15px;
+  margin-bottom: 8px;
+}
+.team-row { display: flex; align-items: center; gap: 13px; flex-wrap: wrap; }
+
+.team-logo {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  background: var(--s3);
+  border: 1px solid var(--border2);
+  object-fit: contain;
+  display: block;
+}
+.team-logo.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.team-logo.big { width: 66px; height: 66px; font-size: 18px; }
+
+.team-id { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 5px; }
+.team-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  word-break: break-word;
+}
+.team-sub { display: flex; gap: 6px; flex-wrap: wrap; }
+.team-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.team-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+.team-edit {
+  border-top: 1px solid var(--border);
+  margin-top: 13px;
+  padding-top: 13px;
+}
+
+/* แถวทีมแบบแน่น ใช้บนหน้าทัวร์นาเมนต์
+ *
+ * ทัวร์นาเมนต์เดียวรับได้ 128 ทีม การ์ดปกติสูงราว 70px คูณ 128
+ * คือหน้าเว็บยาวเกือบเก้าพันพิกเซล เลื่อนหาทีมเดียวก็หมดเวลาแล้ว
+ * แบบแน่นบีบเหลือบรรทัดเดียวราว 38px ซึ่งยังกดปุ่มได้สบายอยู่
+ *
+ * ไม่ไปแก้ .team ตรงๆ เพราะหน้าทะเบียนทีม (/teams) ใช้คลาสเดียวกัน
+ * แต่ที่นั่นแต่ละแถวมี badge มากกว่า (จำนวนทัวร์นาเมนต์ แพ้ชนะ)
+ * และไม่ได้ยาวเท่า เพราะมีช่องค้นหาคัดให้ก่อนแล้ว */
+.team.compact {
+  border-radius: var(--r-sm);
+  padding: 6px 10px;
+  margin-bottom: 5px;
+}
+.team.compact .team-row { gap: 9px; flex-wrap: nowrap; }
+.team.compact .team-logo { width: 26px; height: 26px; border-radius: 5px; }
+.team.compact .team-logo.placeholder { font-size: 9px; }
+
+/* ชื่อกับ badge อยู่บรรทัดเดียวกัน แทนที่จะซ้อนกันสองบรรทัด
+   นี่คือจุดที่ลดความสูงได้มากที่สุด */
+.team.compact .team-id {
+  flex: 1 1 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.team.compact .team-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  /* ชื่อยาวต้องตัดด้วย ... ไม่ใช่ตัดคำขึ้นบรรทัดใหม่ ซึ่งจะทำให้แถวสูงไม่เท่ากัน */
+  word-break: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.team.compact .team-sub { flex: 0 0 auto; gap: 5px; flex-wrap: nowrap; }
+.team.compact .team-sub .badge { font-size: 9px; padding: 1px 6px; }
+.team.compact .team-actions { flex: 0 0 auto; gap: 4px; flex-wrap: nowrap; }
+.team.compact .team-actions .tlink { font-size: 10px; padding: 3px 8px; }
+/* ปุ่มเอาทีมออก เหลือแค่กากบาท ข้อความเต็มอยู่ที่ title และ aria-label
+   กดพลาดไม่อันตราย เพราะยังมีกล่องยืนยันคั่นอยู่ */
+.team.compact .team-actions .tlink.icon {
+  font-size: 12px;
+  line-height: 1;
+  padding: 3px 8px;
+}
+.team.compact .team-edit { margin-top: 9px; padding-top: 9px; }
+
+/* จอแคบเอาปุ่มลงบรรทัดใหม่ ดีกว่าบีบชื่อทีมจนอ่านไม่ออก */
+@media (max-width: 620px) {
+  .team.compact .team-row { flex-wrap: wrap; }
+  .team.compact .team-id { flex-basis: 100%; }
+}
+
+/* ปุ่มพับหัวข้อ กว้างคงที่ ไม่งั้นหัวข้อจะขยับตอนสลับ ▾ กับ ▸ */
+.tlink.fold {
+  flex: 0 0 auto;
+  width: 30px;
+  text-align: center;
+  padding: 5px 0;
+  font-size: 11px;
+}
+
+/* ช่องผู้เล่น ------------------------------------------------------------ */
+
+.player-row { display: flex; gap: 8px; align-items: center; margin-bottom: 7px; flex-wrap: wrap; }
+.player-row .slot {
+  flex: 0 0 22px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+}
+.player-row input[type="text"],
+.player-row select.prole {
+  background: var(--s3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 7px 10px;
+  color: var(--text);
+  font-family: var(--bf);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.player-row input.pname { flex: 1; min-width: 130px; }
+/* ตำแหน่ง (เลน) เป็น select ไม่ใช่ช่องพิมพ์ ค่าถูกเอาไปเลือกไฟล์ไอคอนบนกราฟิก
+   จึงต้องเป็นชุดปิด ดู server/domain/position.ts */
+.player-row select.prole { flex: 0 0 128px; cursor: pointer; }
+.player-row input[type="text"]:focus,
+.player-row select.prole:focus { border-color: var(--gold); }
+.player-row label.cap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.player-row label.cap input { accent-color: var(--gold); }
+
+/* แมตช์ ----------------------------------------------------------------- */
+
+.round-head {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 20px 0 9px;
+}
+.round-head:first-child { margin-top: 0; }
+a.round-head { text-decoration: none; display: block; }
+a.round-head:hover { color: var(--gold); }
+
+.match {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 11px 14px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.match.complete { border-color: var(--border2); }
+.match.bye { opacity: 0.55; }
+
+.match-side {
+  flex: 1;
+  min-width: 120px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  word-break: break-word;
+}
+.match-side.right { text-align: right; }
+.match-side.tbd { color: var(--muted); font-style: italic; font-weight: 400; }
+.match-side.winner { color: var(--gold); font-weight: 700; }
+
+.match-score { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; }
+.match-score input {
+  width: 42px;
+  text-align: center;
+  background: var(--s3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 5px 4px;
+  color: var(--text);
+  font-family: var(--bf);
+  font-size: 15px;
+  font-weight: 700;
+  outline: none;
+}
+.match-score input:focus { border-color: var(--gold); }
+.match-score input:disabled { opacity: 0.4; cursor: not-allowed; }
+.match-score .dash { color: var(--muted); }
+
+.tlink.live-now { color: var(--gold); border-color: var(--gold); background: var(--gold-soft); }
+
+/* แถบบอกว่ากำลังคุมแมตช์ไหนอยู่ ขึ้นบนหน้า Control Panel */
+.live-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--gold-soft);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  margin: 12px 14px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold);
+}
+.live-bar .muted { color: var(--muted2); font-weight: 400; }
+.live-bar a { margin-left: auto; }
+
+/* ประวัติของทีม --------------------------------------------------------- */
+/* ใช้โครงเดียวกับ .match แต่คนละคอลัมน์
+ * .match เป็นคู่แข่งซ้าย-คะแนน-ขวา ส่วนตรงนี้มองจากทีมเดียวออกไป
+ * จึงเป็น รอบ / คู่แข่ง / คะแนน / จำนวนเกม / ผล */
+
+.hist-round {
+  flex: 0 0 150px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hist-opp { flex: 1; min-width: 130px; font-size: 15px; font-weight: 600; }
+.hist-opp.tbd { color: var(--muted); font-style: italic; font-size: 13px; font-weight: 400; }
+/* ทีมที่ถูกลบไปแล้ว ชื่อมาจากสำเนาแช่แข็ง ไม่ใช่ทะเบียน จึงกดไม่ได้
+ * ทำให้ดูจางลงและมี cursor เป็น help เพื่อบอกว่ามีคำอธิบายอยู่ที่ tooltip */
+.hist-opp.gone { color: var(--muted2); cursor: help; }
+.hist-score { flex: 0 0 62px; text-align: center; font-size: 16px; font-weight: 700; color: var(--text); }
+.hist-bo { flex: 0 0 40px; font-size: 11px; color: var(--muted); text-align: center; }
+.hist-outcome { flex: 0 0 96px; display: flex; justify-content: flex-end; }
+
+@media (max-width: 640px) {
+  .src-name { flex: 1 1 100%; }
+}
+
+/* ตารางคะแนนของรอบแบ่งกลุ่ม บนหน้าทัวร์นาเมนต์
+   สีและตัวอักษรทั้งหมดมาจากโทเคนใน theme.css ไม่มีสีเขียนตรงๆ ที่นี่ */
+
+.promote-label { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.promote-input {
+  width: 56px; text-align: center;
+  background: var(--s3); border: 1px solid var(--border2); color: var(--text);
+  border-radius: var(--r-sm); padding: 5px 4px;
+  font-family: var(--bf); font-size: 14px; font-weight: 700;
+}
+.promote-input:focus { outline: none; border-color: var(--gold); }
+
+.stgroups { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+.stgroup { background: var(--s2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 12px 14px; }
+.stgroup-name { font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.stgroup-left { color: var(--muted); font-weight: 500; letter-spacing: 0.08em; margin-left: 8px; }
+
+table.sttable { width: 100%; border-collapse: collapse; }
+.sttable th { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); text-align: right; padding: 0 5px 6px; }
+.sttable th.stname, .sttable th.strank { text-align: left; }
+.sttable td { padding: 5px; font-size: 13px; color: var(--text); text-align: right; border-top: 1px solid var(--border); }
+.sttable td.strank { text-align: left; width: 34px; color: var(--muted2); font-weight: 700; }
+.sttable td.stname { text-align: left; }
+.sttable td.stpts { color: var(--gold); font-weight: 700; }
+
+/* ทีมที่จะได้ไปต่อตามเลขที่ตั้งไว้ ทำให้เห็นเส้นตัดก่อนกดจับสาย */
+.sttable tr.through td { background: var(--gold-soft); }
+
+/* เท่ากันจนตัดสินไม่ได้ ต้องบอกตรงๆ ไม่ใช่แสดงลำดับที่ดูเหมือนตัดสินได้แล้ว
+   การเลื่อนชั้นจะปฏิเสธเองถ้าเส้นตัดยังเสมอกันอยู่ */
+.sttable tr.tied td.strank::after { content: ' ='; color: var(--muted); }
+.stnote { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+/* ประวัติพิค/แบนของทัวร์นาเมนต์ (/tournament/:id/drafts) */
+
+.dh-filter {
+  height: 32px; background: var(--s3); border: 1px solid var(--border2); color: var(--text);
+  border-radius: var(--r-sm); padding: 0 9px; font-family: var(--bf); font-size: 13px;
+}
+.dh-filter:focus { outline: none; border-color: var(--gold); }
+.dh-filter option { background: var(--s2); color: var(--text); }
+.dh-search { min-width: 150px; }
+
+.dh-count { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+
+.dh-game { border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--s2); padding: 12px 14px; margin-bottom: 10px; }
+.dh-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.dh-where { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.dh-teams { font-size: 14px; font-weight: 600; color: var(--text); }
+.dh-game-no { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--gold); }
+
+/* ฝั่งทีมหนึ่งแถว: ชื่อ แล้วพิค แล้วแบน */
+.dh-side { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: center; padding: 6px 0; }
+.dh-side + .dh-side { border-top: 1px solid var(--border); }
+.dh-name { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--text); min-width: 0; }
+.dh-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 7px; }
+.dh-side.blue .dh-dot { background: var(--blue); }
+.dh-side.red .dh-dot { background: var(--red); }
+/* ผู้ชนะรายเกม ทำเครื่องหมายด้วยทอง ซึ่งแปลว่า "สิ่งที่เกิดขึ้นตรงนี้" ทั้งแอพ */
+.dh-side.won .dh-name { color: var(--gold); }
+
+.dh-rows { display: flex; gap: 14px; flex-wrap: wrap; }
+.dh-group { display: flex; align-items: center; gap: 5px; }
+.dh-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+.dh-hero { width: 34px; height: 34px; border-radius: 6px; background: var(--s3) center/cover no-repeat; border: 1px solid var(--border2); }
+.dh-hero.empty { opacity: 0.28; }
+.dh-hero.ban { filter: grayscale(1) brightness(0.7); }
+/* ตัวที่ตรงกับคำค้น ต้องเห็นทันทีว่าอยู่ตรงไหนในเกมนี้ */
+.dh-hero.match { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-soft); }
+
+.dh-empty { font-size: 13px; color: var(--muted); padding: 8px 0; }

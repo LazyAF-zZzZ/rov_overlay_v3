@@ -1,0 +1,97 @@
+<UserControl x:Class="RovOverlay.Desktop.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:svc="clr-namespace:RovOverlay.Desktop.Services">
+    <UserControl.Resources>
+        <Style x:Key="KeyText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="ValueText" TargetType="TextBlock" BasedOn="{StaticResource MonoText}">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="22,18,22,24" MaxWidth="860" HorizontalAlignment="Left">
+            <TextBlock Style="{StaticResource PageTitle}" Text="{svc:T Nav.Settings}"/>
+
+            <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Settings.Language}" Margin="0,22,0,8"/>
+            <Border Style="{StaticResource SegmentGroup}" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton Style="{StaticResource Segment}" GroupName="lang" Content="ไทย"
+                                 IsChecked="{Binding Language, Converter={StaticResource EqualsToBool}, ConverterParameter=th}"/>
+                    <RadioButton Style="{StaticResource Segment}" GroupName="lang" Content="English"
+                                 IsChecked="{Binding Language, Converter={StaticResource EqualsToBool}, ConverterParameter=en}"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Settings.Data}" Margin="0,24,0,8"/>
+            <Border Style="{StaticResource Card}" Padding="16,12">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource MutedText}" Text="{svc:T Settings.DataHint}" Margin="0,0,0,10"/>
+                    <Grid Margin="0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource KeyText}" Text="{svc:T Settings.DataFolder}"/>
+                        <TextBlock Grid.Column="1" Style="{StaticResource ValueText}" Text="{Binding DataDir}" ToolTip="{Binding DataDir}"/>
+                        <Button Grid.Column="2" Content="{svc:T Settings.OpenFolder}" Command="{Binding OpenDataFolderCommand}" Margin="10,0,0,0"/>
+                    </Grid>
+                    <Grid Margin="0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource KeyText}" Text="{svc:T Settings.MediaFolder}"/>
+                        <TextBlock Grid.Column="1" Style="{StaticResource ValueText}" Text="{Binding MediaDir}" ToolTip="{Binding MediaDir}"/>
+                        <Button Grid.Column="2" Content="{svc:T Settings.OpenFolder}" Command="{Binding OpenMediaFolderCommand}" Margin="10,0,0,0"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Settings.Server}" Margin="0,24,0,8"/>
+            <Border Style="{StaticResource Card}" Padding="16,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="26"/>
+                        <RowDefinition Height="26"/>
+                        <RowDefinition Height="26"/>
+                        <RowDefinition Height="26"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Style="{StaticResource KeyText}" Text="{svc:T Settings.Address}"/>
+                    <TextBlock Grid.Column="1" Style="{StaticResource ValueText}" Text="{Binding ServerUrl}"/>
+                    <TextBlock Grid.Row="1" Style="{StaticResource KeyText}" Text="{svc:T Settings.Mode}"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ModeText}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="2" Style="{StaticResource KeyText}" Text="{svc:T Settings.Node}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource ValueText}" Text="{Binding NodePath}"/>
+                    <TextBlock Grid.Row="3" Style="{StaticResource KeyText}" Text="{svc:T Settings.Backend}"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource ValueText}" Text="{Binding BackendDir}"/>
+                </Grid>
+            </Border>
+
+            <DockPanel Margin="0,24,0,8">
+                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE72C;"
+                        Command="{Binding RefreshLogCommand}" ToolTip="{svc:T Common.Refresh}"/>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Settings.Log}" VerticalAlignment="Center"/>
+            </DockPanel>
+            <TextBox Text="{Binding LogText, Mode=OneWay}" IsReadOnly="True" Height="240" TextWrapping="NoWrap"
+                     VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                     FontFamily="{StaticResource MonoFont}" FontSize="11.5"/>
+
+            <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Settings.About}" Margin="0,24,0,8"/>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Style="{StaticResource KeyText}" Text="{svc:T Settings.Version}" Width="150"/>
+                <TextBlock Style="{StaticResource ValueText}" Text="{Binding Version}"/>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

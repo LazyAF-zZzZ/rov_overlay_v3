@@ -1,0 +1,201 @@
+// เทสต์การเดาผู้ชนะรายเกมจากคะแนนซีรีส์
+//
+// ตั้ง env ก่อน import อะไรก็ตาม เพราะ config อ่านตอน import
+//
+// เรื่องที่ต้องถูกที่สุดคือ "เมื่อไหร่ที่ต้องไม่เดา"
+// การเดาผิดแล้วเงียบ แย่กว่าการปล่อยว่างไว้ให้คนมากรอกเอง
+// เพราะค่าที่ผิดจะไหลเข้าอัตราชนะรายฮีโร่โดยไม่มีใครสังเกต
+
+import test from 'node:test';
+import assert from 'node:assert';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'rov-series-test-'));
+process.env.ROV_USER_DATA_DIR = path.join(TMP, 'data');
+process.env.ROV_USER_MEDIA_DIR = path.join(TMP, 'media');
+process.env.CONTROL_TOKEN = '';
+
+const { getStores } = require('../server/store/index') as typeof import('../server/store/index');
+const { closeDatabase } = require('../server/store/db') as typeof import('../server/store/db');
+const { recordSeriesResult } = require('../server/services/series') as typeof import('../server/services/series');
+
+import { must } from './helpers';
+
+test.after(() => {
+  closeDatabase();
+  try { fs.rmSync(TMP, { recursive: true, force: true }); } catch { /* ระบบเก็บเอง */ }
+});
+
+let cup = 0;
+
+// แมตช์เดียว Bo5 พร้อมเกมที่ "เคยขึ้นจอแล้ว" ตามจำนวนที่ขอ
+// สร้างเกมตรงๆ ไม่ผ่าน goLive เพราะเทสต์นี้สนใจแค่การผูกผล ไม่ได้สนใจ overlay
+function setup(gameCount: number) {
+  const { teams, tournaments, matches, games } = getStores();
+  cup += 1;
+  const tournament = must(tournaments.create({ name: `Series ${cup}`, format: 'single_elim', bestOf: 5 }).tournament);
+  const blue = must(teams.create({ name: `Blue ${cup}` }).team);
+  const red = must(teams.create({ name: `Red ${cup}` }).team);
+  tournaments.addTeam(tournament.id, blue.id, 0);
+  tournaments.addTeam(tournament.id, red.id, 1);
+  const match = must(must(matches.generate(tournament.id).matches)[0]);
+
+  for (let no = 1; no <= gameCount; no += 1) {
+    games.ensure(match.id, no, {
+      blueTeamId: blue.id, redTeamId: red.id, blueName: blue.name, redName: red.name
+    });
+  }
+  return { match, blue, red };
+}
+
+const winners = (matchId: string) =>
+  getStores().games.forMatch(matchId).map((g) => g.winner);
+
+test('one point to one side records that side as winning the game just played', () => {
+  const { match } = setup(1);
+  const result = recordSeriesResult(match.id, 1, 0);
+  assert.ok(result.match, result.error ?? 'setResult failed');
+  assert.deepStrictEqual(winners(match.id), ['blue']);
+});
+
+test('the losing side scoring next attributes only the new game', () => {
+  const { match } = setup(2);
+  recordSeriesResult(match.id, 1, 0);
+  recordSeriesResult(match.id, 1, 1);
+  assert.deepStrictEqual(winners(match.id), ['blue', 'red'], 'game 1 keeps its winner');
+});
+
+test('two points to one side attributes both games, since that is unambiguous', () => {
+  const { match } = setup(2);
+  recordSeriesResult(match.id, 2, 0);
+  assert.deepStrictEqual(winners(match.id), ['blue', 'blue']);
+});
+
+// ---- เมื่อไหร่ที่ต้องไม่เดา ----
+
+test('both sides gaining at once is left alone rather than guessed', () => {
+  const { match } = setup(3);
+  // กรอกทีเดียวตอนจบซีรีส์: รู้ว่าเล่นสามเกม แต่ไม่รู้ว่าเกมไหนใครชนะ
+  const result = recordSeriesResult(match.id, 2, 1);
+  assert.ok(result.match, result.error ?? 'setResult failed');
+  assert.deepStrictEqual(winners(match.id), [null, null, null], 'no invented winners');
+});
+
+// แมตช์ที่ไม่เคยขึ้นจอมีแถวเกมที่ 1 อยู่แล้ว เพราะการจับคู่จองสำเนาแช่แข็งไว้ตั้งแต่ตอนนั้น
+// ผู้ชนะรายเกมจึงผูกได้ตามปกติ แต่ต้องไม่มีดราฟต์งอกขึ้นมาเอง และไม่มีเกมที่ 2 ที่ยังไม่ได้เล่น
+test('a match that never went on air still has its pairing, but no invented draft', () => {
+  const { match, blue, red } = setup(0);   // ไม่เคยเปิดแมตช์นี้ขึ้นจอเลย
+  recordSeriesResult(match.id, 1, 0);
+
+  const played = getStores().games.forMatch(match.id);
+  assert.strictEqual(played.length, 1, 'only the game the score says was played');
+  assert.strictEqual(must(played[0]).gameNo, 1);
+  assert.strictEqual(must(played[0]).winner, 'blue');
+  assert.deepStrictEqual(must(played[0]).slots, [], 'no draft is invented for it');
+  assert.strictEqual(must(played[0]).blueName, blue.name, 'the pairing was frozen at the draw');
+  assert.strictEqual(must(played[0]).redName, red.name);
+});
+
+// ---- ถอยคะแนนกลับ ----
+
+test('lowering the score clears the winners of games that no longer happened', () => {
+  const { match } = setup(3);
+  recordSeriesResult(match.id, 1, 0);
+  recordSeriesResult(match.id, 1, 1);
+  recordSeriesResult(match.id, 2, 1);
+  assert.deepStrictEqual(winners(match.id), ['blue', 'red', 'blue']);
+
+  // คนคุมพิมพ์ผิด ถอยกลับเป็น 1-1
+  recordSeriesResult(match.id, 1, 1);
+  assert.deepStrictEqual(
+    winners(match.id), ['blue', 'red', null],
+    'game 3 is unplayed again, so its winner must not linger onto the next draft'
+  );
+});
+
+test('a manual override is not overwritten by a later, unrelated score change', () => {
+  const { match } = setup(3);
+  const { games } = getStores();
+  recordSeriesResult(match.id, 1, 0);
+
+  // คนคุมแก้ผลเกมที่ 1 เอง เพราะระบบเดาผิด
+  const first = must(games.forMatch(match.id)[0]);
+  games.setWinner(first.id, 'red');
+
+  // แล้วซีรีส์เดินต่อ เกมที่ 2 ฝั่งแดงชนะ
+  recordSeriesResult(match.id, 1, 1);
+
+  const all = winners(match.id);
+  assert.strictEqual(all[0], 'red', 'the override on game 1 survives');
+  assert.strictEqual(all[1], 'red', 'game 2 still gets filled in');
+});
+
+// ---- คะแนนสองที่ต้องตรงกันเสมอ ----
+//
+// ช่องบนหน้า control กับกล่องคะแนนในสาย เขียนลงที่เดียวกัน แล้วสะท้อนกลับหากัน
+
+const live = require('../server/services/live-match') as typeof import('../server/services/live-match');
+const liveState = require('../server/store/live-state') as typeof import('../server/store/live-state');
+const { pushOverlayScoreToMatch } = require('../server/services/series') as typeof import('../server/services/series');
+
+// เอาแมตช์ขึ้นจอจริง เพราะการจับคู่ฝั่งอาศัยสำเนาแช่แข็งของเกม
+function onAir() {
+  const { matches } = getStores();
+  const { match } = setup(0);
+  const result = live.goLive(match.id);
+  assert.ok(result.live, result.error ?? 'goLive failed');
+  return must(matches.get(match.id));
+}
+
+test('a score typed on the control panel lands on the match and records the winner', () => {
+  const match = onAir();
+  const { matches, games } = getStores();
+
+  liveState.getState().teamBlue.score = 1;
+  pushOverlayScoreToMatch();
+
+  const after = must(matches.get(match.id));
+  assert.strictEqual(after.scoreA, 1, 'the series score followed the control panel');
+  assert.strictEqual(after.scoreB, 0);
+  assert.deepStrictEqual(
+    games.forMatch(match.id).map((g) => g.winner), ['blue'],
+    'and the game winner came from it, exactly as typing it in the bracket would'
+  );
+});
+
+test('a score typed in the bracket shows on the overlay without reopening the match', () => {
+  const match = onAir();
+  assert.strictEqual(liveState.getState().teamBlue.score, 0);
+
+  recordSeriesResult(match.id, 1, 0);
+
+  assert.strictEqual(liveState.getState().teamBlue.score, 1, 'the overlay followed the bracket');
+  assert.strictEqual(liveState.getState().teamRed.score, 0);
+});
+
+test('a score above what the format allows is clamped, and the overlay is corrected', () => {
+  const match = onAir();   // Bo5 ต้องชนะ 3 เกม
+  const { matches } = getStores();
+
+  liveState.getState().teamBlue.score = 9;
+  pushOverlayScoreToMatch();
+
+  assert.strictEqual(must(matches.get(match.id)).scoreA, 3, 'clamped to what a Bo5 can reach');
+  assert.strictEqual(
+    liveState.getState().teamBlue.score, 3,
+    'the overlay must not keep showing 9 while the bracket says 3'
+  );
+});
+
+test('scoring a standalone match touches no tournament at all', () => {
+  const { liveMatch, matches } = getStores();
+  const match = onAir();
+  liveMatch.clear();          // แมตช์เดี่ยว ไม่ได้ผูกกับทัวร์นาเมนต์
+
+  liveState.getState().teamBlue.score = 2;
+  pushOverlayScoreToMatch();
+
+  assert.strictEqual(must(matches.get(match.id)).scoreA, 0, 'the match record is left alone');
+});

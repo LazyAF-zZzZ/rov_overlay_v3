@@ -1,0 +1,1535 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ============================================================
+   DESIGN TOKENS
+   The banner had grown two parallel palettes: a legacy set from
+   the old top-bar layout (#00bfff, #ff3333, #ff4444, #ff6666,
+   #ffcc00) and the current one (#38bdf8, #f87171, #f59e0b). Both
+   were rendering at once - ban slots in the legacy red, pick slots
+   in the modern one, close enough to look like a mistake rather
+   than a choice. These tokens are the current palette; live rules
+   below point at them so there is one place to change a team colour.
+
+   Legacy hexes still appear further down on rules that are fully
+   overridden (dead, not rendering). Left alone deliberately -
+   rewriting them is churn with no visible effect.
+
+   TYPE SCALE - one step per role, no two roles sharing a size by
+   accident. Weight 900 is reserved for the timer and score so that
+   heaviest actually reads as most important.
+     14  captions: BAN, draft phase, position number, VS
+     18  names: players, tournament
+     24  match title
+     40  timer
+     42  score (the hero element - deliberately above the timer)
+   ============================================================ */
+:root {
+    --ov-blue: #38bdf8;
+    --ov-blue-rgb: 56, 189, 248;
+    --ov-red: #f87171;
+    --ov-red-rgb: 248, 113, 113;
+    --ov-accent: #f59e0b;
+    --ov-text: #ffffff;
+    --ov-text-dim: #94a3b8;
+    /* Neutral grey, no blue in it - --ov-text-dim is slate and reads cool
+       next to white. For labels that should look like metal, not tint. */
+    --ov-silver: #c0c0c0;
+
+    --ov-type-caption: 14px;
+    /* Player names and the tournament name were one token. They start at the
+       same size but sit in different places doing different jobs, so they get
+       their own knobs - resizing one no longer drags the other with it. */
+    /* 22px is 2.04% of a 1080p frame. Under about 2% a name stops surviving
+       the trip to the viewer: most of them watch at 720p or on a phone, where
+       18px arrived as 12. It was also the smallest live thing on the banner
+       while the match title, which never changes during a game, sat at 24px -
+       the same inversion the BAN label was demoted for further down.
+       1440p follows automatically; that page is this layout scaled by 4/3. */
+    --ov-type-player: 22px;
+    --ov-type-tournament: 18px;
+    --ov-type-title: 24px;
+    --ov-type-score: 42px;
+    --ov-type-timer: 40px;
+
+    /* Logo box. The centre is what stays put, not the top or bottom edge -
+       see .team-logo-score for why. Every value here can be overridden at
+       runtime from the Design page; overlay.js writes them onto :root. */
+    --ov-logo-size: 138px;
+    --ov-logo-inset: 10px;
+    --ov-logo-centre-from-bottom: 278.25px;
+}
+
+/* Ban Section */
+.ban-section {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 180px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 50px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.7), transparent);
+}
+
+.ban-left, .ban-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.ban-heroes {
+    display: flex;
+    gap: 10px;
+}
+
+.ban-slot.filled {
+    border-color: var(--ov-red);
+    box-shadow: 0 0 15px rgba(var(--ov-red-rgb), 0.5);
+}
+
+/* ไม่มีตัว X ทับช่องแบนแล้ว (เอาออกตามที่ผู้ใช้ขอ 2026-09-08)
+ *
+ * สิ่งที่ยังบอกว่าช่องนี้คือแบนมีครบอยู่แล้วโดยไม่ต้องมีตัว X:
+ * ไอคอนถูกลดสีและหรี่ลง (.ban-icon ข้างล่าง) กรอบเป็นสีแดงพร้อมเงาแดง
+ * (.ban-slot.filled) และหัวข้อข้างช่องเขียนว่า BAN อยู่แล้ว
+ * ตัว X ปิดหน้าฮีโร่พอดี ซึ่งเป็นสิ่งเดียวที่คนดูใช้ดูว่าโดนแบนตัวไหน */
+
+.ban-slot .ban-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(80%) brightness(0.5);
+    z-index: 1;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Center Match Info */
+
+.team-logo-score.blue {
+    border-color: #00bfff;
+    box-shadow: 0 0 20px rgba(0, 191, 255, 0.4);
+}
+
+.team-logo-score.red {
+    border-color: #ff4444;
+    box-shadow: 0 0 20px rgba(255, 68, 68, 0.4);
+}
+
+.score-separator {
+    font-size: 24px;
+    color: #888888;
+    font-weight: 600;
+}
+
+/* Pick Section */
+.pick-section {
+    position: absolute;
+    bottom: 20px;
+    left: -310px;
+    right: 1px;
+    height: 420px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 4px;
+    background: linear-gradient(to bottom, rgba(20, 22, 22, 0.9), rgba(0, 0, 0, 0.7), transparent);
+}
+
+/* A stray "}" sat here, left behind when a rule was deleted at some point.
+   It made the file invalid CSS. Browsers recover from it silently, which is
+   why nothing looked wrong, but a real parser refuses to read the file. */
+
+.team-center-card.blue {
+    border-color: #00bfff;
+    box-shadow: 0 0 25px rgba(0, 191, 255, 0.5);
+}
+
+.team-center-card.red {
+    border-color: #ff4444;
+    box-shadow: 0 0 25px rgba(255, 68, 68, 0.5);
+}
+
+.blue-team {
+    flex-direction: row;
+}
+
+.red-team {
+    flex-direction: row;
+}
+
+/* Legacy pick-slot chrome from the old top-bar layout. The border and glow
+   here were fully overridden by the banner rules further down, so they were
+   dead paint - but not harmless: the later rule sets its colour with
+   rgba(var(--ov-blue-rgb), ...), and a var() inside a shorthand that is
+   competing with an earlier fully-parsed `border` shorthand did not pick up
+   runtime changes to the variable. The theme picker moved every other blue
+   on the banner and left these two borders behind.
+
+   Only `background` is kept - that is the one declaration these rules still
+   contribute. Colour now comes from one place, the banner rules below. */
+.blue-team .pick-slot {
+    background: linear-gradient(135deg, rgba(0, 100, 255, 0.2), rgba(0, 50, 150, 0.3));
+}
+
+.red-team .pick-slot {
+    background: linear-gradient(135deg, rgba(255, 50, 50, 0.2), rgba(150, 30, 30, 0.3));
+}
+
+.blue-team .pick-slot.filled {
+    border-color: var(--ov-blue);
+    box-shadow: 0 0 30px rgba(var(--ov-blue-rgb), 0.6);
+}
+
+.red-team .pick-slot.filled {
+    border-color: var(--ov-red);
+    box-shadow: 0 0 30px rgba(var(--ov-red-rgb), 0.6);
+}
+
+.hero-image::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+}
+
+.blue-team .position-indicator {
+    border: 2px solid #00bfff;
+    box-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+}
+
+.red-team .position-indicator {
+    border: 2px solid #ff4444;
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+}
+
+.player-name {
+    /* No font-size here. A later .player-name rule sets it from
+       --ov-type-player and wins on order, so a size written here looks like
+       the knob and does nothing - the failure that already cost this file a
+       whole dead stylesheet. Change the token, not this rule. */
+    font-weight: 600;
+    color: #ffffff;
+    text-transform: uppercase;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    letter-spacing: 1px;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(255, 204, 0, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(255, 204, 0, 0.8);
+    }
+}
+
+.pick-slot.picking {
+    animation: pulse 1.5s infinite;
+}
+
+/* `.filled` used to run slideIn here. It matched both .pick-slot and
+   .ban-slot, and because it stays applied after the entrance classes are
+   removed it restarted a second animation right after the new one - the
+   two visibly overlapped. The entrance animations at the end of this file
+   replace it. */
+/* ===== Active Slot Highlight (Draft Timer) ===== */
+@keyframes activePulse {
+    0%   { box-shadow: 0 0 15px 3px var(--active-color); }
+    50%  { box-shadow: 0 0 35px 10px var(--active-color); }
+    100% { box-shadow: 0 0 15px 3px var(--active-color); }
+}
+
+.ban-slot.active {
+    --active-color: rgba(255, 220, 0, 0.85);
+    border: 3px solid #ffdc00 !important;
+    animation: activePulse 1.2s ease-in-out infinite;
+}
+
+.blue-team .pick-slot.active {
+    --active-color: rgba(0, 191, 255, 0.9);
+    border: 3px solid #00bfff !important;
+    animation: activePulse 1.2s ease-in-out infinite;
+}
+
+.red-team .pick-slot.active {
+    --active-color: rgba(255, 68, 68, 0.9);
+    border: 3px solid #ff4444 !important;
+    animation: activePulse 1.2s ease-in-out infinite;
+}
+
+/* ===== 1920x1080 polished layout override ===== */
+body {
+    width: 1920px;
+    height: 1080px;
+    background: transparent;
+    font-family: 'Kanit', "Segoe UI", Arial, sans-serif;
+    overflow: hidden;
+}
+
+.overlay-container {
+    width: 1920px;
+    height: 1080px;
+    position: relative;
+}
+
+.ban-section {
+    height: 172px;
+    padding: 18px 42px;
+    background:
+        linear-gradient(180deg, rgba(3, 7, 18, 0.94), rgba(3, 7, 18, 0.68) 70%, transparent),
+        linear-gradient(90deg, rgba(14, 165, 233, 0.12), transparent 40%, rgba(239, 68, 68, 0.12));
+}
+
+.ban-left,
+.ban-right {
+    width: 455px;
+}
+
+.ban-right {
+    justify-content: flex-end;
+}
+
+.ban-label {
+    font-size: 22px;
+    font-weight: 900;
+    color: #ff3333;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    padding: 8px 20px;
+    background: rgba(185, 28, 28, 0.35);
+    border: 2px solid #ff3333;
+    border-radius: 4px;
+    letter-spacing: 0.12em;
+    border-width: 1px;
+}
+
+.ban-slot {
+    width: 72px;
+    height: 72px;
+    background: rgba(2, 6, 23, 0.86);
+    /* was #ff3333 - a second red rendering right next to the pick slots'
+       #f87171, close enough to read as an inconsistency, not a choice */
+    border: 3px solid var(--ov-red);
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.team-logo {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+}
+
+.score-number {
+    font-size: 40px;
+    font-weight: 900;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    min-width: 40px;
+    text-align: center;
+}
+
+/* Was font-size/color/opacity with !important here, which pinned the draft
+   label off the type scale and could only ever be beaten by more
+   !important. The single #draftLabel rule further down owns it now. */
+
+.pick-section {
+    left: 28px;
+    right: 28px;
+    bottom: 26px;
+    height: 360px;
+    padding: 18px;
+    border-radius: 10px;
+    background:
+        linear-gradient(180deg, transparent, rgba(2, 6, 23, 0.2) 15%, rgba(2, 6, 23, 0.88)),
+        linear-gradient(90deg, rgba(14, 165, 233, 0.16), rgba(15, 23, 42, 0.25) 50%, rgba(239, 68, 68, 0.16));
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.team-center-info {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 14px;
+    z-index: 20;
+    pointer-events: none;
+}
+
+.team-center-logo {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4));
+}
+
+/* Card gap tightened 10px -> 4px to buy middle space for the centre
+   block. width must track it: the rows are pinned to the screen edges,
+   so a width wider than the cards leaves the red row floating off the
+   right edge. 5 x 144 + 4 x 4 = 736. */
+.team-picks {
+    display: flex;
+    gap: 4px;
+    width: 736px;
+}
+
+.pick-slot {
+    width: 144px;
+    height: 312px;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.blue-team .pick-slot,
+.red-team .pick-slot {
+    border-width: 3px;
+    background: rgba(15, 23, 42, 0.72);
+}
+
+.hero-image {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.2;
+    transition: opacity 0.3s ease;
+    position: relative;
+    transform: scale(1.02);
+}
+
+.pick-slot.filled .hero-image {
+    opacity: 1;
+}
+
+.player-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    /* 3px, not 9px, of side padding. The slot is a fixed 144px and the name
+       has to live inside it, so every pixel of padding is a pixel the name
+       cannot use: at 9px the box was 122px and VUXIANG(C) measured 130 at the
+       new size - it would have ellipsised a name that fits. The slot border
+       still keeps the text off the edge.
+
+       The border eats this budget too, so the two are not independent: taking
+       that border from 2px to 3px cost a pixel a side and put the box back to
+       exactly 130, dead level with the longest real name. Widen the border
+       again and this padding has to come down with it. */
+    padding: 12px 3px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.7));
+    z-index: 10;
+}
+
+.position-indicator {
+    position: absolute;
+    bottom: 42px;
+    left: 10px;
+    width: 30px;
+    height: 30px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 900;
+    color: #ffffff;
+    z-index: 10;
+}
+
+.player-name {
+    min-height: 24px;
+    font-size: var(--ov-type-player);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Hide center team chips and player order badges on overlay views. */
+.team-center-info,
+.position-indicator {
+    display: none !important;
+}
+
+/* 1080p top safe area: keep the tournament title away from the capture edge. */
+.ban-section {
+    top: 8px;
+    height: 166px;
+    padding: 10px 42px 16px;
+    align-items: flex-start;
+}
+
+.ban-left,
+.ban-right {
+    padding-top: 48px;
+}
+
+.match-center {
+    text-align: center;
+    flex: 0 0 auto;
+    width: 840px;
+    padding-top: 4px;
+}
+
+.tournament-name {
+    font-size: 15px;
+    color: #cbd5e1;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 5px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    min-height: 22px;
+    line-height: 22px;
+}
+
+.timer-display {
+    margin: 4px 0;
+}
+
+.timer {
+    font-size: 32px;
+    font-weight: 900;
+    color: #ffcc00;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    padding: 6px 22px;
+    background: rgba(15, 23, 42, 0.9);
+    border-radius: 6px;
+    border: 2px solid #ffcc00;
+    display: inline-block;
+    min-width: 108px;
+    line-height: 1;
+    box-shadow: 0 0 22px rgba(250, 204, 21, 0.25);
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.match-title {
+    font-size: 23px;
+    color: #ffffff;
+    font-weight: 600;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    margin-top: 5px;
+    position: static;
+    left: 0px;
+    right: 1px;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+/* Soft animated frame lights for broadcast overlay. */
+.ban-section,
+.pick-section,
+.pick-slot {
+    isolation: isolate;
+}
+
+.ban-section::before,
+.pick-section::before {
+    content: "";
+    position: absolute;
+    left: -28%;
+    right: auto;
+    top: 0;
+    width: 28%;
+    height: 2px;
+    z-index: 35;
+    pointer-events: none;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.08),
+        rgba(125, 211, 252, 0.86),
+        rgba(255, 255, 255, 0.18),
+        transparent
+    );
+    filter: blur(0.2px);
+    opacity: 0.85;
+    animation: frameLightSweep 5.8s ease-in-out infinite;
+}
+
+.pick-section::before {
+    top: -1px;
+    height: 3px;
+    width: 24%;
+    animation-duration: 6.8s;
+}
+
+.pick-section::after {
+    content: "";
+    position: absolute;
+    left: -24%;
+    bottom: -1px;
+    width: 24%;
+    height: 2px;
+    z-index: 35;
+    pointer-events: none;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        rgba(248, 113, 113, 0.78),
+        rgba(255, 255, 255, 0.14),
+        transparent
+    );
+    opacity: 0.65;
+    animation: frameLightSweep 7.4s ease-in-out infinite reverse;
+}
+
+.pick-slot::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    z-index: 4;
+    pointer-events: none;
+    border-radius: inherit;
+    padding: 2px;
+    background:
+        linear-gradient(
+            115deg,
+            transparent 0%,
+            transparent 34%,
+            rgba(255, 255, 255, 0.34) 48%,
+            rgba(125, 211, 252, 0.3) 52%,
+            transparent 66%,
+            transparent 100%
+        );
+    background-size: 260% 100%;
+    mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    opacity: 0.36;
+    animation: slotBorderGlint 5.6s ease-in-out infinite;
+}
+
+.red-team .pick-slot::before {
+    background:
+        linear-gradient(
+            115deg,
+            transparent 0%,
+            transparent 34%,
+            rgba(255, 255, 255, 0.3) 48%,
+            rgba(248, 113, 113, 0.34) 52%,
+            transparent 66%,
+            transparent 100%
+        );
+    background-size: 260% 100%;
+    animation-delay: -2.8s;
+}
+
+@keyframes frameLightSweep {
+    0% {
+        transform: translateX(0);
+        opacity: 0;
+    }
+    12% {
+        opacity: 0.85;
+    }
+    50% {
+        opacity: 0.68;
+    }
+    88% {
+        opacity: 0.85;
+    }
+    100% {
+        transform: translateX(460%);
+        opacity: 0;
+    }
+}
+
+@keyframes slotBorderGlint {
+    0%,
+    18% {
+        background-position: 130% 0;
+        opacity: 0;
+    }
+    42% {
+        opacity: 0.42;
+    }
+    72% {
+        opacity: 0.26;
+    }
+    100% {
+        background-position: -130% 0;
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ban-section::before,
+    .pick-section::before,
+    .pick-section::after,
+    .pick-slot::before {
+        animation: none;
+    }
+}
+
+/* Keep frame lights aligned and clipped to the actual overlay frames. */
+.pick-section {
+    overflow: hidden;
+}
+
+.pick-section::before,
+.pick-section::after {
+    left: 0 !important;
+    width: 30% !important;
+    right: auto !important;
+    z-index: 60;
+    transform: translateX(-110%);
+    animation-name: frameLightSweepInside !important;
+    animation-timing-function: ease-in-out !important;
+}
+
+.ban-section {
+    overflow: visible !important;
+}
+
+.ban-section::before {
+    display: none !important;
+}
+
+.pick-section::before {
+    top: 0 !important;
+    height: 3px !important;
+}
+
+.pick-section::after {
+    top: auto !important;
+    bottom: 0 !important;
+    height: 2px !important;
+}
+
+@keyframes frameLightSweepInside {
+    0% {
+        transform: translateX(-110%);
+        opacity: 0;
+    }
+    12% {
+        opacity: 0.9;
+    }
+    50% {
+        opacity: 0.75;
+    }
+    88% {
+        opacity: 0.9;
+    }
+    100% {
+        transform: translateX(335%);
+        opacity: 0;
+    }
+}
+
+/* Stable text-only team plates after removing team logo support. */
+/* Flex, not grid. A fixed 190px | auto | 190px template breaks as soon as
+   a logo is missing: the empty side keeps its column and shoves the score
+   off centre. Flex centring stays symmetrical with two logos, one, or none. */
+.match-score-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-bottom: 5px;
+}
+
+.team-logo-score {
+    padding: 8px 18px;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.82);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-width: 190px;
+    justify-content: center;
+    border-width: 1px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    width: 190px !important;
+    min-width: 190px !important;
+    height: 58px !important;
+    padding: 0 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.team-logo,
+.team-center-logo {
+    display: none !important;
+}
+
+.team-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+}
+
+.team-name {
+    font-size: 28px;
+    font-weight: 900;
+    color: #ffffff;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 1px;
+    width: 100%;
+    max-width: 100% !important;
+    min-width: 0;
+    text-align: center;
+    white-space: nowrap;
+    line-height: 1.05;
+}
+
+.score-display {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 24px;
+    background: rgba(2, 6, 23, 0.88);
+    border-radius: 6px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    padding-top: 7px;
+    padding-bottom: 7px;
+    min-width: 166px;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.team-center-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(2, 6, 23, 0.82);
+    backdrop-filter: blur(10px);
+    border: 3px solid;
+    transition: all 0.3s ease;
+    min-width: 116px;
+    border-width: 1px;
+    min-height: 44px;
+}
+
+.team-center-name {
+    font-size: 16px;
+    font-weight: 900;
+    color: #ffffff;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
+    letter-spacing: 0.12em;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ============================================================
+   BROADCAST POLISH
+   Typography, entrance motion, and hero-art treatment.
+   Loaded last so it wins over the base rules above.
+   overlay-1440.css @imports this file, so 1440p inherits it all.
+   ============================================================ */
+
+/* --- Typography ------------------------------------------- */
+
+/* Kanit carries real weight at 600/900, which reads far better on a
+   stream than faux-bold Arial. Tight tracking is the broadcast look. */
+.ban-label,
+.tournament-name,
+.match-title,
+.team-name,
+.team-center-name,
+.player-name,
+#draftLabel {
+    font-family: 'Kanit', 'Segoe UI', Arial, sans-serif;
+    font-weight: 600;
+}
+
+.ban-label,
+.team-name,
+.team-center-name {
+    font-weight: 900;
+}
+
+.player-name {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.tournament-name,
+#draftLabel {
+    font-weight: 400;
+}
+
+/* Digits must not shift the layout as they change. Proportional figures
+   make a running clock visibly jitter; tabular ones hold their width. */
+.score-number,
+.timer,
+.position-indicator {
+    font-family: 'Kanit', 'Segoe UI', Arial, sans-serif;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}
+
+/* --- Hero art treatment ----------------------------------- */
+
+/* Splash art was drawn for a game client, not a broadcast frame:
+   slightly flat once scaled down and darkened. */
+.pick-slot .hero-image {
+    filter: saturate(1.18) contrast(1.06);
+    transition: opacity 0.35s ease, filter 0.35s ease;
+    /* Promoted permanently, not just while animating.
+       The entrance ends on transform: scale(1) and then the class is removed,
+       which drops the element back to transform: none and tears down its
+       layer. Same geometry, but the browser rasterises it afresh - and that
+       re-raster is the snap seen AFTER the animation finishes. Holding a
+       constant transform means the animation never creates or destroys a
+       layer, so there is no boundary to pop at. */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* A longer, multi-stop fade blends the art into the name plate instead
+   of ending on the hard edge a single-stop gradient leaves behind. */
+.pick-slot .hero-image::before {
+    height: 46%;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.96) 0%,
+        rgba(0, 0, 0, 0.82) 26%,
+        rgba(0, 0, 0, 0.45) 58%,
+        rgba(0, 0, 0, 0) 100%
+    );
+}
+
+/* Empty slots sit back so filled ones carry the eye. */
+.pick-slot:not(.filled) .hero-image {
+    filter: saturate(0.25) brightness(0.7);
+}
+
+/* --- Entrance motion -------------------------------------- */
+
+/* The slot elements themselves are left alone on purpose. `.pick-slot.active`
+   and `.ban-slot.active` already run activePulse there, and a second
+   `animation` declaration on the same element replaces it rather than
+   layering - the two fought and cancelled each other. Everything below
+   animates a child or a pseudo-element instead, so the active pulse keeps
+   running underneath an entrance. */
+
+/* No will-change here on purpose. Adding it only while animating meant the
+   layer was built at the start and destroyed at the end, and that teardown
+   was itself visible. The element is promoted permanently above instead. */
+.pick-slot.just-picked .hero-image {
+    animation: heroPickIn 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* Flash lives on ::after so it composites over the art without touching the
+   slot's box-shadow. Sits below .player-info (z-index 10) so the name plate
+   stays readable through it. */
+.pick-slot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 70%);
+}
+
+.pick-slot.just-picked::after {
+    animation: pickFlash 0.55s ease-out;
+}
+
+/* A ban is a rejection - it should hit harder and settle faster. The
+   brightness punch is folded into the same keyframes so the icon carries
+   one animation and the slot carries none. */
+.ban-slot.just-banned .ban-icon {
+    animation: banStampIn 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* --- Timer urgency ---------------------------------------- */
+
+/* Under ten seconds the clock should be readable from across a room. */
+.timer.urgent {
+    animation: timerUrgent 0.5s ease-in-out infinite alternate;
+}
+
+/* The existing reduced-motion block predates these, so cover them too. */
+@media (prefers-reduced-motion: reduce) {
+    .pick-slot.just-picked .hero-image,
+    .pick-slot.just-picked::after,
+    .ban-slot.just-banned .ban-icon,
+    .timer.urgent {
+        animation: none;
+    }
+}
+
+/* ============================================================
+   CUSTOM SKIN
+   A designed image can back the top and bottom sections. The
+   built-in panels stay unless they are switched off, so both
+   looks are available and can be compared.
+   ============================================================ */
+
+/* The image is authored 16:9 and stretched to the section, so one file
+   serves both 1080p and 1440p. */
+body.skin-on .ban-section.has-skin,
+body.skin-on .pick-section.has-skin {
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+}
+
+/* Built-in panel art off: the design carries the frame and CSS only
+   positions content on top of it. Anything structural - size, position,
+   layout - is deliberately untouched. */
+body.panels-off .ban-section,
+body.panels-off .pick-section {
+    border: none;
+    box-shadow: none;
+}
+
+body.panels-off .ban-section:not(.has-skin),
+body.panels-off .pick-section:not(.has-skin) {
+    background: none;
+}
+
+body.panels-off .pick-slot,
+body.panels-off .blue-team .pick-slot,
+body.panels-off .red-team .pick-slot,
+body.panels-off .ban-slot {
+    background: none;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+body.panels-off .pick-slot::before,
+body.panels-off .pick-section::before,
+body.panels-off .pick-section::after,
+body.panels-off .ban-section::before {
+    display: none;
+}
+
+body.panels-off .team-center-card {
+    background: none;
+    border-color: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+/* The active-slot highlight survives on purpose - the operator needs to see
+   which slot the draft is on regardless of which look is chosen. */
+
+/* ============================================================
+   BOTTOM SECTION - CANVA DESIGN LANGUAGE
+   Translates the look of the Canva strip into the built-in
+   panel: deep navy body, a bright hairline along the top edge,
+   cyan bleeding in from the blue side and red from the red side,
+   and a warm accent at centre.
+
+   Self-contained and last in the file. Deleting this block
+   restores the previous look exactly - nothing above is edited.
+   ============================================================ */
+
+.pick-section {
+    background:
+        /* warm centre accent, echoing the gold mark in the design */
+        radial-gradient(120% 90% at 50% 0%, rgba(245, 158, 11, 0.16), rgba(245, 158, 11, 0) 42%),
+        /* body: transparent at the top so hero art breathes, solid at the base */
+        linear-gradient(180deg, rgba(4, 8, 20, 0) 0%, rgba(4, 8, 20, 0.55) 14%, rgba(4, 8, 20, 0.95) 100%),
+        /* team colours bleeding in from each side */
+        /* left edge was cyan rgba(34,211,238) against the blue team's
+           sky rgba(56,189,248) - a third blue nobody chose */
+        linear-gradient(90deg, rgba(var(--ov-blue-rgb), 0.17) 0%, rgba(8, 12, 28, 0.3) 50%, rgba(var(--ov-red-rgb), 0.17) 100%);
+    border-top: 2px solid rgba(186, 230, 253, 0.5);
+    border-bottom: 1px solid rgba(186, 230, 253, 0.14);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+        0 -16px 44px rgba(2, 6, 23, 0.5);
+}
+
+/* Brighter card edges. They were 2px - hairlines rather than heavy frames -
+   and that reads better on a monitor, but 2px is the one width this layout
+   cannot render cleanly. /overlay-1440 is this same layout under scale(4/3),
+   so a 2px edge lands on 2.667 device pixels there: the browser resamples it
+   and the line crawls, worst of all against a moving camera behind it. Only
+   multiples of 3 come out whole at both sizes, and 3px is the smallest.
+   Purely visual, so it is one number to put back if the heavier frame is
+   worse on air than the shimmer was. */
+.blue-team .pick-slot {
+    border: 3px solid rgba(var(--ov-blue-rgb), 0.5);
+    box-shadow: 0 0 16px rgba(var(--ov-blue-rgb), 0.18);
+}
+
+.red-team .pick-slot {
+    border: 3px solid rgba(var(--ov-red-rgb), 0.5);
+    box-shadow: 0 0 16px rgba(var(--ov-red-rgb), 0.18);
+}
+
+.blue-team .pick-slot.filled {
+    border-color: rgba(125, 211, 252, 0.85);
+    box-shadow: 0 0 24px rgba(var(--ov-blue-rgb), 0.4);
+}
+
+.red-team .pick-slot.filled {
+    border-color: rgba(252, 165, 165, 0.85);
+    box-shadow: 0 0 24px rgba(var(--ov-red-rgb), 0.4);
+}
+
+/* Bottom banner spans the full canvas width rather than sitting inset.
+   Last in the file so it wins over the earlier .pick-section rules.
+   Note overlay-1440.css loads after this file, so its own inset values
+   are changed there too - editing only here would fix 1080p and leave
+   1440p inset. */
+.pick-section {
+    left: 0;
+    right: 0;
+    border-radius: 0;
+}
+
+/* Card groups sit hard against the outer edges so the middle opens up.
+   The banner uses justify-content: space-between, so the centre gap is
+   whatever is left over - pulling the groups outward widens it, and any
+   side padding would eat into it instead.
+
+   --side-inset is the one knob: raise it to bring the cards in from the
+   edges, which narrows the middle by twice that amount. */
+.pick-section {
+    --side-inset: 0px;
+    padding-left: var(--side-inset);
+    padding-right: var(--side-inset);
+}
+
+/* ============================================================
+   UNIFIED BOTTOM BANNER  (1080p)
+   Bans, picks, score and title now live in one band, matching the
+   reference layout. The separate top bar is gone - .ban-section no
+   longer exists in the markup, so its old rules are inert.
+
+   Children are absolutely placed inside the banner rather than
+   flexed, so each group can be positioned independently.
+   ============================================================ */
+
+.pick-section {
+    display: block;
+    bottom: 0;
+    height: 430px;
+    padding: 0;
+    --side-inset: 14px;
+    /* Hero rows sit closer to the canvas edge than the ban rows do, so
+       they get their own knob. Lowering it pushes the cards outward and
+       widens the middle by twice the change. */
+    --hero-inset: 4px;
+}
+
+/* --- ban rows, tucked into the top corners --- */
+.ban-left,
+.ban-right {
+    position: absolute;
+    top: 10px;
+    width: auto;
+    gap: 10px;
+    align-items: center;
+    z-index: 6;
+}
+
+.ban-left  { left: var(--side-inset); }
+.ban-right { right: var(--side-inset); flex-direction: row-reverse; }
+
+/* A caption, not a headline. This was 40px/900 in white - all but the
+   size of the timer, and larger than every piece of live data on the
+   banner, for a word that never changes. Demoted to caption size and
+   dimmed so the slots beside it carry the row. */
+.ban-label {
+    font-size: var(--ov-type-caption);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--ov-silver);
+    background: none;
+    border: none;
+    padding: 0 6px;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+.ban-heroes { gap: 6px; }
+
+.ban-slot {
+    width: 58px;
+    height: 58px;
+    border-width: 3px;
+    border-radius: 4px;
+}
+
+/* --- pick rows, along the bottom --- */
+.team-picks {
+    position: absolute;
+    bottom: 8px;
+}
+
+.blue-team { left: var(--hero-inset); }
+.red-team  { right: var(--hero-inset); }
+
+.pick-slot { height: 320px; }
+
+/* Team names already appear in the centre block, so the duplicate
+   pair that used to sit here is redundant. */
+.team-center-info { display: none; }
+
+/* --- centre column --- */
+.match-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 8px;
+    width: 380px;
+    text-align: center;
+    z-index: 6;
+}
+
+/* Centred over the full height from the top edge of the overlay box
+   (y=650) to the top edge of the hero banner (y=751). That span is 101px,
+   so this 22px line box sits at 689.5 - 711.5 with 39.5px either side.
+
+   It lands level with the ban slots (y=663 - 721) by design. No collision:
+   the ban rows stop at x=376 and x=1544, this block runs x=782 - 1138.
+
+   Pinned to .match-center's bottom edge rather than pushed up with a
+   margin. A margin can reach the same place but chains the position to
+   the heights of the score, timer and match title, so restyling any of
+   those slides the name off centre. 359.5px = .match-center's 1071 bottom
+   edge minus the wanted 711.5. Score, timer and title do not move:
+   .match-center is bottom-anchored, so taking this element out of the
+   flow only shortens the block upwards. */
+.tournament-name {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 369.5px;
+    font-size: var(--ov-type-tournament);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    margin-bottom: 0;
+    opacity: 0.85;
+}
+
+/* Negative on purpose, and it is the box edges that overlap, not anything
+   you can see. Optical centring: the score should sit midway between the
+   logo above and the timer DIGITS below, but .timer-display starts with
+   the 23px reserved phase-label row, so its box edge is nowhere near its
+   ink. Measuring box-to-box left the score 16.25px under the logo and
+   35px above the digits - visibly hugging the logo.
+
+   -1.375 drops the score 9.375px so both visible gaps land on 25.6px.
+   The score's box then ends 1.375px inside .timer-display's box, which is
+   empty space in every case: with no phase label the row is blank, and
+   with one the label text still clears the score box. */
+.match-score-container {
+    gap: 10px;
+    margin-bottom: -1.375px;
+}
+
+.team-logo-score {
+    padding: 6px 12px;
+    min-width: 96px;
+    justify-content: center;
+}
+
+.team-name { font-size: 20px; }
+
+/* Boxed digits with VS between, noticeably smaller than before */
+.score-display {
+    gap: 8px;
+    padding: 4px 10px;
+    background: none;
+    border: none;
+}
+
+.score-number {
+    font-size: var(--ov-type-score);
+    min-width: 44px;
+    padding: 2px 0;
+    background: rgba(2, 6, 23, 0.85);
+    border-radius: 4px;
+}
+
+.blue-team-score, .score-number:first-of-type { border: 3px solid rgba(var(--ov-blue-rgb), 0.9); }
+.score-number:last-of-type { border: 3px solid rgba(var(--ov-red-rgb), 0.9); }
+
+/* Caption weight - it separates the two numbers, it is not one of them. */
+.score-separator {
+    font-size: var(--ov-type-caption);
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--ov-text-dim);
+}
+
+/* Timer is the loud element here, not the score.
+   margin-top dropped to 0 so the score's own margin is the only thing
+   setting that gap - with both set, the two collapse and the arithmetic
+   below stops being predictable. */
+.timer-display { margin: 0 0 4px; }
+
+/* Moved out of an inline style on the element so it lives on the scale
+   with every other caption. Inline it could not be overridden by any of
+   this without !important. */
+/* min-height holds the row whether or not there is a phase label. The
+   label is empty between phases, and .match-center is bottom-anchored, so
+   without this the score, logos and tournament name all jumped ~20px
+   every time a label appeared or cleared - mid-draft, on air. */
+#draftLabel {
+    font-size: var(--ov-type-caption);
+    color: var(--ov-text);
+    opacity: 0.85;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    min-height: 21px;
+    line-height: 21px;
+}
+
+.timer {
+    font-size: var(--ov-type-timer);
+    color: var(--ov-text);
+    background: none;
+    border: none;
+    /* เงาเหลืองที่ค้างมาจากดีไซน์เก่า
+     *
+     * กฎด้านบนเคยวาดนาฬิกาเป็นกล่องพื้นเข้มขอบเหลือง แล้วถูกยกเลิกตรงนี้
+     * ด้วย background: none กับ border: none แต่ box-shadow ไม่ได้ถูกล้างตาม
+     * ผลคือแสงเหลืองเรืองรอบตัวเลขโดยไม่มีกล่องให้มันเป็นขอบอีกแล้ว
+     * ซึ่งบนจอดูเหมือนกล่องแสงลอยอยู่ ไม่ใช่เอฟเฟกต์ที่ตั้งใจ (ผู้ใช้แจ้ง 2026-09-08) */
+    box-shadow: none;
+    padding: 0;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+}
+
+.match-title {
+    position: static;
+    font-size: var(--ov-type-title);
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    padding: 4px 10px;
+    background: rgba(2, 6, 23, 0.75);
+    border-radius: 4px;
+}
+
+/* The ban rows kept padding-top: 48px and a fixed height from the old
+   top-bar layout, which made them ~108px tall and pushed them down into
+   the pick cards. Reset to their natural height. */
+.ban-left,
+.ban-right {
+    padding: 0;
+    height: auto;
+}
+
+/* Sized to the gap the pick rows leave, keeping 8px clear either side so
+   nothing clips. Tightening the card gaps widened that gap 372 -> 420,
+   so the centre block goes 356 -> 404. Re-derive both if .team-picks
+   changes: gap = 1920 - 2 x (side-inset + row width). */
+.match-center { width: 404px; }
+
+/* ============================================================
+   1440p BY SCALE
+   The overlay used to carry a second hand-tuned stylesheet for
+   1440p. After the banner was restructured its declarations
+   stopped reaching the elements - the rules were in the loaded
+   sheet and the elements matched them, but the values never
+   applied, even with !important. I could not find the cause.
+
+   Rather than ship a layout I cannot control, 1440p is now the
+   1080p layout scaled by 4/3, which is what the result screen
+   already does. Both are 16:9 so the factor is exact, and it
+   guarantees the two sizes cannot drift apart. overlay-1440.css
+   is left in place but is now switched off by overlay-size.js.
+   ============================================================ */
+
+/* ON-AIR TOGGLE
+   The banner slides down out of frame and back up. translateY(100%) is
+   100% of .pick-section's own 430px height and it sits on bottom: 0, so
+   one transform carries it exactly clear of the bottom edge - no distance
+   to keep in sync if the banner is ever resized.
+
+   Transform, not display:none: the layout is never torn down and rebuilt,
+   so OBS keeps rendering the same source and the slide runs on the
+   compositor rather than relayout. Everything inside is positioned against
+   .pick-section, so it all travels together.
+
+   The easing overshoots slightly on the way in, which reads as weight
+   rather than a mechanical move. */
+.pick-section {
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+}
+
+body.overlay-hidden .pick-section {
+    transform: translateY(100%);
+    pointer-events: none;
+}
+
+/* Applied for one frame on the very first state update so a page loaded
+   while the banner is hidden starts down instead of sliding down. Without
+   it, refreshing the OBS source mid-match plays the exit animation. */
+body.no-anim .pick-section {
+    transition: none;
+}
+
+body[data-size="1440"] {
+    width: 2560px;
+    height: 1440px;
+}
+
+body[data-size="1440"] .overlay-container {
+    width: 1920px;
+    height: 1080px;
+    transform: scale(calc(4 / 3));
+    transform-origin: top left;
+}
+
+/* TEAM LOGOS either side of the score.
+
+   The holder carries none of the old plate chrome - no box, no border,
+   no fixed 190x58 - so the logo art sits on the banner on its own. The
+   sizing lives on the <img>. !important throughout because the base
+   .team-logo-score rule up at line 694 declares width, height, padding
+   and display with !important, and an important declaration beats a
+   later normal one no matter the order.
+
+   overlay.js keeps writing team names into .team-info on every state
+   update, so that feature stays intact - it is only hidden, matching
+   the reference layout where the centre shows logos and score alone. */
+/* 138px, the largest square that fits without touching anything.
+
+   Height is what binds now. Once the logos moved inward far enough to
+   overhang the score box's x-range, the score's top edge (y=905.5) became
+   the floor and the tournament name's bottom (y=711.5) the ceiling - a
+   194px band. Width has more room to spare: 28px to each hero row and
+   108px between the two logos.
+
+   Re-pinned as the centre stack grew. The 42px score is a 79px box
+   against the old 61px, and it is bottom-anchored, so its top rose and
+   squeezed the band above. Recovered by cutting the score-to-timer margin
+   to 8px: tournament name ends 711.5, score starts 874, giving 162.5px
+   for the 138px logo - 12.25px clear either side.
+   209.25px = .match-center's 1071 bottom edge minus the 861.75 bottom.
+
+   The 138px box is 184px at 1440p, which is the size the control panel
+   asks you to upload (LOGO_DRAW_PX in control.js mirrors it). Size is
+   fixed by request, and this band is the tightest constraint on the
+   banner, so anything that grows here has to come out of the score or
+   the match title.
+
+   Absolute against .match-center (nearest positioned ancestor - the score
+   row is static), so none of this can push the score off centre. */
+.team-logo-score {
+    position: absolute;
+    /* Anchored by its centre, not an edge: resizing from the Design page
+       then grows the box evenly about where it sits instead of dragging it
+       up into the tournament name or down into the score. */
+    bottom: calc(var(--ov-logo-centre-from-bottom) - var(--ov-logo-size) / 2);
+    display: flex !important;
+    width: var(--ov-logo-size) !important;
+    min-width: 0 !important;
+    height: var(--ov-logo-size) !important;
+    padding: 0 !important;
+    background: none;
+    border: none;
+    overflow: visible !important;
+}
+
+/* 10px inward from the .match-center edges. Not a move - this is the
+   25px inset rebalanced for the wider 138px box, which grew 15px each
+   way about its own centre, so the logos are where they were.
+
+   Each logo's inner edge sits inside the score box's x-range, but they
+   never touch: the logos end at y=897.25 and the score starts at 905.5,
+   so what overlaps is two elements on different rows.
+
+   box-shadow: none kills the team-coloured glow the old plates carried
+   (line 67), which drew a lit rectangle around the logo art. It has to be
+   turned off on these .blue/.red selectors rather than the bare
+   .team-logo-score above - the glow is set at .team-logo-score.blue, so a
+   single-class rule loses to it no matter where it sits in the file. */
+.team-logo-score.blue { left: var(--ov-logo-inset); box-shadow: none; }
+.team-logo-score.red  { right: var(--ov-logo-inset); box-shadow: none; }
+
+.team-logo-score .team-info {
+    display: none;
+}
+
+/* Fills its holder, so the box size above is the single place that sets
+   how big a logo draws. object-fit: contain letterboxes non-square art
+   inside that box rather than stretching it. */
+.team-logo {
+    display: block !important;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.75));
+}
+
+.team-logo[hidden] {
+    display: none !important;
+}
+
+/* ===== Position icon (banner background of a pick slot) ===== */
+/* ไอคอนตำแหน่ง (เลน) ของผู้เล่นที่นั่งช่องนั้น
+ *
+ * วางเป็นชั้นล่างสุดของช่องพิค: .hero-image เป็น position: relative และมาทีหลัง
+ * ในลำดับ DOM จึงวาดทับชั้นนี้เสมอโดยไม่ต้องตั้ง z-index ให้ใคร
+ *
+ * ช่องที่ยังไม่ถูกเลือก .hero-image มี opacity 0.2 และไม่มีภาพ ไอคอนจึงเห็นชัด
+ * พอเลือกฮีโร่แล้ว .pick-slot.filled ดัน .hero-image เป็น opacity 1 แบบ cover
+ * ภาพฮีโร่จึงบังไอคอนไปเอง ตามที่ตั้งใจ — แต่ยังจางไอคอนลงด้วย
+ * เผื่อภาพฮีโร่บางรูปมีขอบโปร่ง จะได้ไม่มีไอคอนโผล่ออกมาข้างหลัง
+ *
+ * ไฟล์อยู่ที่ public/images/positions/<slug>.png ห้าไฟล์ ชื่อตายตัว
+ * ไม่มีก็แค่ไม่มีไอคอน ช่องยังวาดปกติ (background-image ที่ 404 ไม่ทำให้อะไรพัง) */
+.position-icon {
+    position: absolute;
+    inset: 0;
+    background-repeat: no-repeat;
+    background-position: center 38%;
+    background-size: 52% auto;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.pick-slot.filled .position-icon {
+    opacity: 0;
+}

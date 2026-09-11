@@ -1,0 +1,30 @@
+# Node backend
+backend/node_modules/
+backend/build/
+backend/data/state.json
+backend/data/tournament.db*
+backend/public/images/team-logos/*.png
+backend/public/images/team-logos/*.jpg
+backend/public/images/team-logos/*.webp
+backend/public/images/skins/*
+!backend/public/images/skins/README.md
+backend/public/images/sounds/README.txt
+
+# .NET desktop app
+desktop/**/bin/
+desktop/**/obj/
+desktop/.vs/
+*.user
+
+# Release output (Velopack)
+releases/
+publish/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+*~
+*.bak
+Thumbs.db
+.DS_Store

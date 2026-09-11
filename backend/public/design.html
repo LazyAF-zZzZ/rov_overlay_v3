@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROV Custom Design</title>
+<link rel="stylesheet" href="/css/theme.css">
+<style>
+/* เฉพาะของหน้า Design
+   เปลือกที่ใช้ร่วมกับหน้าอื่นอยู่ใน /css/theme.css ซึ่งโหลดไว้ก่อนหน้านี้แล้ว
+   สีในตัวอย่างพรีวิวไม่ได้อยู่ในธีมนี้ มันคือสีของ overlay ที่ผู้ใช้ตั้งเอง */
+
+.wrap{max-width:1280px;}
+.panel{margin-bottom:14px;}
+.panel.theme-panel{border-top:2px solid var(--gold-line);}
+
+/* ตัวแก้ธีมของ overlay ---------------------------------------------------- */
+
+.theme-note{font-size:11px;color:var(--muted);}
+.theme-group-title{font-size:11px;font-weight:700;letter-spacing:0.16em;color:var(--muted);text-transform:uppercase;margin:4px 0 12px;}
+.theme-group-title:not(:first-child){margin-top:22px;padding-top:18px;border-top:1px solid var(--border);}
+.theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+.trow{border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;}
+.trow-head{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+.trow-label{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text);}
+.trow-value{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.trow.changed .trow-value{color:var(--gold);}
+.trow input[type=color]{width:38px;height:28px;padding:0;border:1px solid var(--border2);border-radius:var(--r-sm);background:var(--s3);cursor:pointer;}
+.trow input[type=range]{width:100%;accent-color:var(--gold);cursor:pointer;}
+.trow-inputs{display:flex;align-items:center;gap:9px;}
+.trow-inputs input[type=text]{flex:1;min-width:0;padding:6px 9px;background:var(--s3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);font-family:var(--mono);font-size:12px;text-transform:lowercase;}
+.trow-inputs input[type=text]:focus{outline:none;border-color:var(--gold);}
+.trow-inputs input[type=text].invalid{border-color:var(--red);}
+.theme-hint{margin-top:18px;padding:12px 14px;background:var(--s2);border:1px solid var(--border);border-left:2px solid var(--gold-line);border-radius:var(--r-sm);font-size:12px;line-height:1.75;color:var(--muted2);}
+
+/* ตัวอย่างสด
+   ตรึงไว้ให้ยังเห็นตอนเลื่อนอ่านตัวควบคุมข้างล่าง
+   ปรับสีที่มองไม่เห็นไปด้วยคือการเดา */
+.theme-preview{position:sticky;top:60px;z-index:5;margin-bottom:20px;padding-bottom:12px;background:var(--s1);}
+.tp-frame{--tp-scale:0.25;--tp-w:1920px;--tp-h:1080px;
+  width:calc(var(--tp-w) * var(--tp-scale));height:calc(var(--tp-h) * var(--tp-scale));
+  max-width:100%;border:1px solid var(--border2);border-radius:var(--r-sm);overflow:hidden;position:relative;}
+/* overlay เป็นภาพโปร่ง พื้นหลังตรงนี้ยืนแทนภาพเกมจริง
+   ถ้าตัดสินสีบนพื้นหลังเดียวตลอดจะหลงทาง จึงมีปุ่มสลับพื้นหลังให้ */
+.tp-frame.dark{background:#141a24;}
+.tp-frame.light{background:#c8cdd6;}
+.tp-frame.checker{background-color:#2a3240;background-image:
+  linear-gradient(45deg,#1d2430 25%,transparent 25%),linear-gradient(-45deg,#1d2430 25%,transparent 25%),
+  linear-gradient(45deg,transparent 75%,#1d2430 75%),linear-gradient(-45deg,transparent 75%,#1d2430 75%);
+  background-size:18px 18px;background-position:0 0,0 9px,9px -9px,-9px 0;}
+.tp-frame iframe{width:var(--tp-w);height:var(--tp-h);border:0;display:block;
+  transform:scale(var(--tp-scale));transform-origin:top left;pointer-events:none;}
+.tp-meta{display:flex;align-items:center;gap:9px;margin-top:9px;flex-wrap:wrap;}
+.tp-caption{font-size:11px;color:var(--muted);}
+.tp-backdrops{display:flex;gap:4px;margin-left:auto;}
+.tp-bd{padding:3px 9px;border-radius:4px;border:1px solid var(--border2);background:none;color:var(--muted);font-family:var(--bf);font-size:10px;font-weight:600;letter-spacing:0.06em;cursor:pointer;transition:color 0.15s,border-color 0.15s,background 0.15s;}
+.tp-bd:hover{color:var(--text);}
+.tp-bd.active{background:var(--gold);border-color:var(--gold);color:#141209;}
+@media (max-width:700px){.tp-frame{--tp-scale:0.17;}.theme-preview{position:static;}}
+
+/* ภาพพื้นหลังของ overlay -------------------------------------------------- */
+
+.design-toggles{margin-left:auto;display:flex;gap:14px;align-items:center;}
+.dtoggle{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11px;font-weight:600;letter-spacing:0.04em;color:var(--muted2);}
+.dtoggle:hover{color:var(--text);}
+.dtoggle input{accent-color:var(--gold);width:15px;height:15px;cursor:pointer;}
+
+.design-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.dgroup-title{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:0.16em;color:var(--muted);text-transform:uppercase;padding-top:8px;border-top:1px solid var(--border);}
+.dgroup-title:first-child{padding-top:0;border-top:none;}
+.dslot{border:1px solid var(--border);border-radius:var(--r);padding:13px;display:flex;flex-direction:column;gap:10px;}
+.dslot-title{font-size:11px;font-weight:700;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;}
+.dslot-title b{color:var(--text);font-weight:700;}
+.dslot-note{font-size:11px;color:var(--muted);}
+.dsize-banner{grid-column:1/-1;display:flex;align-items:center;gap:12px;margin-top:10px;padding:11px 14px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:12px;color:var(--muted2);}
+.dsize-banner:first-child{margin-top:0;}
+.dsize-banner b{color:var(--text);}
+.dsize-chip{font-size:13px;font-weight:700;letter-spacing:0.06em;color:#141209;background:var(--gold);padding:3px 12px;border-radius:4px;}
+.dslot-size{border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;display:flex;flex-direction:column;gap:5px;}
+.dsize-row{display:flex;align-items:baseline;gap:8px;font-size:13px;}
+.dsize-px{color:var(--text);}
+.dsize-px b{color:var(--gold);font-weight:700;}
+.dsize-ratio{margin-left:auto;font-size:11px;color:var(--muted);}
+.dsize-file{font-size:11px;color:var(--muted);}
+.dslot-preview{aspect-ratio:16/5;border-radius:var(--r-sm);border:1px dashed var(--border2);background:var(--s3) center/contain no-repeat;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);overflow:hidden;text-align:center;padding:8px;}
+.dslot-preview.filled{border-style:solid;border-color:var(--gold-line);}
+.dslot-actions{display:flex;gap:7px;}
+.dslot-actions .tlink{flex:1;text-align:center;}
+
+.guide{font-size:13px;color:var(--muted2);line-height:1.9;}
+.guide b{color:var(--text);}
+.guide code{background:var(--s3);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;font-family:var(--mono);font-size:12px;color:var(--text);}
+.guide ul{margin:8px 0 0 20px;}
+
+@media (max-width:820px){.design-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">ROV <span>|</span> DESIGN</div>
+  <nav class="topnav" aria-label="Pages">
+    <a class="tlink" href="/" data-i18n>HOME</a>
+    <a class="tlink" href="/teams" data-i18n>TEAMS</a>
+    <a class="tlink" href="/analytics" data-i18n>ANALYTICS</a>
+    <a class="tlink" href="/control" data-i18n>CONTROL</a>
+    <a class="tlink active" href="/design" aria-current="page" data-i18n>DESIGN</a>
+    <a class="tlink" href="/hotkeys" data-i18n>HOTKEYS</a>
+    <a class="tlink" href="/guide" data-i18n>GUIDE</a>
+  </nav>
+</div>
+
+<div class="wrap">
+
+  <div class="panel theme-panel">
+    <div class="panel-head">
+      <div class="panel-title" data-i18n>Overlay theme</div>
+      <span class="theme-note" data-i18n>Changes show on the overlay as you make them</span>
+      <button class="tlink danger" type="button" id="themeReset" style="margin-left:auto" data-i18n>RESET TO ORIGINAL</button>
+    </div>
+    <div class="panel-body">
+
+      <!-- The real overlay in an iframe, scaled down. Not a mock-up: it runs
+           the same stylesheet and its own socket, so it reflects theme, picks,
+           bans, timer and the on-air toggle without this page doing anything. -->
+      <div class="theme-preview">
+        <div class="tp-frame checker" id="tpFrame">
+          <iframe id="themePreview" title="Overlay preview" scrolling="no" tabindex="-1"></iframe>
+        </div>
+        <div class="tp-meta">
+          <span class="tp-caption" id="tpCaption">Live preview</span>
+          <span class="tp-backdrops">
+            <button class="tp-bd" type="button" data-bd="checker">CHECKER</button>
+            <button class="tp-bd" type="button" data-bd="dark">DARK</button>
+            <button class="tp-bd" type="button" data-bd="light">LIGHT</button>
+          </span>
+          <button class="tlink" type="button" id="tpReload" data-i18n>RELOAD</button>
+        </div>
+      </div>
+
+      <!-- Grouped by where a thing appears on the banner rather than by what
+           kind of property it is. Looking for the score, you look under Centre
+           column - you do not have to know it is a "size" and not a "colour". -->
+      <div class="theme-group-title" data-i18n>Team colours</div>
+      <div class="theme-grid" id="themeTeamColours"></div>
+
+      <div class="theme-group-title" data-i18n>Centre column</div>
+      <div class="theme-grid" id="themeCentre"></div>
+
+      <div class="theme-group-title" data-i18n>Hero cards</div>
+      <div class="theme-grid" id="themeCards"></div>
+
+      <div class="theme-group-title" data-i18n>Ban row and labels</div>
+      <div class="theme-grid" id="themeLabels"></div>
+
+      <div class="theme-group-title" data-i18n>Team logo</div>
+      <div class="theme-grid" id="themeLogo"></div>
+
+      <!-- บรรทัดเดียว ไม่ตัดบรรทัด: data-i18n ใช้ข้อความในแท็กเป็นคีย์แปล
+           ขึ้นบรรทัดใหม่จะทำให้คีย์มีตัวขึ้นบรรทัดกับช่องว่างซ้อนติดมาด้วย -->
+      <div class="theme-hint" data-i18n>Text sizes move the centre column - the score, timer and match title sit on the bottom edge of the banner, so making them bigger pushes everything above them upward. If the logos start crowding the score, bring a size back down or use Reset.</div>
+    </div>
+  </div>
+
+  <div class="panel design-panel">
+    <div class="panel-head">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0"></div>
+      <div class="panel-title" data-i18n>Custom Design</div>
+      <div class="design-toggles">
+        <label class="dtoggle"><input type="checkbox" id="skinEnabled" onchange="updateSkinOptions()"> <span>USE MY DESIGN</span></label>
+        <label class="dtoggle"><input type="checkbox" id="skinShowPanels" onchange="updateSkinOptions()" checked> <span>SHOW BUILT-IN PANELS</span></label>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="design-grid" id="designGrid"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">วิธีทำภาพ</div>
+    </div>
+    <div class="panel-body guide">
+      <ul>
+        <li><b>1080p กับ 1440p แยกไฟล์กันคนละชุด</b> ระบบจะหยิบชุดที่ตรงกับขนาดที่เลือกอยู่ใน Control Panel
+            ถ้าใช้แค่ขนาดเดียว อัปโหลดแค่ชุดนั้นก็พอ</li>
+        <li><b>ทำภาพตามขนาด px ที่เขียนไว้ในแต่ละช่อง</b> ภาพจะถูกยืดเต็มพื้นที่พอดี ไม่ได้ครอบตัด
+            ถ้าสัดส่วนไม่ตรงกับที่ระบุ ภาพจะบิด</li>
+        <li>แต่ละพื้นที่เป็นแถบยาว <b>ไม่ใช่ 16:9</b> เช่นแถบบนของ overlay กว้างกว่าสูงประมาณ 11 เท่า</li>
+        <li>บันทึกเป็น <code>PNG</code> แบบมีพื้นหลังโปร่งใส ตรงไหนที่โปร่งใสจะเห็นรูปฮีโร่และฉากหลังทะลุขึ้นมา</li>
+        <li>ขนาดไฟล์ไม่เกิน <b>8 MB</b> ต่อไฟล์ รองรับ <code>PNG</code> <code>JPG</code> <code>WEBP</code></li>
+        <li>ติ๊ก <b>USE MY DESIGN</b> เพื่อเปิดใช้ภาพที่อัปโหลด</li>
+        <li>เอาติ๊ก <b>SHOW BUILT-IN PANELS</b> ออก ถ้าอยากให้เหลือแต่ภาพของคุณ ไม่มีกรอบและพื้นหลังเดิมของแอพมาทับ</li>
+        <li>เปิดหน้า OVERLAY หรือ RESULT ไว้อีกแท็บ จะเห็นผลเปลี่ยนทันทีตอนกดอัปโหลด</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast_el"></div>
+
+<script src="/js/lib/i18n.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/lib/app-client.js"></script>
+<script src="js/design.js"></script>
+</body>
+</html>

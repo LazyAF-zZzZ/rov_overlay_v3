@@ -1,0 +1,25 @@
+<UserControl x:Class="RovOverlay.Desktop.Views.LegacyPageView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:svc="clr-namespace:RovOverlay.Desktop.Services">
+    <Grid>
+        <Border Style="{StaticResource Card}" Width="540" Padding="28" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel>
+                <TextBlock Style="{StaticResource Icon}" Text="{Binding Glyph}" FontSize="26"
+                           Foreground="{StaticResource GoldBrush}" HorizontalAlignment="Left"/>
+                <TextBlock Style="{StaticResource PageTitle}" Text="{Binding Title}" Margin="0,12,0,0"/>
+                <TextBlock Style="{StaticResource MutedText}" Text="{svc:T Legacy.Body}" Margin="0,8,0,0" LineHeight="19"/>
+                <TextBox Text="{Binding Url, Mode=OneWay}" IsReadOnly="True" Margin="0,16,0,0" FontFamily="{StaticResource MonoFont}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding OpenCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE8A7;" FontSize="12" Margin="0,0,7,0"/>
+                            <TextBlock Text="{svc:T Common.OpenBrowser}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Content="{svc:T Common.CopyUrl}" Command="{Binding CopyCommand}" Margin="8,0,0,0"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,198 @@
+<UserControl x:Class="RovOverlay.Desktop.Views.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:svc="clr-namespace:RovOverlay.Desktop.Services">
+    <Grid Margin="22,18,22,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Command="{Binding ShowCreateCommand}"
+                    Visibility="{Binding IsCreating, Converter={StaticResource BoolToVisInv}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Icon}" Text="&#xE710;" FontSize="11" Margin="0,0,7,0"/>
+                    <TextBlock Text="{svc:T Home.New}"/>
+                </StackPanel>
+            </Button>
+            <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE72C;" Margin="0,0,6,0"
+                    Command="{Binding RefreshCommand}" ToolTip="{svc:T Common.Refresh}"/>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource PageTitle}" Text="{svc:T Home.Title}"/>
+                <Border Style="{StaticResource Pill}" Margin="10,2,0,0">
+                    <TextBlock Text="{Binding CountText}" FontSize="11" Foreground="{StaticResource Muted2Brush}"/>
+                </Border>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Create form -->
+        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="16" Margin="0,14,0,0"
+                Visibility="{Binding IsCreating, Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="150"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{svc:T Home.Name}"/>
+                    <TextBox Text="{Binding NewName, UpdateSourceTrigger=PropertyChanged}" MaxLength="60" Tag="ROV Premier League 2026">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding CreateCommand}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{svc:T Home.Format}"/>
+                    <ComboBox ItemsSource="{Binding Formats}" SelectedItem="{Binding NewFormat}" DisplayMemberPath="Label"/>
+                    <TextBlock Text="{Binding FormatHint}" FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{svc:T Home.BestOf}"/>
+                    <ComboBox ItemsSource="{Binding BestOfOptions}" SelectedItem="{Binding NewBestOf}" ItemStringFormat="Bo{0}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Grid.ColumnSpan="5" Margin="0,12,0,0">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{svc:T Home.Note}"/>
+                    <TextBox Text="{Binding NewNote, UpdateSourceTrigger=PropertyChanged}" MaxLength="500" Height="58"
+                             AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
+                             Tag="{svc:T Home.NotePlaceholder}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Grid.ColumnSpan="5" Orientation="Horizontal" Margin="0,14,0,0">
+                    <Button Style="{StaticResource PrimaryButton}" Content="{svc:T Common.Create}" Command="{Binding CreateCommand}" MinWidth="96"/>
+                    <Button Content="{svc:T Common.Cancel}" Command="{Binding CancelCreateCommand}" Margin="8,0,0,0" MinWidth="80"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Toolbar -->
+        <DockPanel Grid.Row="2" Margin="0,14,0,10">
+            <Border DockPanel.Dock="Right" Style="{StaticResource SegmentGroup}">
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton Style="{StaticResource Segment}" GroupName="homeStatus" Content="{svc:T Filter.all}"
+                                 IsChecked="{Binding StatusFilter, Converter={StaticResource EqualsToBool}, ConverterParameter=all}"/>
+                    <RadioButton Style="{StaticResource Segment}" GroupName="homeStatus" Content="{svc:T Filter.active}"
+                                 IsChecked="{Binding StatusFilter, Converter={StaticResource EqualsToBool}, ConverterParameter=active}"/>
+                    <RadioButton Style="{StaticResource Segment}" GroupName="homeStatus" Content="{svc:T Filter.finished}"
+                                 IsChecked="{Binding StatusFilter, Converter={StaticResource EqualsToBool}, ConverterParameter=finished}"/>
+                </StackPanel>
+            </Border>
+            <Grid Width="300" HorizontalAlignment="Left">
+                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Padding="28,4,7,4" Tag="{svc:T Home.Search}"/>
+                <TextBlock Style="{StaticResource Icon}" Text="&#xE721;" FontSize="12" Margin="10,0,0,0"
+                           Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Left" IsHitTestVisible="False"/>
+            </Grid>
+        </DockPanel>
+
+        <!-- Table -->
+        <Border Grid.Row="3" Style="{StaticResource Card}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="32"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Background="{StaticResource Surface0Brush}" BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="0,0,0,1" CornerRadius="6,6,0,0">
+                    <Grid Margin="14,0" TextElement.Foreground="{StaticResource MutedBrush}"
+                          TextElement.FontSize="11" TextElement.FontWeight="SemiBold">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="170"/>
+                            <ColumnDefinition Width="70"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="110"/>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="80"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{svc:T Col.Name}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{svc:T Col.Format}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{svc:T Col.Series}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="{svc:T Col.Teams}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="4" Text="{svc:T Col.Status}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="5" Text="{svc:T Col.Updated}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <ListBox Grid.Row="1" Style="{StaticResource RowList}" ItemContainerStyle="{StaticResource RowItem}"
+                         ItemsSource="{Binding View}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Height="42" Margin="14,0" Background="Transparent">
+                                <Grid.InputBindings>
+                                    <MouseBinding Gesture="LeftDoubleClick" CommandParameter="{Binding}"
+                                                  Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+                                </Grid.InputBindings>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="170"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="90"/>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="160"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Note}" FontSize="11" Foreground="{StaticResource MutedBrush}"
+                                               TextTrimming="CharacterEllipsis" Visibility="{Binding Note, Converter={StaticResource NullToVis}}"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="{Binding FormatLabel}" VerticalAlignment="Center" Foreground="{StaticResource Muted2Brush}"/>
+                                <TextBlock Grid.Column="2" Text="{Binding SeriesText}" VerticalAlignment="Center" Style="{StaticResource MonoText}"/>
+                                <TextBlock Grid.Column="3" Text="{Binding TeamsText}" VerticalAlignment="Center" Style="{StaticResource MonoText}"/>
+                                <Border Grid.Column="4" HorizontalAlignment="Left" CornerRadius="9" Padding="8,1,8,2" VerticalAlignment="Center">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{StaticResource Surface3Brush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                    <Setter Property="Background" Value="{StaticResource GoldSoftBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding StatusText}" FontSize="11">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource Muted2Brush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                        <Setter Property="Foreground" Value="{StaticResource GoldBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                                <TextBlock Grid.Column="5" Text="{Binding UpdatedText}" VerticalAlignment="Center"
+                                           Foreground="{StaticResource MutedBrush}" FontSize="11.5"/>
+                                <Button Grid.Column="6" Style="{StaticResource GhostButton}" HorizontalAlignment="Right" Padding="10,0"
+                                        Content="{svc:T Common.Open}" ToolTip="{svc:T Home.OpenTip}" CommandParameter="{Binding}"
+                                        Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <TextBlock Grid.Row="1" Text="{svc:T Home.Empty}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{StaticResource MutedBrush}" Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}"/>
+                <TextBlock Grid.Row="1" Text="{svc:T Home.NoMatch}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{StaticResource MutedBrush}" Visibility="{Binding NoMatches, Converter={StaticResource BoolToVis}}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

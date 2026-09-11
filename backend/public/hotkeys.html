@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROV Hotkeys</title>
+<link rel="stylesheet" href="/css/theme.css">
+<style>
+/* เฉพาะของหน้า Hotkeys
+   เปลือกที่ใช้ร่วมกับหน้าอื่นอยู่ใน /css/theme.css ซึ่งโหลดไว้ก่อนหน้านี้แล้ว */
+
+.wrap{max-width:820px;}
+.panel{margin-bottom:14px;}
+.panel-head .panel-note{margin-right:auto;}
+
+/* แถวของคีย์ลัดแต่ละอัน --------------------------------------------------- */
+
+.krow{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;flex-wrap:wrap;}
+/* กำลังรอให้กดปุ่ม เป็นสถานะชั่วคราวที่ต้องเห็นทันทีว่าอยู่แถวไหน */
+.krow.recording{border-color:var(--gold);background:var(--gold-soft);}
+.krow.conflict{border-color:var(--red);}
+.krow-main{flex:1;min-width:180px;}
+.krow-label{font-size:13px;font-weight:600;color:var(--text);}
+.krow-note{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.6;}
+.krow-conflict{font-size:11px;color:var(--red);margin-top:4px;}
+.kcap{flex:0 0 auto;min-width:130px;text-align:center;padding:7px 12px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-weight:600;letter-spacing:0.04em;color:var(--text);}
+.krow.recording .kcap{border-color:var(--gold);color:var(--gold);}
+.krow.changed .kcap{border-color:var(--gold-line);}
+.krow-actions{display:flex;gap:6px;flex-wrap:wrap;}
+
+/* คีย์ลัดระดับระบบ -------------------------------------------------------- */
+
+.gswitch{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted2);cursor:pointer;}
+.gswitch input{accent-color:var(--gold);cursor:pointer;}
+.gswitch input:disabled{cursor:default;}
+/* เปิดในเบราว์เซอร์ = เห็นได้ ตั้งไม่ได้ และมีบรรทัดบอกว่าทำไม
+   ซ่อนทิ้งจะเรียบกว่า แต่คนที่ไม่เคยเปิดแอพเดสก์ท็อปจะไม่รู้เลยว่ามีของนี้อยู่ */
+#globalPanel .desktop-only{display:none;}
+#globalPanel.unavailable .desktop-only{display:block;border-left-color:var(--red);}
+#globalPanel.unavailable .krow{opacity:0.55;}
+/* ปิดอยู่ = แถวยังอ่านได้แต่บอกให้รู้ว่าตอนนี้ไม่มีผล */
+#globalRows.off{opacity:0.55;}
+.krow-accel{font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:0.04em;}
+.krow-accel.taken{color:var(--red);}
+
+/* ปุ่มที่เปลี่ยนไม่ได้ ---------------------------------------------------- */
+
+.fixed-list{display:flex;flex-direction:column;gap:8px;}
+.frow{display:flex;align-items:center;gap:12px;margin-bottom:0;font-size:12px;color:var(--muted2);}
+/* หน้านี้ใช้ .hint เป็นกล่องอธิบายทั้งย่อหน้า ไม่ใช่ข้อความห้อยท้ายช่องกรอก */
+.panel-body > .hint{display:block;margin-top:18px;padding:12px 14px;background:var(--s2);border:1px solid var(--border);border-left:2px solid var(--gold-line);border-radius:var(--r-sm);font-size:12px;line-height:1.75;color:var(--muted2);}
+
+.fkey{flex:0 0 130px;text-align:center;padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;font-weight:600;letter-spacing:0.04em;color:var(--muted2);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">ROV <span>|</span> HOTKEYS</div>
+  <nav class="topnav" aria-label="Pages">
+    <a class="tlink" href="/" data-i18n>HOME</a>
+    <a class="tlink" href="/teams" data-i18n>TEAMS</a>
+    <a class="tlink" href="/analytics" data-i18n>ANALYTICS</a>
+    <a class="tlink" href="/control" data-i18n>CONTROL</a>
+    <a class="tlink" href="/design" data-i18n>DESIGN</a>
+    <a class="tlink active" href="/hotkeys" aria-current="page" data-i18n>HOTKEYS</a>
+    <a class="tlink" href="/guide" data-i18n>GUIDE</a>
+  </nav>
+</div>
+
+<div class="wrap">
+
+  <div class="panel keys-panel">
+    <div class="panel-head">
+      <div class="panel-title" data-i18n>Control panel hotkeys</div>
+      <span class="panel-note" data-i18n>Click CHANGE, then press the key you want</span>
+      <button class="tlink danger" type="button" id="resetAll" style="margin-left:auto" data-i18n>RESET ALL</button>
+    </div>
+    <div class="panel-body">
+      <div id="keyRows"></div>
+      <div class="hint">
+        These work on the Control Panel while its window has focus. For keys
+        that keep working while you are in OBS or the game, see
+        <b>System-wide hotkeys</b> below.
+        <br><br>
+        Tapping a modifier on its own (Alt, Ctrl, Shift) is allowed and is the
+        default for the banner toggle. It fires on release, and only when the
+        key is tapped alone - so Alt+Tab still switches windows without cutting
+        your banner off air.
+      </div>
+    </div>
+  </div>
+
+  <div class="panel keys-panel" id="globalPanel">
+    <div class="panel-head">
+      <div class="panel-title" data-i18n>System-wide hotkeys</div>
+      <span class="panel-note" data-i18n>Work while OBS or the game has focus</span>
+      <label class="gswitch" style="margin-left:auto">
+        <input type="checkbox" id="globalEnabled">
+        <span data-i18n>Switch on</span>
+      </label>
+      <!-- แผงบนมีทางกลับไปค่าเริ่มต้น แผงนี้ไม่เคยมี ทั้งที่เซิร์ฟเวอร์รับคำสั่ง
+           resetGlobalHotkeys อยู่แล้วตั้งแต่แรก มันเป็นคำสั่งที่ไม่มีใครเรียกถึงได้
+           แถวของแผงนี้ก็ไม่มีปุ่ม DEFAULT รายตัวแบบแผงบนด้วย -->
+      <button class="tlink danger" type="button" id="resetGlobal" data-i18n>RESET ALL</button>
+    </div>
+    <div class="panel-body">
+      <div id="globalRows"></div>
+      <div class="hint desktop-only" data-i18n>This panel only does anything in the desktop app. A page in a browser cannot register keys with Windows, so nothing here is switchable while you are reading it in one.</div>
+      <div class="hint">
+        The desktop app registers these with Windows itself, so they fire from
+        anywhere - no need to click back into the Control Panel first.
+        <br><br>
+        Every one of them needs a modifier (Ctrl, Alt, Shift or Win). A bare key
+        registered system-wide is taken away from every other program on this
+        machine, which would be a strange thing to have happen after installing
+        a broadcast overlay.
+        <br><br>
+        A key another program already holds is marked in red here, because the
+        app is told which ones it actually got. Nothing breaks - that one
+        shortcut simply does not fire, and the rest still work.
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title" data-i18n>Fixed keys</div>
+      <span class="panel-note" data-i18n>Text editing, not rebindable</span>
+    </div>
+    <div class="panel-body">
+      <div class="fixed-list">
+        <div class="frow"><span class="fkey" data-i18n>Enter</span><span data-i18n>Confirm the hero typed in a pick or ban box</span></div>
+        <div class="frow"><span class="fkey" data-i18n>Esc</span><span data-i18n>Leave a hero box without choosing</span></div>
+        <div class="frow"><span class="fkey" data-i18n>Esc</span><span data-i18n>Outside a box: go back to the previous page</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast_el"></div>
+
+<script src="/js/lib/i18n.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/lib/app-client.js"></script>
+<script src="js/hotkey-utils.js"></script>
+<script src="js/hotkeys.js"></script>
+</body>
+</html>
