@@ -24,6 +24,7 @@
             <DataTemplate DataType="{x:Type vm:TournamentViewModel}"><v:TournamentView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:TeamsViewModel}"><v:TeamsView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:TeamProfileViewModel}"><v:TeamProfileView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ControlViewModel}"><v:ControlView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:LegacyPageViewModel}"><v:LegacyPageView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:SettingsViewModel}"><v:SettingsView/></DataTemplate>
         </ResourceDictionary>

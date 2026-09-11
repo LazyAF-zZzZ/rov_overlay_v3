@@ -24,6 +24,8 @@ public sealed partial class Loc : INotifyPropertyChanged
     {
         foreach (var (key, text) in ScreensEn) En[key] = text;
         foreach (var (key, text) in ScreensTh) Th[key] = text;
+        foreach (var (key, text) in ControlEn) En[key] = text;
+        foreach (var (key, text) in ControlTh) Th[key] = text;
     }
 
     private string _language = "th";
