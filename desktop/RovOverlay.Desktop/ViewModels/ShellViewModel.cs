@@ -73,9 +73,9 @@ public sealed class ShellViewModel : ObservableObject
 
         NavItems =
         [
-            new NavItem(this, "Home", "\uE80F", () => new HomeViewModel(services)),
+            new NavItem(this, "Home", "\uE80F", () => new HomeViewModel(services, this)),
             Legacy("Control", "/control", "\uE7FC"),
-            Legacy("Teams", "/teams", "\uE716"),
+            new NavItem(this, "Teams", "\uE716", () => new TeamsViewModel(services, this)),
             Legacy("Analytics", "/analytics", "\uE9D2"),
             Legacy("Design", "/design", "\uE790"),
             Legacy("Hotkeys", "/hotkeys", "\uE765"),
@@ -87,6 +87,16 @@ public sealed class ShellViewModel : ObservableObject
         RetryCommand = new AsyncRelayCommand(StartAsync);
         ToggleLanguageCommand = new RelayCommand(() => Loc.Instance.Language = Loc.Instance.Language == "th" ? "en" : "th");
         ToggleObsCommand = new RelayCommand(() => IsObsOpen = !IsObsOpen);
+        BackCommand = new RelayCommand(Back, () => CanGoBack);
+        // A click on the sidebar item already selected still has to leave a page opened
+        // on top of it (a tournament opened from Home), so this is a command, not just
+        // the radio button's checked state.
+        NavigateCommand = new RelayCommand(p =>
+        {
+            if (p is not NavItem item) return;
+            if (item.IsSelected) Navigate(item);
+            else item.IsSelected = true;
+        });
 
         services.StateUpdated += ApplyState;
         services.ConnectionChanged += connected =>
@@ -125,6 +135,36 @@ public sealed class ShellViewModel : ObservableObject
     public ICommand RetryCommand { get; }
     public ICommand ToggleLanguageCommand { get; }
     public ICommand ToggleObsCommand { get; }
+    public ICommand BackCommand { get; }
+    public ICommand NavigateCommand { get; }
+
+    // Pages opened on top of a sidebar screen, newest last. Esc and the mouse's back
+    // button walk back through them, as Esc did in v2.
+    private readonly Stack<object> _back = new();
+
+    public bool CanGoBack => _back.Count > 0;
+
+    public void Open(object page)
+    {
+        if (CurrentPage is not null) _back.Push(CurrentPage);
+        CurrentPage = page;
+        OnPropertyChanged(nameof(CanGoBack));
+    }
+
+    public void Back()
+    {
+        if (_back.Count == 0) return;
+        (CurrentPage as IClosablePage)?.OnClosed();
+        CurrentPage = _back.Pop();
+        OnPropertyChanged(nameof(CanGoBack));
+    }
+
+    private void CloseStack()
+    {
+        (CurrentPage as IClosablePage)?.OnClosed();
+        while (_back.Count > 0) (_back.Pop() as IClosablePage)?.OnClosed();
+        OnPropertyChanged(nameof(CanGoBack));
+    }
 
     public object? CurrentPage
     {
@@ -232,7 +272,30 @@ public sealed class ShellViewModel : ObservableObject
 
         _services.Connect();
         OnPropertyChanged(nameof(ConnectionText));
-        if (CurrentPage is null) NavigateTo(_startPage);
+        if (CurrentPage is null)
+        {
+            NavigateTo(_startPage);
+            OpenFromArgument(OpenOnStart);
+        }
+    }
+
+    // "tournament:<id>" or "team:<id>", from --open on the command line.
+    public string? OpenOnStart { get; init; }
+
+    private void OpenFromArgument(string? target)
+    {
+        var colon = target?.IndexOf(':') ?? -1;
+        if (target is null || colon <= 0) return;
+        var id = target[(colon + 1)..];
+        switch (target[..colon])
+        {
+            case "tournament":
+                Open(new TournamentViewModel(_services, this, id));
+                break;
+            case "team":
+                Open(new TeamProfileViewModel(_services, this, id));
+                break;
+        }
     }
 
     public void NavigateTo(string key)
@@ -247,6 +310,7 @@ public sealed class ShellViewModel : ObservableObject
         {
             if (!ReferenceEquals(item, target) && item.IsSelected) item.Deselect();
         }
+        CloseStack();
         CurrentPage = target.Page;
     }
 

@@ -14,10 +14,16 @@
             <core:BoolToVisibilityConverter x:Key="BoolToVis"/>
             <core:BoolToVisibilityConverter x:Key="BoolToVisInv" Invert="True"/>
             <core:NullToVisibilityConverter x:Key="NullToVis"/>
+            <core:NullToVisibilityConverter x:Key="NullToVisInv" Invert="True"/>
             <core:EqualsToBoolConverter x:Key="EqualsToBool"/>
+            <core:UrlToImageConverter x:Key="UrlToImage"/>
+            <core:FoldGlyphConverter x:Key="FoldGlyph"/>
 
             <!-- Page view model to view. Adding a native screen = a view model, a view, a line here. -->
             <DataTemplate DataType="{x:Type vm:HomeViewModel}"><v:HomeView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:TournamentViewModel}"><v:TournamentView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:TeamsViewModel}"><v:TeamsView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:TeamProfileViewModel}"><v:TeamProfileView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:LegacyPageViewModel}"><v:LegacyPageView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:SettingsViewModel}"><v:SettingsView/></DataTemplate>
         </ResourceDictionary>

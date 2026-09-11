@@ -1,0 +1,215 @@
+<UserControl x:Class="RovOverlay.Desktop.Views.TeamProfileView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:svc="clr-namespace:RovOverlay.Desktop.Services"
+             xmlns:vm="clr-namespace:RovOverlay.Desktop.ViewModels"
+             xmlns:ctl="clr-namespace:RovOverlay.Desktop.Views.Controls">
+    <Grid>
+        <Border Style="{StaticResource Card}" Width="480" Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center"
+                Visibility="{Binding NotFound, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource PageTitle}" Text="{svc:T Profile.NotFound}"/>
+                <TextBlock Style="{StaticResource MutedText}" Text="{Binding ErrorText}" Margin="0,8,0,14"/>
+                <Button HorizontalAlignment="Left" Content="{svc:T Common.Back}" Command="{Binding BackCommand}"/>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding NotFound, Converter={StaticResource BoolToVisInv}}">
+            <Grid Margin="22,14,22,24">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <StackPanel>
+                    <Button Style="{StaticResource GhostButton}" HorizontalAlignment="Left" Padding="6,0" Margin="-6,0,0,6"
+                            Command="{Binding BackCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE72B;" FontSize="11" Margin="0,0,6,0"/>
+                            <TextBlock Text="{svc:T Common.Back}"/>
+                        </StackPanel>
+                    </Button>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <ctl:TeamLogoView Width="64" Height="64"/>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name}" FontSize="24" FontWeight="SemiBold"/>
+                            <WrapPanel Margin="0,6,0,0">
+                                <Border Style="{StaticResource Pill}" Margin="0,0,6,0" Visibility="{Binding HasTag, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Style="{StaticResource PillText}" Text="{Binding Tag}"/>
+                                </Border>
+                                <Border Style="{StaticResource Pill}" Margin="0,0,6,0"><TextBlock Style="{StaticResource PillText}" Text="{Binding PlayersText}"/></Border>
+                                <Border Style="{StaticResource Pill}" Margin="0,0,6,0" Visibility="{Binding CaptainText, Converter={StaticResource NullToVis}}">
+                                    <TextBlock Style="{StaticResource PillText}" Text="{Binding CaptainText}"/>
+                                </Border>
+                                <Border CornerRadius="9" Padding="8,1,8,2" Margin="0,0,6,0" Visibility="{Binding HasRecord, Converter={StaticResource BoolToVis}}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{StaticResource Surface3Brush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsWinning}" Value="True">
+                                                    <Setter Property="Background" Value="{StaticResource GoldSoftBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Style="{StaticResource PillText}" Text="{Binding RecordText}"/>
+                                </Border>
+                                <Border Style="{StaticResource Pill}" Margin="0,0,6,0" Visibility="{Binding HasRecord, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Style="{StaticResource PillText}" Text="{Binding GamesText}"/>
+                                </Border>
+                                <Border Style="{StaticResource Pill}" Visibility="{Binding HasRecord, Converter={StaticResource BoolToVisInv}}">
+                                    <TextBlock Style="{StaticResource PillText}" Text="{svc:T Profile.NoMatchesYet}"/>
+                                </Border>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <Grid Grid.Row="1" Margin="0,18,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <!-- Edit -->
+                        <Border Style="{StaticResource Card}" Padding="14">
+                            <StackPanel>
+                                <DockPanel Margin="0,0,0,10">
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="{svc:T Tour.Revert}"
+                                            Command="{Binding RevertCommand}" Padding="10,0"/>
+                                    <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Profile.Edit}" VerticalAlignment="Center"/>
+                                </DockPanel>
+                                <ctl:TeamEditorView DataContext="{Binding Editor}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Tournaments -->
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Profile.Tournaments}" Margin="14,12,14,8"/>
+                                <ItemsControl ItemsSource="{Binding Tournaments}" Focusable="False">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="14,0">
+                                                <DockPanel Height="38">
+                                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Border CornerRadius="9" Padding="8,1,8,2" Margin="0,0,6,0">
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Setter Property="Background" Value="{StaticResource Surface3Brush}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                            <Setter Property="Background" Value="{StaticResource GoldSoftBrush}"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                            <TextBlock Style="{StaticResource PillText}" Text="{Binding StatusText}"/>
+                                                        </Border>
+                                                        <Border Style="{StaticResource Pill}" Margin="0,0,6,0"><TextBlock Style="{StaticResource PillText}" Text="{Binding FormatText}"/></Border>
+                                                        <Border Style="{StaticResource Pill}"><TextBlock Style="{StaticResource PillText}" Text="{Binding SeedText}"/></Border>
+                                                    </StackPanel>
+                                                    <Button Style="{StaticResource LinkButton}" Command="{Binding OpenCommand}" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                    </Button>
+                                                </DockPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Text="{svc:T Profile.NoTournaments}" Foreground="{StaticResource MutedBrush}" Margin="14,0,14,14"
+                                           Visibility="{Binding HasTournaments, Converter={StaticResource BoolToVisInv}}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Match history -->
+                    <Border Grid.Column="2" Style="{StaticResource Card}" VerticalAlignment="Top">
+                        <StackPanel>
+                            <DockPanel Margin="14,12,14,4">
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding HistoryHint}" FontSize="11" Foreground="{StaticResource MutedBrush}"/>
+                                <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Profile.History}"/>
+                            </DockPanel>
+                            <ItemsControl ItemsSource="{Binding History}" Focusable="False">
+                                <ItemsControl.Resources>
+                                    <DataTemplate DataType="{x:Type vm:HistoryHeader}">
+                                        <Button Style="{StaticResource LinkButton}" Command="{Binding OpenCommand}" Margin="14,12,14,4">
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{StaticResource GoldBrush}"/>
+                                        </Button>
+                                    </DataTemplate>
+                                    <DataTemplate DataType="{x:Type vm:HistoryLine}">
+                                        <Grid Height="32" Margin="14,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="42"/>
+                                                <ColumnDefinition Width="92"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding RoundText}" VerticalAlignment="Center" Foreground="{StaticResource Muted2Brush}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <Button Grid.Column="1" Style="{StaticResource LinkButton}" Command="{Binding OpenOpponentCommand}"
+                                                    Visibility="{Binding OpponentIsLink, Converter={StaticResource BoolToVis}}">
+                                                <TextBlock Text="{Binding OpponentText}" TextTrimming="CharacterEllipsis"/>
+                                            </Button>
+                                            <TextBlock Grid.Column="1" Text="{Binding OpponentText}" VerticalAlignment="Center" FontStyle="Italic"
+                                                       Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis"
+                                                       Visibility="{Binding OpponentIsLink, Converter={StaticResource BoolToVisInv}}"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding ScoreText}" VerticalAlignment="Center" Style="{StaticResource MonoText}"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding BoText}" VerticalAlignment="Center" Style="{StaticResource MonoText}"
+                                                       Foreground="{StaticResource MutedBrush}"/>
+                                            <Border Grid.Column="4" CornerRadius="9" Padding="8,1,8,2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="{StaticResource Surface3Brush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding OutcomeKind}" Value="win">
+                                                                <Setter Property="Background" Value="{StaticResource GoldSoftBrush}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding OutcomeKind}" Value="loss">
+                                                                <Setter Property="Background" Value="{StaticResource RedSoftBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding OutcomeText}" FontSize="11">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{StaticResource Muted2Brush}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding OutcomeKind}" Value="win">
+                                                                    <Setter Property="Foreground" Value="{StaticResource GoldBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding OutcomeKind}" Value="loss">
+                                                                    <Setter Property="Foreground" Value="{StaticResource RedBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.Resources>
+                            </ItemsControl>
+                            <TextBlock Text="{svc:T Profile.HistoryEmpty}" Foreground="{StaticResource MutedBrush}" Margin="14,4,14,16"
+                                       TextWrapping="Wrap" Visibility="{Binding HistoryEmpty, Converter={StaticResource BoolToVis}}"/>
+                            <Rectangle Height="10"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <TextBlock Grid.Row="2" Style="{StaticResource MutedText}" Text="{svc:T Profile.Foot}" FontSize="11.5" Margin="0,12,0,0"
+                           Foreground="{StaticResource MutedBrush}"/>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

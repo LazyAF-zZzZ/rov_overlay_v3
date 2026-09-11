@@ -1,0 +1,15 @@
+<UserControl x:Class="RovOverlay.Desktop.Views.Controls.TeamLogoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- DataContext: anything with LogoUrl and Initials (a TeamFace). Initials show
+         when there is no logo, or while it downloads. -->
+    <Border CornerRadius="5" Background="{StaticResource Surface3Brush}" ClipToBounds="True">
+        <Grid>
+            <Viewbox Margin="5" Stretch="Uniform" Visibility="{Binding LogoUrl, Converter={StaticResource NullToVisInv}}">
+                <TextBlock Text="{Binding Initials}" FontWeight="Bold" Foreground="{StaticResource Muted2Brush}"/>
+            </Viewbox>
+            <Image Source="{Binding LogoUrl, Converter={StaticResource UrlToImage}}" Stretch="Uniform" Margin="2"
+                   RenderOptions.BitmapScalingMode="HighQuality"/>
+        </Grid>
+    </Border>
+</UserControl>

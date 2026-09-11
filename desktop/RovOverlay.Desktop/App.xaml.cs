@@ -45,7 +45,7 @@ public partial class App : Application
         };
 
         _services = new AppServices(settings);
-        var shell = new ShellViewModel(_services, args.Page);
+        var shell = new ShellViewModel(_services, args.Page) { OpenOnStart = args.Open };
         var window = new MainWindow { DataContext = shell };
         MainWindow = window;
         window.Show();
@@ -95,12 +95,13 @@ public partial class App : Application
 
 // Command-line switches, all optional:
 //   --page <Home|Control|Teams|...|Settings>   open on that screen
+//   --open <tournament:ID|team:ID>             then open that tournament or team on top
 //   --lang <th|en>                             language for this run only (not saved)
 //   --snapshot <file.png>                      render the window to a PNG and exit
 //   --snapshot-delay <ms>                      wait before the snapshot (default 2500)
 // The snapshot switches exist so a screen can be checked without a person at the
 // keyboard; the operator never needs them.
-internal sealed record StartupArgs(string? Page, string? Language, string? SnapshotPath, int SnapshotDelayMs)
+internal sealed record StartupArgs(string? Page, string? Open, string? Language, string? SnapshotPath, int SnapshotDelayMs)
 {
     public static StartupArgs Parse(string[] args)
     {
@@ -112,6 +113,6 @@ internal sealed record StartupArgs(string? Page, string? Language, string? Snaps
 
         var delay = int.TryParse(Value("--snapshot-delay"), out var ms) ? Math.Clamp(ms, 0, 60_000) : 2500;
         var language = Value("--lang") is "th" or "en" ? Value("--lang") : null;
-        return new StartupArgs(Value("--page"), language, Value("--snapshot"), delay);
+        return new StartupArgs(Value("--page"), Value("--open"), language, Value("--snapshot"), delay);
     }
 }

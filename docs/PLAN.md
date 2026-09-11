@@ -8,17 +8,18 @@ session with no conversation history should be able to continue from here and
 
 ## 0. Where things stand
 
-**Last updated 2026-09-11. Milestone M1 (shell) is built. Nothing is committed yet:
-the repository was `git init`-ed on `main` with no commits.**
+**Last updated 2026-09-11. M1 is committed (`e826fb3`); M2 is built and committed in
+the commit after it (see `git log`).**
 
 | Area | State |
 |---|---|
-| Backend (`backend/`) | Copied from v2 at `6c69766` (v2.0.2 plus two overlay commits). Builds; **350 tests: 349 pass, 1 skipped on purpose** (§8). |
-| Desktop app (`desktop/`) | WPF on .NET 10. Builds with no warnings. Starts or attaches to the backend, live title strip, sidebar, OBS source list, toasts, Thai/English. |
-| Native screens | Home (tournament list and create), Settings. Every other screen shows a "not moved yet" card that opens the v2-style HTML page from the same server. |
+| Backend (`backend/`) | Copied from v2 at `6c69766` (v2.0.2 plus two overlay commits). Builds; **350 tests: 349 pass, 1 skipped on purpose** (§8). Unchanged by M2. |
+| Desktop app (`desktop/`) | WPF on .NET 10. Builds with no warnings. Starts or attaches to the backend, live title strip, sidebar, OBS source list, toasts, Thai/English, back stack (Esc / mouse back). |
+| Native screens | Home, tournament detail, team registry, team profile, Settings with backup/restore. The rest (Control, bracket, analytics, drafts, Design, Hotkeys, Guide) open their v2-style HTML page from the same server. |
+| Verified how | Every native screen rendered with seeded data (`--snapshot`, §3) in both languages. The **clicking** flows (create, edit, delete, logo upload, backup, restore) call the same endpoints as v2 but have not been clicked through by a person yet (§8). |
 | Updates / notifications | Designed (§5), not built. |
 
-Next: M2 (§7).
+Next: M3, the native Control Panel (§7).
 
 ---
 
@@ -115,9 +116,10 @@ at the same time on it.
 | v2 page | v3 now | Target |
 |---|---|---|
 | `/` Home: tournament list, create | **Native** | done (M1) |
-| `/` Home: backup and restore | HTML (the Home page) | Settings, M2 |
-| `/tournament/:id` | HTML (Open on a row) | Native, M2 |
-| `/teams`, `/teams/:id` | HTML | Native, M2 |
+| `/` Home: backup and restore | **Native**, in Settings | done (M2) |
+| `/tournament/:id` | **Native** (details, roster with inline team editor, add/create team, match summary, standings and playoff draw, per-tournament OBS URLs) | done (M2) |
+| `/teams` | **Native** (search, create with players and logo, multi-select bulk delete, W-L and tournament counts) | done (M2) |
+| `/teams/:id` | **Native** (roster and logo editor, tournaments, match history) | done (M2) |
 | `/control` Control Panel | HTML | Native, M3 (the largest: 1,411 lines of JS in v2) |
 | `/tournament/:id/bracket` | HTML | M4: native or WebView2 (§8) |
 | `/analytics`, `/tournament/:id/drafts` | HTML | M4 |
@@ -181,9 +183,9 @@ docs/v2/            v2's plan, guide and notes, for reference
 
 | # | What | State |
 |---|---|---|
-| M1 | Copy backend; WPF shell; backend host; Socket.IO client; Home; Settings; OBS list | **built, uncommitted** |
-| M2 | Native tournament detail, team registry and team profile; backup/restore in Settings | next |
-| M3 | Native Control Panel (draft, picks/bans, timer, scores, live match) | |
+| M1 | Copy backend; WPF shell; backend host; Socket.IO client; Home; Settings; OBS list | done, `e826fb3` |
+| M2 | Native tournament detail, team registry and team profile; backup/restore in Settings | done, commit after `e826fb3` |
+| M3 | Native Control Panel (draft, picks/bans, timer, scores, live match) | next |
 | M4 | Bracket, analytics, tournament drafts | |
 | M5 | Design (WebView2 preview), Hotkeys with native global hotkeys, Guide | |
 | M6 | Import from v2: copy v2's data folder in, explicitly, never in place | |
@@ -192,7 +194,11 @@ docs/v2/            v2's plan, guide and notes, for reference
 
 ## 8. Open items
 
-- **Commit M1.** Nothing is committed yet.
+- **Click through M2 by hand.** Create a tournament and a team, edit a roster inline,
+  upload and clear a logo, remove a team, delete a tournament, save a backup and
+  restore it. Rendering is verified; these flows are not yet (no UI automation here).
+- **Standings ignore the "teams through" box until it is a valid 1-8**; an invalid value
+  keeps the last good one. Fine, but it shows no error.
 - **`tests/media.test.ts` "installer never ships uploaded images" is skipped.** It read
   electron-builder's `build.files`, which no longer exists. Re-point it at the M7
   packaging step; until then nothing guards against shipping a builder's team logos.
@@ -218,6 +224,16 @@ docs/v2/            v2's plan, guide and notes, for reference
   `MemoryStream` and `File` need `using System.IO;`.
 - **The TextBox template must not set scrollbar visibility** on `PART_ContentHost`, or
   no TextBox (the log box included) can ever scroll.
+- **A closed ComboBox shows the selected item's `ToString()`, not its
+  `DisplayMemberPath`**, with our own ComboBox template. The position picker showed
+  `RovOverlay.Desktop.ViewModels.PositionChoice`. Every choice type overrides
+  `ToString()` to return its label; do the same for any new one.
+- **Pages opened on top (tournament, team) must unsubscribe** from
+  `AppServices.DataChanged` and `Loc.Changed` in `IClosablePage.OnClosed`, or every page
+  ever opened keeps reloading itself for the rest of the session.
+- **Rows are updated in place by id, never rebuilt**, when a change is pushed from
+  elsewhere: rebuilding would throw away an inline editor someone is typing in (the same
+  rule as v2's `deferWhileEditing`).
 - **`RenderTargetBitmap` renders nothing behind the content**, so the window's root
   border carries the background brush itself, or snapshots come out transparent.
 - **The job object kills the backend at once if the app crashes**, before

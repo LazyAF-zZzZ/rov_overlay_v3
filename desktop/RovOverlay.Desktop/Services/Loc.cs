@@ -14,9 +14,17 @@ namespace RovOverlay.Desktop.Services;
 // Keys are short identifiers rather than v2's English source strings, but the Thai
 // wording is taken from v2's i18n.js wherever the same text existed there, so
 // operators see the words they already know.
-public sealed class Loc : INotifyPropertyChanged
+public sealed partial class Loc : INotifyPropertyChanged
 {
     public static Loc Instance { get; } = new();
+
+    // The screen strings live in Loc.Screens.cs. Static field initialisers in every part
+    // of the class run before this body, so both halves exist by the time they merge.
+    static Loc()
+    {
+        foreach (var (key, text) in ScreensEn) En[key] = text;
+        foreach (var (key, text) in ScreensTh) Th[key] = text;
+    }
 
     private string _language = "th";
 

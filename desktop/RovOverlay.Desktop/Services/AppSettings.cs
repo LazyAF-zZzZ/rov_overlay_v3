@@ -18,6 +18,18 @@ public sealed class AppSettings
     public string Language { get; set; } = "th";
     public int Port { get; set; } = DefaultPort;
 
+    // Which sections the operator folded away, by key, so a 128-team roster stays folded
+    // the next time the page opens.
+    public Dictionary<string, bool> Folds { get; set; } = new();
+
+    public bool IsOpen(string key, bool fallback) => Folds.TryGetValue(key, out var open) ? open : fallback;
+
+    public void SetOpen(string key, bool open)
+    {
+        Folds[key] = open;
+        Save();
+    }
+
     public static string Root { get; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RovOverlayTool3");
 

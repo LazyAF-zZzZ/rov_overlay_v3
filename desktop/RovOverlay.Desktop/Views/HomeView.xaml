@@ -181,7 +181,7 @@
                                 <TextBlock Grid.Column="5" Text="{Binding UpdatedText}" VerticalAlignment="Center"
                                            Foreground="{StaticResource MutedBrush}" FontSize="11.5"/>
                                 <Button Grid.Column="6" Style="{StaticResource GhostButton}" HorizontalAlignment="Right" Padding="10,0"
-                                        Content="{svc:T Common.Open}" ToolTip="{svc:T Home.OpenTip}" CommandParameter="{Binding}"
+                                        Content="{svc:T Common.Open}" CommandParameter="{Binding}"
                                         Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
                             </Grid>
                         </DataTemplate>

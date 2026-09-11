@@ -1,0 +1,134 @@
+<UserControl x:Class="RovOverlay.Desktop.Views.TeamsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:svc="clr-namespace:RovOverlay.Desktop.Services"
+             xmlns:ctl="clr-namespace:RovOverlay.Desktop.Views.Controls">
+    <Grid Margin="22,18,22,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Command="{Binding ToggleCreateCommand}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Icon}" Text="&#xE710;" FontSize="11" Margin="0,0,7,0"/>
+                    <TextBlock Text="{svc:T Teams.New}"/>
+                </StackPanel>
+            </Button>
+            <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE72C;" Margin="0,0,6,0"
+                    Command="{Binding RefreshCommand}" ToolTip="{svc:T Common.Refresh}"/>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource PageTitle}" Text="{svc:T Teams.Title}"/>
+                <Border Style="{StaticResource Pill}" Margin="10,2,0,0"><TextBlock Style="{StaticResource PillText}" Text="{Binding CountText}"/></Border>
+                <Border Style="{StaticResource Pill}" Margin="6,2,0,0" Visibility="{Binding ShownText, Converter={StaticResource NullToVis}}">
+                    <TextBlock Style="{StaticResource PillText}" Text="{Binding ShownText}"/>
+                </Border>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- New team -->
+        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="16" Margin="0,14,0,0"
+                Visibility="{Binding CreateOpen, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+                <ctl:NewTeamFormView DataContext="{Binding NewTeam}"/>
+                <DockPanel Margin="0,10,0,0" LastChildFill="False">
+                    <Button DockPanel.Dock="Right" Content="{svc:T Common.Close}" Command="{Binding CloseCreateCommand}"/>
+                    <Button Style="{StaticResource PrimaryButton}" Content="{svc:T Teams.CreateTeam}" Command="{Binding CreateCommand}" MinWidth="100"/>
+                    <Button Content="{svc:T Team.ClearForm}" Command="{Binding ClearFormCommand}" Margin="8,0,0,0"/>
+                </DockPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Search and select-all -->
+        <DockPanel Grid.Row="2" Margin="0,14,0,10">
+            <CheckBox DockPanel.Dock="Right" Content="{svc:T Teams.SelectAll}" IsChecked="{Binding SelectAllState, Mode=OneWay}"
+                      Command="{Binding ToggleAllCommand}"/>
+            <Grid Width="300" HorizontalAlignment="Left">
+                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Padding="28,4,7,4" Tag="{svc:T Teams.Search}"/>
+                <TextBlock Style="{StaticResource Icon}" Text="&#xE721;" FontSize="12" Margin="10,0,0,0"
+                           Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Left" IsHitTestVisible="False"/>
+            </Grid>
+        </DockPanel>
+
+        <!-- Bulk bar: only while something is ticked -->
+        <Border Grid.Row="3" CornerRadius="6" Padding="14,8" Margin="0,0,0,10" Background="{StaticResource RedSoftBrush}"
+                BorderBrush="#5A3134" BorderThickness="1" Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
+            <DockPanel LastChildFill="False">
+                <TextBlock Text="{Binding SelectedText}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <Button DockPanel.Dock="Right" Style="{StaticResource DangerButton}" Content="{Binding DeleteSelectedText}"
+                        Command="{Binding DeleteSelectedCommand}"/>
+                <Button DockPanel.Dock="Right" Content="{svc:T Teams.ClearSelection}" Command="{Binding ClearSelectionCommand}" Margin="0,0,8,0"/>
+            </DockPanel>
+        </Border>
+
+        <!-- The registry -->
+        <Border Grid.Row="4" Style="{StaticResource Card}">
+            <Grid>
+                <ListBox Style="{StaticResource RowList}" ItemContainerStyle="{StaticResource RowItem}" ItemsSource="{Binding View}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Height="50" Margin="14,0,10,0" Background="Transparent">
+                                <Grid.InputBindings>
+                                    <MouseBinding Gesture="LeftDoubleClick" Command="{Binding ProfileCommand}"/>
+                                </Grid.InputBindings>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="28"/>
+                                    <ColumnDefinition Width="40"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <CheckBox IsChecked="{Binding IsSelected}"/>
+                                <ctl:TeamLogoView Grid.Column="1" Width="32" Height="32" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="2" Margin="4,0,12,0" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource LinkButton}" Command="{Binding ProfileCommand}">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                    </Button>
+                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                        <Border Style="{StaticResource Pill}" Margin="0,0,5,0" Visibility="{Binding HasTag, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Style="{StaticResource PillText}" Text="{Binding Tag}"/>
+                                        </Border>
+                                        <Border Style="{StaticResource Pill}" Margin="0,0,5,0"><TextBlock Style="{StaticResource PillText}" Text="{Binding PlayersText}"/></Border>
+                                        <Border Style="{StaticResource Pill}" Margin="0,0,5,0" Visibility="{Binding HasTournaments, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Style="{StaticResource PillText}" Text="{Binding TournamentsText}"/>
+                                        </Border>
+                                        <Border CornerRadius="9" Padding="8,1,8,2" Visibility="{Binding HasRecord, Converter={StaticResource BoolToVis}}">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{StaticResource Surface3Brush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsWinning}" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource GoldSoftBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Style="{StaticResource PillText}" Text="{Binding RecordText}"/>
+                                        </Border>
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource GhostButton}" Content="{svc:T Common.Profile}" Command="{Binding ProfileCommand}" Padding="10,0"/>
+                                    <Button Style="{StaticResource DangerIconButton}" Content="&#xE74D;" Command="{Binding DeleteCommand}"
+                                            ToolTip="{svc:T Common.Delete}"/>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Text="{svc:T Teams.Empty}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{StaticResource MutedBrush}" Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}"/>
+                <TextBlock Text="{Binding NoMatchText}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{StaticResource MutedBrush}" Visibility="{Binding NoMatches, Converter={StaticResource BoolToVis}}"/>
+            </Grid>
+        </Border>
+
+        <TextBlock Grid.Row="5" Style="{StaticResource MutedText}" Text="{svc:T Teams.Foot}" FontSize="11.5" Margin="0,10,0,0"
+                   Foreground="{StaticResource MutedBrush}"/>
+    </Grid>
+</UserControl>

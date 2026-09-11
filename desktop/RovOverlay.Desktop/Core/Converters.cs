@@ -35,6 +35,45 @@ public sealed class NullToVisibilityConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+// An http image URL to a bitmap, downloaded in the background and decoded small.
+// Null or empty gives no image, so a placeholder underneath shows instead.
+public sealed class UrlToImageConverter : IValueConverter
+{
+    public int DecodeWidth { get; set; } = 160;
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not string url || url.Length == 0) return null;
+        try
+        {
+            var image = new System.Windows.Media.Imaging.BitmapImage();
+            image.BeginInit();
+            image.UriSource = new Uri(url);
+            image.DecodePixelWidth = DecodeWidth;
+            image.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            image.EndInit();
+            return image;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+// Open section: chevron down. Folded: chevron right.
+public sealed class FoldGlyphConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is true ? "\uE70D" : "\uE76C";
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 // Binds a group of RadioButtons to one string property: each button passes its own
 // value as the ConverterParameter.
 public sealed class EqualsToBoolConverter : IValueConverter

@@ -8,7 +8,12 @@ using RovOverlay.Desktop.Services;
 
 namespace RovOverlay.Desktop.ViewModels;
 
-public sealed record FormatChoice(string Id, string Label, int MinTeams, int MaxTeams);
+// Choice records override ToString() because a closed ComboBox shows the selected
+// item's ToString(), not its DisplayMemberPath (docs/PLAN.md §9).
+public sealed record FormatChoice(string Id, string Label, int MinTeams, int MaxTeams)
+{
+    public override string ToString() => Label;
+}
 
 public sealed class TournamentRow
 {
@@ -62,7 +67,7 @@ public sealed class HomeViewModel : ObservableObject
     private FormatChoice? _newFormat;
     private int _newBestOf = 3;
 
-    public HomeViewModel(AppServices services)
+    public HomeViewModel(AppServices services, ShellViewModel shell)
     {
         _services = services;
         View = CollectionViewSource.GetDefaultView(Rows);
@@ -75,10 +80,9 @@ public sealed class HomeViewModel : ObservableObject
             ResetForm();
         });
         CreateCommand = new AsyncRelayCommand(CreateAsync, () => NewName.Trim().Length > 0 && NewFormat is not null);
-        // The tournament screen is not native yet; until it is, open the web version.
         OpenCommand = new RelayCommand(p =>
         {
-            if (p is TournamentRow row) Browser.Open(services.Url($"/tournament/{Uri.EscapeDataString(row.Id)}"));
+            if (p is TournamentRow row) shell.Open(new TournamentViewModel(services, shell, row.Id));
         });
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
 
