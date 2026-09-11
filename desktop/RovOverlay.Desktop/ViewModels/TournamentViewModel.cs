@@ -192,8 +192,8 @@ public sealed class TournamentViewModel : ObservableObject, IClosablePage
             NewTeam.Clear();
             Toasts.Info(Loc.T("Team.FormCleared"));
         });
-        OpenBracketCommand = new RelayCommand(() => Browser.Open(services.Url($"/tournament/{E(id)}/bracket")));
-        OpenDraftsCommand = new RelayCommand(() => Browser.Open(services.Url($"/tournament/{E(id)}/drafts")));
+        OpenBracketCommand = new RelayCommand(() => shell.Open(new BracketViewModel(services, shell, id)));
+        OpenDraftsCommand = new RelayCommand(() => shell.Open(new DraftHistoryViewModel(services, shell, id)));
         DrawPlayoffCommand = new AsyncRelayCommand(DrawPlayoffAsync);
         ObsSources = ObsSourceRow.CreateForTournament(services, id);
 

@@ -76,7 +76,7 @@ public sealed class ShellViewModel : ObservableObject
             new NavItem(this, "Home", "\uE80F", () => new HomeViewModel(services, this)),
             new NavItem(this, "Control", "\uE7FC", () => new ControlViewModel(services)),
             new NavItem(this, "Teams", "\uE716", () => new TeamsViewModel(services, this)),
-            Legacy("Analytics", "/analytics", "\uE9D2"),
+            new NavItem(this, "Analytics", "\uE9D2", () => new AnalyticsViewModel(services)),
             Legacy("Design", "/design", "\uE790"),
             Legacy("Hotkeys", "/hotkeys", "\uE765"),
             Legacy("Guide", "/guide", "\uE897")
@@ -282,6 +282,9 @@ public sealed class ShellViewModel : ObservableObject
     // "tournament:<id>" or "team:<id>", from --open on the command line.
     public string? OpenOnStart { get; init; }
 
+    // "bracket" or "drafts", opened on top of that tournament (--then).
+    public string? ThenOnStart { get; init; }
+
     private void OpenFromArgument(string? target)
     {
         var colon = target?.IndexOf(':') ?? -1;
@@ -291,6 +294,8 @@ public sealed class ShellViewModel : ObservableObject
         {
             case "tournament":
                 Open(new TournamentViewModel(_services, this, id));
+                if (ThenOnStart == "bracket") Open(new BracketViewModel(_services, this, id));
+                else if (ThenOnStart == "drafts") Open(new DraftHistoryViewModel(_services, this, id));
                 break;
             case "team":
                 Open(new TeamProfileViewModel(_services, this, id));

@@ -1,0 +1,215 @@
+<UserControl x:Class="RovOverlay.Desktop.Views.AnalyticsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:svc="clr-namespace:RovOverlay.Desktop.Services">
+    <UserControl.Resources>
+        <Style x:Key="StatNum" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Right"/>
+            <Setter Property="FontFamily" Value="{StaticResource MonoFont}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{StaticResource Muted2Brush}"/>
+        </Style>
+        <Style x:Key="StatHead" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Right"/>
+            <Setter Property="FontSize" Value="10.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="22,18,22,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <DockPanel>
+            <Grid DockPanel.Dock="Right" Width="240">
+                <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" Padding="28,4,7,4" Tag="{svc:T Analytics.Search}"/>
+                <TextBlock Style="{StaticResource Icon}" Text="&#xE721;" FontSize="12" Margin="10,0,0,0"
+                           Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Left" IsHitTestVisible="False"/>
+            </Grid>
+            <WrapPanel VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource PageTitle}" Text="{svc:T Analytics.Title}" Margin="0,0,10,0"/>
+                <Border Style="{StaticResource Pill}" Margin="0,2,6,0"><TextBlock Style="{StaticResource PillText}" Text="{Binding GamesText}"/></Border>
+                <Border Style="{StaticResource Pill}" Margin="0,2,6,0" Visibility="{Binding HasGames, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Style="{StaticResource PillText}" Text="{Binding HeroesSeenText}"/>
+                </Border>
+                <Border CornerRadius="9" Padding="8,1,8,2" Margin="0,2,0,0" VerticalAlignment="Center"
+                        Visibility="{Binding HasGames, Converter={StaticResource BoolToVis}}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{StaticResource Surface3Brush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding AllDecided}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource GoldSoftBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Style="{StaticResource PillText}" Text="{Binding DecidedText}"/>
+                </Border>
+            </WrapPanel>
+        </DockPanel>
+
+        <!-- Scope -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,14,0,0">
+            <StackPanel Width="260">
+                <TextBlock Style="{StaticResource FieldLabel}" Text="{svc:T Analytics.Tournament}"/>
+                <ComboBox ItemsSource="{Binding Tournaments}" SelectedItem="{Binding Tournament}" DisplayMemberPath="Label"/>
+            </StackPanel>
+            <StackPanel Width="260" Margin="10,0,0,0">
+                <TextBlock Style="{StaticResource FieldLabel}" Text="{svc:T Analytics.Team}"/>
+                <ComboBox ItemsSource="{Binding Teams}" SelectedItem="{Binding Team}" DisplayMemberPath="Label"/>
+            </StackPanel>
+            <Button Content="{svc:T Analytics.AllGames}" Command="{Binding ResetScopeCommand}" VerticalAlignment="Bottom" Margin="10,0,0,0"/>
+        </StackPanel>
+
+        <!-- The draft in progress, kept out of the numbers -->
+        <Border Grid.Row="2" Background="{StaticResource GoldSoftBrush}" BorderBrush="{StaticResource GoldLineBrush}" BorderThickness="1"
+                CornerRadius="6" Padding="12,9" Margin="0,14,0,0"
+                Visibility="{Binding HasLive, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="7" Height="7" Fill="{StaticResource GoldBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding LiveTitle}" FontWeight="SemiBold" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding LiveNote}" FontSize="11" Foreground="{StaticResource Muted2Brush}" Margin="10,0,0,0"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding LiveHeroes}" Margin="0,8,0,0" Focusable="False">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border CornerRadius="4" Padding="3,2,8,2" Margin="0,0,6,6" BorderThickness="1"
+                                    Background="{StaticResource Surface1Brush}">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="{StaticResource RedBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBlue}" Value="True">
+                                                <Setter Property="BorderBrush" Value="{StaticResource BlueBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsBan}" Value="True">
+                                                <Setter Property="Opacity" Value="0.6"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="22" Height="22" CornerRadius="3" ClipToBounds="True">
+                                        <Image Source="{Binding ImageUrl, Converter={StaticResource UrlToImage}}" Stretch="UniformToFill"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Hero}" FontSize="11.5" Margin="7,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- The table -->
+        <Border Grid.Row="3" Style="{StaticResource Card}" Margin="0,14,0,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="32"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Background="{StaticResource Surface0Brush}" BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="0,0,0,1" CornerRadius="6,6,0,0">
+                    <Grid Margin="14,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="44"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="134"/>
+                            <ColumnDefinition Width="70"/>
+                            <ColumnDefinition Width="70"/>
+                            <ColumnDefinition Width="70"/>
+                            <ColumnDefinition Width="80"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="1" Text="{svc:T Analytics.Hero}" Style="{StaticResource StatHead}" TextAlignment="Left"/>
+                        <TextBlock Grid.Column="2" Text="{svc:T Analytics.Presence}" Style="{StaticResource StatHead}"/>
+                        <TextBlock Grid.Column="4" Text="{svc:T Analytics.Pick}" Style="{StaticResource StatHead}"/>
+                        <TextBlock Grid.Column="5" Text="{svc:T Analytics.Ban}" Style="{StaticResource StatHead}"/>
+                        <TextBlock Grid.Column="6" Text="{svc:T Analytics.Win}" Style="{StaticResource StatHead}"/>
+                        <TextBlock Grid.Column="7" Text="{svc:T Analytics.BanPrio}" Style="{StaticResource StatHead}"/>
+                    </Grid>
+                </Border>
+
+                <ListBox Grid.Row="1" Style="{StaticResource RowList}" ItemContainerStyle="{StaticResource RowItem}" ItemsSource="{Binding Rows}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Height="44" Margin="14,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="44"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="134"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Width="34" Height="34" CornerRadius="4" ClipToBounds="True" HorizontalAlignment="Left"
+                                        Background="{StaticResource Surface3Brush}">
+                                    <Image Source="{Binding ImageUrl, Converter={StaticResource UrlToImage}}" Stretch="UniformToFill"
+                                           RenderOptions.BitmapScalingMode="HighQuality"/>
+                                </Border>
+                                <TextBlock Grid.Column="1" Text="{Binding Hero}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                           Margin="0,0,10,0"/>
+                                <TextBlock Grid.Column="2" Text="{Binding PresenceText}" Style="{StaticResource StatNum}"
+                                           FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
+                                <Border Grid.Column="3" Height="5" CornerRadius="3" Background="{StaticResource Surface3Brush}"
+                                        VerticalAlignment="Center" Margin="10,0" HorizontalAlignment="Stretch">
+                                    <Border Width="{Binding Meter}" HorizontalAlignment="Left" CornerRadius="3"
+                                            Background="{StaticResource GoldBrush}"/>
+                                </Border>
+                                <TextBlock Grid.Column="4" Text="{Binding PickText}" Style="{StaticResource StatNum}"/>
+                                <TextBlock Grid.Column="5" Text="{Binding BanText}" Style="{StaticResource StatNum}"/>
+                                <TextBlock Grid.Column="6" Text="{Binding WinText}" ToolTip="{Binding WinTip}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource StatNum}">
+                                            <Style.Triggers>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding HasWinRate}" Value="True"/>
+                                                        <Condition Binding="{Binding WinIsGood}" Value="True"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Foreground" Value="{StaticResource GoldBrush}"/>
+                                                </MultiDataTrigger>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding HasWinRate}" Value="True"/>
+                                                        <Condition Binding="{Binding WinIsGood}" Value="False"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Foreground" Value="{StaticResource RedBrush}"/>
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Grid.Column="7" Text="{Binding PriorityText}" Style="{StaticResource StatNum}"
+                                           ToolTip="{Binding PriorityTip}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <TextBlock Grid.Row="1" Text="{Binding EmptyText}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" MaxWidth="440" TextAlignment="Center"
+                           Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}"/>
+            </Grid>
+        </Border>
+
+        <TextBlock Grid.Row="4" Style="{StaticResource MutedText}" Text="{svc:T Analytics.Foot}" FontSize="11.5" Margin="0,10,0,0"
+                   Foreground="{StaticResource MutedBrush}"/>
+    </Grid>
+</UserControl>

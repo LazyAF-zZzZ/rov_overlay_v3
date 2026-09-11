@@ -45,7 +45,7 @@ public partial class App : Application
         };
 
         _services = new AppServices(settings);
-        var shell = new ShellViewModel(_services, args.Page) { OpenOnStart = args.Open };
+        var shell = new ShellViewModel(_services, args.Page) { OpenOnStart = args.Open, ThenOnStart = args.Then };
         var window = new MainWindow { DataContext = shell };
         if (args.Size is { } size)
         {
@@ -101,13 +101,14 @@ public partial class App : Application
 // Command-line switches, all optional:
 //   --page <Home|Control|Teams|...|Settings>   open on that screen
 //   --open <tournament:ID|team:ID>             then open that tournament or team on top
+//   --then <bracket|drafts>                    and open that page of the tournament above it
 //   --lang <th|en>                             language for this run only (not saved)
 //   --snapshot <file.png>                      render the window to a PNG and exit
 //   --snapshot-delay <ms>                      wait before the snapshot (default 2500)
 //   --size <width>x<height>                    open at this size, to fit a whole screen in one snapshot
 // The snapshot switches exist so a screen can be checked without a person at the
 // keyboard; the operator never needs them.
-internal sealed record StartupArgs(string? Page, string? Open, string? Language, string? SnapshotPath, int SnapshotDelayMs, System.Windows.Size? Size)
+internal sealed record StartupArgs(string? Page, string? Open, string? Then, string? Language, string? SnapshotPath, int SnapshotDelayMs, System.Windows.Size? Size)
 {
     public static StartupArgs Parse(string[] args)
     {
@@ -126,6 +127,6 @@ internal sealed record StartupArgs(string? Page, string? Open, string? Language,
             size = new System.Windows.Size(Math.Clamp(width, 800, 4000), Math.Clamp(height, 600, 4000));
         }
 
-        return new StartupArgs(Value("--page"), Value("--open"), language, Value("--snapshot"), delay, size);
+        return new StartupArgs(Value("--page"), Value("--open"), Value("--then"), language, Value("--snapshot"), delay, size);
     }
 }

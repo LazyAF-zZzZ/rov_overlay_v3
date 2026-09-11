@@ -25,6 +25,9 @@
             <DataTemplate DataType="{x:Type vm:TeamsViewModel}"><v:TeamsView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:TeamProfileViewModel}"><v:TeamProfileView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:ControlViewModel}"><v:ControlView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:BracketViewModel}"><v:BracketView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:DraftHistoryViewModel}"><v:DraftHistoryView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:AnalyticsViewModel}"><v:AnalyticsView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:LegacyPageViewModel}"><v:LegacyPageView/></DataTemplate>
             <DataTemplate DataType="{x:Type vm:SettingsViewModel}"><v:SettingsView/></DataTemplate>
         </ResourceDictionary>
