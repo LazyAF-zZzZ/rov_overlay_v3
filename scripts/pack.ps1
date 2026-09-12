@@ -40,6 +40,25 @@ $vpkChannel = if ($Channel -eq 'beta') { 'beta' } else { 'win' }
 # they are removed by name after the copy rather than filtered during it.
 $uploadDirs = @('team-logos', 'skins')
 
+# The HTML operator pages v2 shipped. Every one has a native screen now, so shipping them
+# would hand users a second way to drive the app that nobody maintains.
+#
+# The overlays OBS loads are NOT here and must never be: overlay, overlay-1440, result,
+# overlay-prev, overlay-standings, overlay-matchup, overlay-team-drafts, overlay-teams,
+# overlay-analytics.
+#
+# Two more pages stay on purpose, because nothing replaced them:
+#   sfx-test.html  a sound check, a troubleshooting tool rather than an operator screen.
+#   guide.html     the manual. The native Guide screen has a button that opens it in a
+#                  browser, which is how it gets read on a second monitor while the app
+#                  itself is showing the control panel.
+# Guarded by backend/tests/packaging.test.ts.
+$operatorPages = @(
+    'home.html', 'control.html', 'teams.html', 'team.html', 'tournament.html',
+    'tournament-drafts.html', 'bracket.html', 'analytics.html', 'design.html',
+    'hotkeys.html'
+)
+
 Write-Host "ROV Overlay Tool $Version ($Channel)" -ForegroundColor Cyan
 
 # --- 1. A clean stage -------------------------------------------------------------
@@ -79,6 +98,13 @@ foreach ($dir in $uploadDirs) {
     }
 }
 
+# The replaced operator pages. Their routes stay and answer with a line saying where the
+# screen went, so an old bookmark explains itself instead of failing.
+foreach ($page in $operatorPages) {
+    $path = Join-Path $backend "public\$page"
+    if (Test-Path $path) { Remove-Item $path -Force }
+}
+
 # Production packages only: a clean install from the lockfile, not a copy of the repo's
 # node_modules, which still carries v2's Electron packages.
 Write-Host '  installing production packages…'
@@ -98,6 +124,18 @@ New-Item -ItemType Directory -Path (Join-Path $backend 'runtime') -Force | Out-N
 Copy-Item $nodeExe -Destination (Join-Path $backend 'runtime\node.exe') -Force
 
 # --- 5. Pack ----------------------------------------------------------------------
+# Release notes appear in the installer and on the Releases page. A version without a
+# notes file still packs; it just ships without them.
+$notesArgs = @()
+$notesFile = Join-Path $root "docs\release-notes\$Version.md"
+if (Test-Path $notesFile) {
+    $notesArgs = @('--releaseNotes', $notesFile)
+    Write-Host "  notes: docs\release-notes\$Version.md"
+}
+else {
+    Write-Host "  no release notes at docs\release-notes\$Version.md" -ForegroundColor Yellow
+}
+
 Write-Host '  packing…'
 & $vpk pack `
     --packId RovOverlayTool3 `
@@ -109,7 +147,7 @@ Write-Host '  packing…'
     --icon (Join-Path $root 'backend\public\images\app-icon.ico') `
     --instLicense (Join-Path $root 'LICENSE.md') `
     --channel $vpkChannel `
-    --outputDir $releases
+    --outputDir $releases @notesArgs
 if ($LASTEXITCODE -ne 0) { throw 'vpk pack failed' }
 
 Write-Host "  done: $releases" -ForegroundColor Green

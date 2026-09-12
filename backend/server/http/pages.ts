@@ -3,9 +3,38 @@
 // เพิ่มหน้าใหม่ที่นี่ที่เดียว เช่น หน้าทัวร์นาเมนต์ / รายชื่อทีม / สถิติ
 // แล้วเพิ่มไฟล์ html ใน public/
 
+import fs from 'fs';
 import path from 'path';
-import express, { Router } from 'express';
+import express, { Response, Router } from 'express';
 import { PUBLIC_DIR } from '../config';
+
+// หน้าของคนคุมงานมีหน้าจอในแอพแทนหมดแล้ว ตัวติดตั้งจึงไม่เอาไฟล์พวกนี้ไปด้วย
+// (ดู $operatorPages ใน scripts/pack.ps1 และ tests/packaging.test.ts)
+//
+// เส้นทางยังอยู่ครบ เพราะคนที่ bookmark /control ไว้ควรได้คำอธิบาย
+// ไม่ใช่ 500 จาก sendFile ที่หาไฟล์ไม่เจอ
+const MOVED_HTML = `<!doctype html>
+<html lang="th"><meta charset="utf-8">
+<title>ย้ายเข้าแอพแล้ว / Now in the app</title>
+<style>
+body{background:#12141a;color:#e8e6e3;font-family:system-ui,"Segoe UI",sans-serif;
+margin:0;height:100vh;display:grid;place-items:center;text-align:center;line-height:1.8}
+p{max-width:34rem;margin:.5rem 1.5rem}b{color:#e3c07b}small{color:#8b8f98}
+</style>
+<div>
+<p><b>หน้านี้ย้ายเข้าไปอยู่ในแอพแล้ว</b><br>เปิด ROV Overlay Tool แล้วใช้เมนูด้านซ้าย</p>
+<p>This screen is part of the app now. Open ROV Overlay Tool and use the sidebar.</p>
+<p><small>ลิงก์ overlay สำหรับ OBS ไม่เปลี่ยน / Overlay URLs for OBS are unchanged.</small></p>
+</div>`;
+
+function sendPage(res: Response, file: string): void {
+  const full = path.join(PUBLIC_DIR, file);
+  if (fs.existsSync(full)) {
+    res.sendFile(full);
+    return;
+  }
+  res.status(410).type('html').send(MOVED_HTML);
+}
 
 // route -> ไฟล์ใน public/
 export const PAGES: Record<string, string> = {
@@ -58,7 +87,7 @@ export function pageRoutes(): Router {
   const router = express.Router();
 
   Object.entries(PAGES).forEach(([route, file]) => {
-    router.get(route, (_req, res) => res.sendFile(path.join(PUBLIC_DIR, file)));
+    router.get(route, (_req, res) => sendPage(res, file));
   });
 
   // หน้าเดียวเสิร์ฟทุก id ตัวหน้าเว็บอ่าน id เอาเองจาก URL
@@ -67,19 +96,19 @@ export function pageRoutes(): Router {
   // ใน tournament.html ต้องอ้าง /js/... /css/... แบบเต็ม ห้ามใช้ path สัมพัทธ์
   // ไม่งั้นเบราว์เซอร์จะไปหาที่ /tournament/js/... แล้วได้ 404
   router.get('/tournament/:id', (_req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, 'tournament.html'));
+    sendPage(res, 'tournament.html');
   });
 
   // โปรไฟล์ทีม ลึกกว่าหน้าอื่นหนึ่งชั้นเหมือน /tournament/:id
   // team.html จึงต้องอ้าง /js/... /css/... แบบเต็มเช่นกัน
   router.get('/teams/:id', (_req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, 'team.html'));
+    sendPage(res, 'team.html');
   });
 
   // สายการแข่งแบบเห็นภาพ อยู่ลึกสองชั้น (/tournament/:id/bracket)
   // path ของ asset ยิ่งต้องเป็นแบบเต็ม
   router.get('/tournament/:id/bracket', (_req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, 'bracket.html'));
+    sendPage(res, 'bracket.html');
   });
 
   // ประวัติพิค/แบนของทัวร์นาเมนต์ อยู่ลึกสองชั้นเหมือนหน้าสายการแข่ง
@@ -89,7 +118,7 @@ export function pageRoutes(): Router {
   // ต้องแก้ทุกหน้าพร้อมกัน ส่วนหน้านี้เข้าถึงจากหน้าทัวร์นาเมนต์ก็พอ
   // (แบบเดียวกับ /tournament/:id/bracket)
   router.get('/tournament/:id/drafts', (_req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, 'tournament-drafts.html'));
+    sendPage(res, 'tournament-drafts.html');
   });
 
   router.get('/index.html', (_req, res) => res.redirect('/control'));

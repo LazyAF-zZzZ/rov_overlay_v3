@@ -8,17 +8,17 @@ session with no conversation history should be able to continue from here and
 
 ## 0. Where things stand
 
-**Last updated 2026-09-12. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 `c615d39`, M7 in the commit after those (see `git log`).**
+**Last updated 2026-09-12. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 `c615d39`, M7 `79c5f41`, M8 in the commit after those (see `git log`).**
 
 | Area | State |
 |---|---|
-| Backend (`backend/`) | Copied from v2 at `6c69766` (v2.0.2 plus two overlay commits). Builds; **352 tests, all passing, nothing skipped**. M6 added the v2 importer; M7 re-pointed the "installer never ships uploaded images" guard at `scripts/pack.ps1`, so it runs again. |
+| Backend (`backend/`) | Copied from v2 at `6c69766` (v2.0.2 plus two overlay commits). Builds; **356 tests, all passing, nothing skipped**. M6 added the v2 importer; M7 revived the "installer never ships uploaded images" guard; M8 added `tests/packaging.test.ts`, which keeps the bundle's page list honest in both directions. |
 | Desktop app (`desktop/`) | WPF on .NET 10. Builds with no warnings. Starts or attaches to the backend, live title strip, sidebar, OBS source list, toasts, Thai/English, back stack (Esc / mouse back), notice bell, first-run licence. |
-| Native screens | **All of them**: Home, tournament detail, team registry, team profile, Control Panel, bracket, analytics, pick/ban history, Design, Hotkeys, Guide, Settings. No screen opens a web page any more, and the HTML operator pages are now dead weight the packaging step can drop (§8). |
-| Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages. The v2 import runs against a synthetic v2 install in the tests, and the v2 folder is asserted byte-identical afterwards. M7 was rehearsed end to end: `pack.ps1` built a 124 MB installer at 3.0.0-rc.1, `vpk` confirmed the Velopack entry point, and the notice bell was rendered against a local feed. The **clicking** flows, and the installer itself, have not been tried by a person (§8). |
+| Native screens | **All of them**: Home, tournament detail, team registry, team profile, Control Panel, bracket, analytics, pick/ban history, Design, Hotkeys, Guide, Settings. No screen opens a web page any more, and since M8 the installer no longer carries the ten HTML operator pages they replaced. The manual (`/guide`) and the sound check (`/sfx-test`) still ship: nothing replaced those, and the Guide screen has a button that opens the manual in a browser. |
+| Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages; anything in its own window cannot be (§8). The v2 import runs against a synthetic v2 install in the tests, with the v2 folder asserted byte-identical afterwards. 3.0.0 packs clean: 9 of 9 overlays present, all ten operator pages gone, no uploaded images, and a measured delta of **841 KB** from the previous build against 124 MB full. The **clicking** flows, and the installer itself, have not been tried by a person (§8). |
 | Updates / notifications | **Built** (§5). Velopack 1.2.0 against GitHub Releases, applied when the app closes and never on its own; a notice feed with a bell in the title bar. |
 
-Next: M8, release 3.0.0 (§7).
+Next: publish 3.0.0 when the user says to (§7), then watch the first real update land.
 
 ---
 
@@ -195,14 +195,14 @@ docs/v2/            v2's plan, guide and notes, for reference
 | M5 | Design, Hotkeys with native global hotkeys, Guide | done, commit after `c3ac12a` |
 | M6 | Import from v2: read its database and images, merge them in, never write to its folder | done, commit after `3fcb2a9` |
 | M7 | Packaging: bundled node, Velopack installer, updates, notice feed, licence dialog | done, commit after `c615d39` |
-| M8 | Release 3.0.0 | next |
+| M8 | Release 3.0.0 | **built, not published**: artifacts in `releases/`, commit after `79c5f41` |
 
 ## 8. Open items
 
-- **The installer still ships v2's HTML operator pages.** `pack.ps1` copies all of
-  `public/`, so the bundle carries the pages every native screen replaced. They are
-  harmless and small next to node.exe, but they are dead weight and a second way to
-  drive the app that nobody maintains. Decide before M8 whether to exclude them.
+- **3.0.0 is built but not published.** `releases/` holds the installer, the portable
+  zip and the full package; nothing has been uploaded, so no user can receive it yet.
+  Publishing is one command and is the user's call:
+  `$env:GITHUB_TOKEN = (gh auth token); .\scripts\pack.ps1 -Version 3.0.0 -Publish`.
 - **The installer has never been run.** `pack.ps1` builds it, but nobody has installed
   it on a clean machine, and no update has been watched going from one version to the
   next. Both before M8.
@@ -210,9 +210,12 @@ docs/v2/            v2's plan, guide and notes, for reference
   (`raw.githubusercontent.com/LazyAF-zZzZ/rov_overlay_v3/main/notices.json`, HTTP 200).
   What is untested is a real entry: add one, watch it reach an installed copy, and check
   that dismissing it sticks across a restart.
-- **A `Popup` cannot be checked by a render.** It is its own window, so
-  `RenderTargetBitmap` never sees it: the notice panel and the OBS source list are
-  verified by their markup and their data, not by a screenshot.
+- **Anything in its own window cannot be checked by a render.** `--snapshot` draws the
+  main window's content with `RenderTargetBitmap`, and a `Popup` or a modal `Window` is a
+  separate HWND it never sees. So the notice panel, the OBS source list, the confirm box
+  and the **first-run licence dialog** are verified by their markup, their strings and
+  their data, never by a screenshot. The licence dialog is the first thing a new user
+  meets, so look at it by hand at least once.
 - **No v2 data exists on this machine to import.** `%APPDATA%\ROV Overlay Tool` does not
   exist and the database in the v2 repo has zero rows, so the importer was proved
   against a synthetic v2 install instead. Run it once against a real one.
@@ -248,6 +251,10 @@ docs/v2/            v2's plan, guide and notes, for reference
   `DisplayMemberPath`**, with our own ComboBox template. The position picker showed
   `RovOverlay.Desktop.ViewModels.PositionChoice`. Every choice type overrides
   `ToString()` to return its label; do the same for any new one.
+- **`vpk` builds its feed from whatever is sitting in `releases/`.** A rehearsal build
+  left in that folder goes out with the real one, and users are offered a version nobody
+  meant to ship. Clear the folder before packing a release, and accept that the first
+  release therefore has no delta to build against.
 - **`execFileSync` blocks Node's event loop**, so a server in the same script cannot
   answer while a child process runs. A local notice feed served that way looked exactly
   like a broken notice service: the app's request went unanswered until its own 15-second
