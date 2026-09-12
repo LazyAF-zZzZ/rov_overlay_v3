@@ -202,8 +202,10 @@ docs/v2/            v2's plan, guide and notes, for reference
 - **The installer has never been run.** `pack.ps1` builds it, but nobody has installed
   it on a clean machine, and no update has been watched going from one version to the
   next. Both before M8.
-- **`notices.json` reaches users only once it is on `main`.** Until then the feed URL
-  404s, which the app reads as "no messages" and stays quiet about, as intended.
+- **No notice has ever been sent end to end.** The feed is live and serving `[]`
+  (`raw.githubusercontent.com/LazyAF-zZzZ/rov_overlay_v3/main/notices.json`, HTTP 200).
+  What is untested is a real entry: add one, watch it reach an installed copy, and check
+  that dismissing it sticks across a restart.
 - **A `Popup` cannot be checked by a render.** It is its own window, so
   `RenderTargetBitmap` never sees it: the notice panel and the OBS source list are
   verified by their markup and their data, not by a screenshot.
