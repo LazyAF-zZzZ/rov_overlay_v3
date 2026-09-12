@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "id": "test-2026-09-12",
+    "level": "info",
+    "title": {
+      "th": "ทดสอบระบบแจ้งเตือน",
+      "en": "Notification test"
+    },
+    "body": {
+      "th": "ถ้าเห็นข้อความนี้ แปลว่าข้อความจากคนทำแอปส่งถึงเครื่องผู้ใช้ได้จริง กดรับทราบเพื่อปิดทิ้ง แล้วมันจะไม่กลับมาอีก",
+      "en": "If you can read this, messages from the maker reach the app. Press Got it to dismiss it; it will not come back."
+    },
+    "expires": "2026-09-14T00:00:00Z"
+  }
+]
