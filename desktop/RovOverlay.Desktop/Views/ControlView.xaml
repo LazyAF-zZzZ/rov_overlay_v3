@@ -350,8 +350,24 @@
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
                                             <Style.Triggers>
+                                                <!-- Under ten seconds the clock pulses. This one is not
+                                                     decoration: the operator is watching the teams and the
+                                                     draft board, and movement is what peripheral vision
+                                                     catches when a colour change does not. -->
                                                 <DataTrigger Binding="{Binding IsUrgent}" Value="True">
                                                     <Setter Property="Foreground" Value="{StaticResource RedBrush}"/>
+                                                    <DataTrigger.EnterActions>
+                                                        <BeginStoryboard Name="UrgentPulse">
+                                                            <Storyboard>
+                                                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                                 From="1" To="0.35" Duration="0:0:0.5"
+                                                                                 AutoReverse="True" RepeatBehavior="Forever"/>
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </DataTrigger.EnterActions>
+                                                    <DataTrigger.ExitActions>
+                                                        <StopStoryboard BeginStoryboardName="UrgentPulse"/>
+                                                    </DataTrigger.ExitActions>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>

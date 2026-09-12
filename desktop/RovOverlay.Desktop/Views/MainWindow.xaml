@@ -289,7 +289,28 @@
                     </DockPanel>
                 </Border>
 
-                <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" Focusable="False"/>
+                <!-- A screen fades up as it arrives, so switching reads as a change of place
+                     rather than a redraw. 140ms: long enough to see, too short to wait for. -->
+                <ContentControl Grid.Column="1" Content="{Binding CurrentPage, NotifyOnTargetUpdated=True}" Focusable="False">
+                    <ContentControl.RenderTransform>
+                        <TranslateTransform/>
+                    </ContentControl.RenderTransform>
+                    <ContentControl.Triggers>
+                        <EventTrigger RoutedEvent="Binding.TargetUpdated">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.14"/>
+                                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)"
+                                                     From="10" To="0" Duration="0:0:0.18">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase EasingMode="EaseOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </ContentControl.Triggers>
+                </ContentControl>
 
                 <!-- Starting, or the server is down: nothing else on screen can work. -->
                 <Grid Grid.ColumnSpan="2" Background="{StaticResource BgBrush}"
@@ -323,6 +344,26 @@
                         <DataTemplate>
                             <Border Margin="0,6,0,0" Padding="12,9" CornerRadius="4" BorderThickness="3,1,1,1"
                                     Background="{StaticResource Surface3Brush}">
+                                <!-- Slides in from the edge it lives on. A toast that simply
+                                     appears is easy to miss; one that moves is not. -->
+                                <Border.RenderTransform>
+                                    <TranslateTransform/>
+                                </Border.RenderTransform>
+                                <Border.Triggers>
+                                    <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.16"/>
+                                                <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.X)"
+                                                                 From="36" To="0" Duration="0:0:0.24">
+                                                    <DoubleAnimation.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut"/>
+                                                    </DoubleAnimation.EasingFunction>
+                                                </DoubleAnimation>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </Border.Triggers>
                                 <Border.Style>
                                     <Style TargetType="Border">
                                         <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}"/>

@@ -9,7 +9,21 @@
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
     <Border Margin="18" Padding="24,20,24,18" CornerRadius="8" BorderThickness="1"
             Background="{StaticResource Surface2Brush}" BorderBrush="{StaticResource BorderStrongBrush}"
-            MouseLeftButtonDown="Border_MouseLeftButtonDown">
+            RenderTransformOrigin="0.5,0.5" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+        <Border.RenderTransform>
+            <ScaleTransform ScaleX="0.97" ScaleY="0.97"/>
+        </Border.RenderTransform>
+        <Border.Triggers>
+            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.12"/>
+                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(ScaleTransform.ScaleX)" To="1" Duration="0:0:0.16"/>
+                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(ScaleTransform.ScaleY)" To="1" Duration="0:0:0.16"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Border.Triggers>
         <Border.Effect>
             <DropShadowEffect BlurRadius="24" ShadowDepth="6" Opacity="0.6" Color="Black"/>
         </Border.Effect>

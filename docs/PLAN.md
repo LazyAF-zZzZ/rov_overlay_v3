@@ -104,6 +104,14 @@ at the same time on it.
   existed there.
 - **Theme:** `Theme/Theme.xaml` is the only place colours are defined. Green appears
   only on the connection light.
+- **Motion is short, and there is very little of it.** Hover fades in over 90ms and out
+  over 140ms; a screen fades up over 140ms as it arrives; a toast slides in from the edge
+  it lives on; dialogs fade and scale from 0.97. That is the whole budget. This is a panel
+  someone stares at for an entire event, and anything that moves while they are reading it
+  is a defect. The single repeating animation is the draft clock pulsing under ten
+  seconds, and that one exists to be caught by peripheral vision rather than to look nice.
+  Animate `Opacity` or a transform, never the shared brushes: they are frozen resources
+  and animating them throws.
 - **Icons:** Segoe Fluent Icons (Windows 11) with Segoe MDL2 Assets as fallback. Write
   glyphs as `\uE80F` in C# and `&#xE80F;` in XAML, never as raw characters (§9).
 - **Checking a screen without a person:** `RovOverlayTool.exe --page Home --lang en
