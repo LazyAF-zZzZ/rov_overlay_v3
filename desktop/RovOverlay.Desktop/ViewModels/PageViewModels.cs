@@ -67,6 +67,7 @@ public sealed class SettingsViewModel : ObservableObject
         RestoreCommand = new AsyncRelayCommand(RestoreAsync);
         ImportCommand = new AsyncRelayCommand(ImportAsync, () => ImportPath.Length > 0);
         BrowseImportCommand = new AsyncRelayCommand(BrowseImportAsync);
+        CheckUpdateCommand = new AsyncRelayCommand(() => Updates.CheckAsync(manual: true));
         _ = FindV2Async();
         Loc.Instance.Changed += () =>
         {
@@ -100,6 +101,24 @@ public sealed class SettingsViewModel : ObservableObject
     public ICommand RestoreCommand { get; }
     public ICommand ImportCommand { get; }
     public ICommand BrowseImportCommand { get; }
+    public ICommand CheckUpdateCommand { get; }
+
+    // ---- Updates ----------------------------------------------------------
+
+    public UpdateService Updates => _services.Updates;
+
+    // Saved as it is chosen: the next check reads it, so there is nothing to apply.
+    public string UpdateChannel
+    {
+        get => _services.Settings.UpdateChannel;
+        set
+        {
+            if (_services.Settings.UpdateChannel == value) return;
+            _services.Settings.UpdateChannel = value;
+            _services.Settings.Save();
+            OnPropertyChanged();
+        }
+    }
 
     // ---- Importing from v2 ------------------------------------------------
 

@@ -87,6 +87,8 @@ public sealed class ShellViewModel : ObservableObject
         RetryCommand = new AsyncRelayCommand(StartAsync);
         ToggleLanguageCommand = new RelayCommand(() => Loc.Instance.Language = Loc.Instance.Language == "th" ? "en" : "th");
         ToggleObsCommand = new RelayCommand(() => IsObsOpen = !IsObsOpen);
+        ToggleNoticesCommand = new RelayCommand(() => Notices.IsOpen = !Notices.IsOpen);
+        DismissAllNoticesCommand = new RelayCommand(() => Notices.DismissAll());
         BackCommand = new RelayCommand(Back, () => CanGoBack);
         // A click on the sidebar item already selected still has to leave a page opened
         // on top of it (a tournament opened from Home), so this is a command, not just
@@ -129,9 +131,16 @@ public sealed class ShellViewModel : ObservableObject
     public IReadOnlyList<ObsSourceRow> ObsSources { get; }
     public ObservableCollection<Toast> ToastItems => Toasts.Items;
 
+    // The bell and the "ready" pill in the title bar. Both are visible from every screen
+    // because a message about the app matters wherever the operator happens to be.
+    public NoticeService Notices => _services.Notices;
+    public UpdateService Updates => _services.Updates;
+
     public ICommand RetryCommand { get; }
     public ICommand ToggleLanguageCommand { get; }
     public ICommand ToggleObsCommand { get; }
+    public ICommand ToggleNoticesCommand { get; }
+    public ICommand DismissAllNoticesCommand { get; }
     public ICommand BackCommand { get; }
     public ICommand NavigateCommand { get; }
 

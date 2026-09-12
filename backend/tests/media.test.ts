@@ -110,31 +110,41 @@ test('the app ships with its own sound files, so a download is not silent', () =
 // ของเครื่องที่ build ฝังอยู่ใน app.asar
 //
 // ตรวจทั้งสามนามสกุลที่ตัวอัปโหลดรับ ไม่ใช่แค่ png (ดู SKIN_TYPES)
-test('the installer never ships images the operator uploaded', {
-  skip: 'v3: electron-builder and build.files are gone. Re-point this guard at the Velopack packaging step (docs/PLAN.md, open items).'
-}, () => {
-  const pkg = JSON.parse(
-    fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8')
-  ) as { build: { files: string[] } };
+// v3 ไม่มี electron-builder แล้ว คนที่แพ็กตัวติดตั้งคือ scripts/pack.ps1
+// ซึ่ง copy ไฟล์ออกไป stage ก่อน แล้วลบรูปที่ผู้ใช้อัปโหลดทิ้งก่อนแพ็ก
+test('the installer never ships images the operator uploaded', () => {
+  const script = fs.readFileSync(
+    path.join(__dirname, '..', '..', '..', 'scripts', 'pack.ps1'), 'utf8'
+  );
 
-  const extensions = Object.values(SKIN_TYPES);
+  // โฟลเดอร์ที่ตัวอัปโหลดเขียนลงไป ต้องถูกล้างก่อนแพ็ก
+  const stripped = /\$uploadDirs\s*=\s*@\(([^)]*)\)/.exec(script);
+  assert.ok(stripped, 'pack.ps1 must list the upload folders it strips');
+
   (['team-logos', 'skins'] as const).forEach((folder) => {
-    extensions.forEach((ext) => {
-      const rule = `!public/images/${folder}/*.${ext}`;
-      assert.ok(
-        pkg.build.files.includes(rule),
-        `build.files must exclude ${rule} - uploaded images are the user's own data`
-      );
-    });
+    assert.ok(
+      stripped![1].includes(`'${folder}'`),
+      `pack.ps1 must strip public/images/${folder} - uploaded images are the user's own data`
+    );
   });
 
-  // ของที่ต้องติดไปด้วยจริงๆ ห้ามถูกยกเว้นตามไปด้วย
-  ['public/images/heroes', 'public/images/sounds'].forEach((keep) => {
+  // ประกาศไว้เฉยๆ ไม่พอ ต้องลบจริง
+  assert.match(
+    script,
+    /foreach \(\$dir in \$uploadDirs\)[\s\S]*Remove-Item/,
+    'pack.ps1 must delete the uploaded images, not just name them'
+  );
+
+  // ของที่ต้องติดไปด้วยจริงๆ ห้ามโดนลบตามไปด้วย
+  ['heroes', 'sounds'].forEach((keep) => {
     assert.ok(
-      !pkg.build.files.some((f) => f.startsWith('!') && f.includes(keep)),
+      !stripped![1].includes(keep),
       `${keep} is an app asset and must keep shipping`
     );
   });
+
+  // ตัวอัปโหลดรับสามนามสกุล ทั้งสามอยู่ในโฟลเดอร์ที่ถูกล้าง จึงไม่ต้องไล่ทีละนามสกุล
+  assert.ok(Object.values(SKIN_TYPES).length > 0, 'SKIN_TYPES must still list the accepted uploads');
 });
 
 // ตัวถอยของรูปที่โหลดไม่ขึ้น ต้องถอยได้ครั้งเดียว ไม่ใช่วนไม่รู้จบ

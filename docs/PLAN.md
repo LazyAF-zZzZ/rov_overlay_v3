@@ -8,17 +8,17 @@ session with no conversation history should be able to continue from here and
 
 ## 0. Where things stand
 
-**Last updated 2026-09-12. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 in the commit after those (see `git log`).**
+**Last updated 2026-09-12. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 `c615d39`, M7 in the commit after those (see `git log`).**
 
 | Area | State |
 |---|---|
-| Backend (`backend/`) | Copied from v2 at `6c69766` (v2.0.2 plus two overlay commits). Builds; **352 tests: 351 pass, 1 skipped on purpose** (§8). M6 added the v2 importer and its two tests. |
-| Desktop app (`desktop/`) | WPF on .NET 10. Builds with no warnings. Starts or attaches to the backend, live title strip, sidebar, OBS source list, toasts, Thai/English, back stack (Esc / mouse back). |
+| Backend (`backend/`) | Copied from v2 at `6c69766` (v2.0.2 plus two overlay commits). Builds; **352 tests, all passing, nothing skipped**. M6 added the v2 importer; M7 re-pointed the "installer never ships uploaded images" guard at `scripts/pack.ps1`, so it runs again. |
+| Desktop app (`desktop/`) | WPF on .NET 10. Builds with no warnings. Starts or attaches to the backend, live title strip, sidebar, OBS source list, toasts, Thai/English, back stack (Esc / mouse back), notice bell, first-run licence. |
 | Native screens | **All of them**: Home, tournament detail, team registry, team profile, Control Panel, bracket, analytics, pick/ban history, Design, Hotkeys, Guide, Settings. No screen opens a web page any more, and the HTML operator pages are now dead weight the packaging step can drop (§8). |
-| Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages. The v2 import is covered by tests: a synthetic v2 install is imported, its rows and logo land in v3, a second import adds nothing, and the v2 folder is asserted byte-identical afterwards. The **clicking** flows have not been clicked through by a person yet (§8). |
-| Updates / notifications | Designed (§5), not built. |
+| Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages. The v2 import runs against a synthetic v2 install in the tests, and the v2 folder is asserted byte-identical afterwards. M7 was rehearsed end to end: `pack.ps1` built a 124 MB installer at 3.0.0-rc.1, `vpk` confirmed the Velopack entry point, and the notice bell was rendered against a local feed. The **clicking** flows, and the installer itself, have not been tried by a person (§8). |
+| Updates / notifications | **Built** (§5). Velopack 1.2.0 against GitHub Releases, applied when the app closes and never on its own; a notice feed with a bell in the title bar. |
 
-Next: M7, packaging, updates and notifications (§7).
+Next: M8, release 3.0.0 (§7).
 
 ---
 
@@ -135,29 +135,35 @@ at the same time on it.
 - The first-run licence agreement dialog: M7, with the installer.
 - The app menu that opened overlay windows so sound effects play: see §8.
 
-## 5. Updates and notifications (designed, not built)
+## 5. Updates and notifications (built in M7)
 
-**Updates: Velopack** (open source, the successor to Squirrel).
+**Updates: Velopack 1.2.0**, the only third-party package in the app.
 
-- `dotnet publish` self-contained win-x64, plus `backend/` with its production
-  `node_modules` and a bundled `node.exe` in `backend/runtime/`, packed by `vpk pack`.
-- Delta packages, so a patch downloads only what changed.
-- Feed: GitHub Releases on a v3 repository (not created yet; the user decides where).
-- Check on start and every 6 hours, download in the background, then show
-  "Update ready, restart to apply". **Never restart by itself**: an operator may be
-  live on air. Apply on the next normal close.
-- Channels `stable` and `beta`, chosen in Settings.
+- `scripts/pack.ps1` stages a self-contained `dotnet publish`, the backend with a clean
+  production `npm ci`, and `node.exe` into `backend/runtime/`, then runs `vpk pack`.
+  Staged bundle 255 MB; installer 124 MB, plus a portable zip and a full `.nupkg`.
+- It strips `public/images/team-logos` and `skins` from the stage first. Those are
+  whatever the person building happened to upload, and v2 once shipped them to everyone.
+- Feed: **GitHub Releases on `LazyAF-zZzZ/rov_overlay_v3`**, public because a private
+  feed would need every user to hold a token. `pack.ps1 -Publish` uploads; without that
+  switch nothing reaches anyone.
+- Checked on start and every six hours, downloaded in the background. The operator is
+  told it is ready and **the app never restarts itself**:
+  `WaitExitThenApplyUpdates(restart: false)` puts it in when they close the app. Someone
+  may be live on air.
+- Channels `stable` and `beta`, chosen in Settings and read fresh on every check.
+- Only an installed copy can update. A portable copy, or a build from the repo, says so
+  in Settings instead of pretending to check.
 
-**Notifications: a notice feed**, no server of our own.
+**Notifications: a notice feed**, with no server of ours.
 
-- A `notices.json` in the repository, read over HTTPS on start and every 6 hours:
+- `notices.json` in the repository root, read over HTTPS on start and every six hours:
   `{ id, level: info|warning|critical, title: {th, en}, body: {th, en}, url?,
   minVersion?, maxVersion?, expires? }`.
-- Shown in a bell panel in the title bar, with a toast for new ones; dismissed ids are
-  remembered in `settings.json`.
-- Works offline (nothing shown), sends nothing about the user.
-
-Both need NuGet or network access that has not been set up yet; see §8.
+- A bell with a count in the title bar, a panel to read them, and a toast for new ones.
+  Dismissed ids are kept in `settings.json`, so a notice does not come back.
+- The version filtering happens on the operator's machine, so **nothing about them is
+  sent**: the app only GETs one public file. Offline, nothing is shown and nothing warns.
 
 ## 6. Layout
 
@@ -188,11 +194,19 @@ docs/v2/            v2's plan, guide and notes, for reference
 | M4 | Bracket, analytics, tournament drafts | done, commit after `ab3bdf8` |
 | M5 | Design, Hotkeys with native global hotkeys, Guide | done, commit after `c3ac12a` |
 | M6 | Import from v2: read its database and images, merge them in, never write to its folder | done, commit after `3fcb2a9` |
-| M7 | Packaging: bundled node, Velopack installer, updates, notice feed, licence dialog | next |
-| M8 | Release 3.0.0 | |
+| M7 | Packaging: bundled node, Velopack installer, updates, notice feed, licence dialog | done, commit after `c615d39` |
+| M8 | Release 3.0.0 | next |
 
 ## 8. Open items
 
+- **The installer has never been run.** `pack.ps1` builds it, but nobody has installed
+  it on a clean machine, and no update has been watched going from one version to the
+  next. Both before M8.
+- **`notices.json` reaches users only once it is on `main`.** Until then the feed URL
+  404s, which the app reads as "no messages" and stays quiet about, as intended.
+- **A `Popup` cannot be checked by a render.** It is its own window, so
+  `RenderTargetBitmap` never sees it: the notice panel and the OBS source list are
+  verified by their markup and their data, not by a screenshot.
 - **No v2 data exists on this machine to import.** `%APPDATA%\ROV Overlay Tool` does not
   exist and the database in the v2 repo has zero rows, so the importer was proved
   against a synthetic v2 install instead. Run it once against a real one.
@@ -206,16 +220,9 @@ docs/v2/            v2's plan, guide and notes, for reference
   M3). The Control Panel's TEST button plays locally only.
 - **Standings ignore the "teams through" box until it is a valid 1-8**; an invalid value
   keeps the last good one. Fine, but it shows no error.
-- **`tests/media.test.ts` "installer never ships uploaded images" is skipped.** It read
-  electron-builder's `build.files`, which no longer exists. Re-point it at the M7
-  packaging step; until then nothing guards against shipping a builder's team logos.
 - **Sound effects.** In v2 the Electron menu opened the overlay in a window so its
   `?sfx=1` audio played. v3 has no such window. Decide in M3: an OBS browser source
   with "Control audio via OBS", or a hidden WebView2 player.
-- **No NuGet package is needed any more.** The bracket is drawn natively and Design opens the overlay in a browser for its live preview, so WebView2 is optional polish, not a requirement. Velopack (M7) is still a download to approve.
-  (M7). M1 uses none on purpose.
-- **Where v3 releases live** (GitHub repository name, public or private) is the user's
-  call, needed before M7.
 - **Code signing.** An unsigned installer gets a SmartScreen warning.
 - **`CONTROL_TOKEN`** is not used by v3 (the server binds 127.0.0.1 only). Revisit if
   the server is ever exposed on the LAN.
@@ -235,6 +242,13 @@ docs/v2/            v2's plan, guide and notes, for reference
   `DisplayMemberPath`**, with our own ComboBox template. The position picker showed
   `RovOverlay.Desktop.ViewModels.PositionChoice`. Every choice type overrides
   `ToString()` to return its label; do the same for any new one.
+- **`execFileSync` blocks Node's event loop**, so a server in the same script cannot
+  answer while a child process runs. A local notice feed served that way looked exactly
+  like a broken notice service: the app's request went unanswered until its own 15-second
+  timeout. Use `spawn` and await the exit.
+- **Velopack has to run before WPF opens anything.** WPF generates its own `Main` from
+  App.xaml, so ours lives in `Program.cs` and `<StartupObject>` picks it. `vpk pack`
+  checks this really happened: "Verified VelopackApp.Run() in ... Program::Main".
 - **A v2 database can be in WAL mode**, and its newest rows live in the `-wal` file.
   Copy the database and its `-wal`/`-shm` aside and open the copy: opening v2's own
   file would replay the log and write to the folder we promised never to touch.
@@ -265,5 +279,6 @@ docs/v2/            v2's plan, guide and notes, for reference
   150 ms of state. Accepted: the alternative is a server squatting on port 3000.
 - **Backend changes from v2:** `package.json` (Electron removed, version 3.0.0-dev),
   `server.js` (lifecycle hook), `server/index.ts` (app-info route),
-  `server/store/live-state.ts` (`flushState`), `tests/media.test.ts` (one skip), plus
+  `server/store/live-state.ts` (`flushState`), `tests/media.test.ts` (its installer
+  guard now reads `scripts/pack.ps1` instead of electron-builder), plus
   the new files named in §6. Everything else is byte-for-byte v2.

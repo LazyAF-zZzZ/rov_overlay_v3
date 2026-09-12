@@ -87,6 +87,34 @@
                 </StackPanel>
             </Border>
 
+            <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Update.Section}" Margin="0,24,0,8"/>
+            <Border Style="{StaticResource Card}" Padding="16,12">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource MutedText}" Text="{svc:T Update.Hint}" Margin="0,0,0,10"/>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="{svc:T Update.CheckNow}" Command="{Binding CheckUpdateCommand}"
+                                Margin="8,0,0,0" MinWidth="110"/>
+                        <TextBlock Text="{Binding Updates.Status}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </DockPanel>
+                    <ProgressBar Height="3" Margin="0,10,0,0" BorderThickness="0" Maximum="100"
+                                 Value="{Binding Updates.Percent, Mode=OneWay}"
+                                 Background="{StaticResource Surface3Brush}" Foreground="{StaticResource GoldBrush}"
+                                 Visibility="{Binding Updates.ShowProgress, Converter={StaticResource BoolToVis}}"/>
+
+                    <TextBlock Style="{StaticResource MutedText}" Text="{svc:T Update.Channel}" Margin="0,16,0,6"/>
+                    <Border Style="{StaticResource SegmentGroup}" HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton Style="{StaticResource Segment}" GroupName="channel" Content="{svc:T Update.Stable}"
+                                         IsChecked="{Binding UpdateChannel, Converter={StaticResource EqualsToBool}, ConverterParameter=stable}"/>
+                            <RadioButton Style="{StaticResource Segment}" GroupName="channel" Content="{svc:T Update.Beta}"
+                                         IsChecked="{Binding UpdateChannel, Converter={StaticResource EqualsToBool}, ConverterParameter=beta}"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="{svc:T Update.ChannelHint}" FontSize="11" Foreground="{StaticResource MutedBrush}"
+                               Margin="0,8,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
             <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Settings.Server}" Margin="0,24,0,8"/>
             <Border Style="{StaticResource Card}" Padding="16,12">
                 <Grid>

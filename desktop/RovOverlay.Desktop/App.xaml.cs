@@ -10,6 +10,10 @@ namespace RovOverlay.Desktop;
 
 public partial class App : Application
 {
+    // Raise this when the licence text changes, so it is shown and agreed to again
+    // instead of being assumed from an old agreement.
+    private const int LicenceVersion = 1;
+
     private Mutex? _singleInstance;
     private AppServices? _services;
 
@@ -44,6 +48,20 @@ public partial class App : Application
             settings.Save();
         };
 
+        // The licence, once, before anything of the app opens. A snapshot run is a
+        // development aid with nobody at the keyboard, so it is never asked there.
+        if (args.SnapshotPath is null && settings.AgreedLicence < LicenceVersion)
+        {
+            string[] keys = ["Licence.Free", "Licence.May", "Licence.MayNot", "Licence.Keep", "Licence.Assets"];
+            if (!Dialogs.Agree(Loc.T("Licence.Title"), keys.Select(Loc.T), Loc.T("Licence.Agree"), Loc.T("Licence.Exit")))
+            {
+                Shutdown();
+                return;
+            }
+            settings.AgreedLicence = LicenceVersion;
+            settings.Save();
+        }
+
         _services = new AppServices(settings);
         var shell = new ShellViewModel(_services, args.Page) { OpenOnStart = args.Open, ThenOnStart = args.Then };
         var window = new MainWindow { DataContext = shell };
@@ -72,6 +90,9 @@ public partial class App : Application
         // the UI thread is how shutdowns hang.
         if (_services is not null)
         {
+            // If a new version was downloaded, this is the moment it goes in: the
+            // operator has closed the app themselves, so nothing is interrupted.
+            _services.Updates.ApplyOnExit();
             _ = _services.Socket?.DisposeAsync().AsTask();
             _services.Backend.Dispose();
         }

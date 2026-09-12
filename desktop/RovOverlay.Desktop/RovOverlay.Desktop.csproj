@@ -8,11 +8,18 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>RovOverlay.Desktop</RootNamespace>
     <AssemblyName>RovOverlayTool</AssemblyName>
+    <!-- Velopack must run before any window: see Program.cs. WPF also generates a Main
+         from App.xaml, and this is what picks ours over it. -->
+    <StartupObject>RovOverlay.Desktop.Program</StartupObject>
     <Product>ROV Overlay Tool</Product>
     <Version>3.0.0-dev</Version>
     <ApplicationIcon>..\..\backend\public\images\app-icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Velopack" Version="1.2.0" />
+  </ItemGroup>
 
 </Project>

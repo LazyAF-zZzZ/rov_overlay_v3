@@ -16,10 +16,14 @@ public sealed class AppServices : IAsyncDisposable
     {
         Settings = settings;
         Backend = new BackendHost(settings.Port);
+        Updates = new UpdateService(settings);
+        Notices = new NoticeService(settings);
     }
 
     public AppSettings Settings { get; }
     public BackendHost Backend { get; }
+    public UpdateService Updates { get; }
+    public NoticeService Notices { get; }
     public ApiClient Api { get; private set; } = null!;
     public SocketIoClient? Socket { get; private set; }
     public JsonNode? LastState { get; private set; }
@@ -67,6 +71,12 @@ public sealed class AppServices : IAsyncDisposable
         // Hotkeys screen is open.
         Hotkeys = new GlobalHotkeyHost(Api);
         Hotkeys.Start();
+
+        // Neither of these needs the backend or the network to be there. They start here
+        // so they start once, and only after the app is actually up rather than while it
+        // is still working out whether it can run at all.
+        Updates.Start();
+        Notices.Start();
     }
 
     public GlobalHotkeyHost? Hotkeys { get; private set; }
@@ -76,6 +86,8 @@ public sealed class AppServices : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         Hotkeys?.Dispose();
+        Updates.Dispose();
+        Notices.Dispose();
         if (Socket is not null) await Socket.DisposeAsync();
         Backend.Dispose();
     }

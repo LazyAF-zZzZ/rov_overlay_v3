@@ -17,6 +17,17 @@ public static class Dialogs
         return dialog.ShowDialog() == true;
     }
 
+    // The licence, shown once on the first run. Not a confirmation: the way out is
+    // closing the app, so the second button says so rather than saying "Cancel".
+    public static bool Agree(string title, IEnumerable<string> body, string agreeLabel, string exitLabel)
+    {
+        var dialog = new ConfirmDialog(title, body, agreeLabel, exitLabel, danger: false)
+        {
+            Owner = Application.Current?.MainWindow
+        };
+        return dialog.ShowDialog() == true;
+    }
+
     public static string? PickImage() =>
         PickOpen($"{Loc.T("Dialog.Images")} (*.png;*.jpg;*.webp)|*.png;*.jpg;*.jpeg;*.webp");
 

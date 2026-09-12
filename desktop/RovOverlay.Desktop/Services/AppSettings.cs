@@ -18,6 +18,17 @@ public sealed class AppSettings
     public string Language { get; set; } = "th";
     public int Port { get; set; } = DefaultPort;
 
+    // "stable" or "beta". Test versions arrive earlier and break more often, so this is
+    // opt-in and lives here rather than being guessed from the version number.
+    public string UpdateChannel { get; set; } = "stable";
+
+    // Messages from the maker the operator has already read, so they stay gone.
+    public List<string> DismissedNotices { get; set; } = new();
+
+    // Which version of the licence has been agreed to. A number, not a flag, so a
+    // changed licence can be shown again instead of being assumed.
+    public int AgreedLicence { get; set; }
+
     // Which sections the operator folded away, by key, so a 128-team roster stays folded
     // the next time the page opens.
     public Dictionary<string, bool> Folds { get; set; } = new();
