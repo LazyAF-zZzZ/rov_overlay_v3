@@ -199,6 +199,10 @@ docs/v2/            v2's plan, guide and notes, for reference
 
 ## 8. Open items
 
+- **The installer still ships v2's HTML operator pages.** `pack.ps1` copies all of
+  `public/`, so the bundle carries the pages every native screen replaced. They are
+  harmless and small next to node.exe, but they are dead weight and a second way to
+  drive the app that nobody maintains. Decide before M8 whether to exclude them.
 - **The installer has never been run.** `pack.ps1` builds it, but nobody has installed
   it on a clean machine, and no update has been watched going from one version to the
   next. Both before M8.
