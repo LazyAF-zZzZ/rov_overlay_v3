@@ -88,6 +88,7 @@ public sealed class ShellViewModel : ObservableObject
         ToggleLanguageCommand = new RelayCommand(() => Loc.Instance.Language = Loc.Instance.Language == "th" ? "en" : "th");
         ToggleObsCommand = new RelayCommand(() => IsObsOpen = !IsObsOpen);
         ToggleNoticesCommand = new RelayCommand(() => Notices.IsOpen = !Notices.IsOpen);
+        ShowUpdateCommand = new RelayCommand(() => ShowUpdate(force: true));
         DismissAllNoticesCommand = new RelayCommand(() => Notices.DismissAll());
         BackCommand = new RelayCommand(Back, () => CanGoBack);
         // A click on the sidebar item already selected still has to leave a page opened
@@ -99,6 +100,19 @@ public sealed class ShellViewModel : ObservableObject
             if (item.IsSelected) Navigate(item);
             else item.IsSelected = true;
         });
+
+        // A finished download asks to go in, but never mid-broadcast: BannerOnAir is the
+        // overlay being visible to viewers, which is as close as this app gets to knowing
+        // "do not interrupt". It waits, and asks when the banner comes down.
+        services.Updates.Ready += () =>
+        {
+            _updatePending = true;
+            TryShowUpdate();
+        };
+        PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(BannerOnAir)) TryShowUpdate();
+        };
 
         services.StateUpdated += ApplyState;
         services.ConnectionChanged += connected =>
@@ -136,10 +150,29 @@ public sealed class ShellViewModel : ObservableObject
     public NoticeService Notices => _services.Notices;
     public UpdateService Updates => _services.Updates;
 
+    private bool _updatePending;
+
+    private void TryShowUpdate()
+    {
+        if (_updatePending && !BannerOnAir) ShowUpdate(force: false);
+    }
+
+    // force: the operator clicked the version pill, so they are asking for it. Otherwise
+    // this is the app deciding to interrupt, which it only does while nothing is on air.
+    private void ShowUpdate(bool force)
+    {
+        if (!Updates.IsReady) return;
+        if (!force && BannerOnAir) return;
+
+        _updatePending = false;
+        if (Dialogs.AskUpdate(Updates.ReadyVersion ?? "", Updates.ReleaseNotes)) Updates.ApplyNow();
+    }
+
     public ICommand RetryCommand { get; }
     public ICommand ToggleLanguageCommand { get; }
     public ICommand ToggleObsCommand { get; }
     public ICommand ToggleNoticesCommand { get; }
+    public ICommand ShowUpdateCommand { get; }
     public ICommand DismissAllNoticesCommand { get; }
     public ICommand BackCommand { get; }
     public ICommand NavigateCommand { get; }

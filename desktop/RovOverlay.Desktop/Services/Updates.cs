@@ -49,6 +49,14 @@ public sealed class UpdateService : ObservableObject, IDisposable
 
     public bool IsReady => _ready is not null;
     public string? ReadyVersion => _ready?.TargetFullRelease.Version.ToString();
+
+    // The release notes ride inside the downloaded package, so what the operator reads is
+    // exactly what was written for that version - offline, and with nothing fetched.
+    public string? ReleaseNotes => _ready?.TargetFullRelease.NotesMarkdown;
+
+    // Raised once, when a version has finished downloading. The shell decides when to put
+    // it in front of anyone: never in the middle of a broadcast.
+    public event Action? Ready;
     public string Status { get => _status; private set => Set(ref _status, value); }
     public int Percent { get => _percent; private set => Set(ref _percent, value); }
 
@@ -148,6 +156,7 @@ public sealed class UpdateService : ObservableObject, IDisposable
             OnPropertyChanged(nameof(ReadyVersion));
             Status = Loc.F("Update.Ready", version);
             Toast(Loc.F("Update.ReadyToast", version), false);
+            Application.Current?.Dispatcher.InvokeAsync(() => Ready?.Invoke());
         }
         catch (OperationCanceledException)
         {
@@ -162,6 +171,25 @@ public sealed class UpdateService : ObservableObject, IDisposable
         {
             IsBusy = false;
             OnPropertyChanged(nameof(ShowProgress));
+        }
+    }
+
+    // The operator asked for it now rather than at the next close.
+    //
+    // Velopack is told to wait for this process to end and then start the new one, and the
+    // app is closed the ordinary way: OnExit still runs, so the backend is asked to stop
+    // and gets to flush the last state change instead of being killed with the job object.
+    public void ApplyNow()
+    {
+        if (_applying is null || _ready is null) return;
+        try
+        {
+            _applying.WaitExitThenApplyUpdates(_ready.TargetFullRelease, silent: true, restart: true);
+            Application.Current?.Shutdown();
+        }
+        catch (Exception e)
+        {
+            Toast(e.Message, true);
         }
     }
 

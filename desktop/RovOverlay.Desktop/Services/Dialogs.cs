@@ -28,6 +28,13 @@ public static class Dialogs
         return dialog.ShowDialog() == true;
     }
 
+    // A version has downloaded: what changed, what is about to happen, now or later.
+    public static bool AskUpdate(string version, string? notes)
+    {
+        var dialog = new UpdateDialog(version, notes) { Owner = Application.Current?.MainWindow };
+        return dialog.ShowDialog() == true;
+    }
+
     public static string? PickImage() =>
         PickOpen($"{Loc.T("Dialog.Images")} (*.png;*.jpg;*.webp)|*.png;*.jpg;*.jpeg;*.webp");
 

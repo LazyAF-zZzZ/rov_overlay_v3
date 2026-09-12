@@ -93,13 +93,16 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,6,0">
-                        <!-- A downloaded update waiting for the app to close. -->
-                        <Border Style="{StaticResource Pill}" Margin="0,0,8,0" Padding="8,1,8,2"
-                                Background="{StaticResource GoldBrush}" ToolTip="{Binding Updates.Status}"
+                        <!-- A downloaded update. Click it to read what changed and choose. -->
+                        <Button Style="{StaticResource GhostButton}" Padding="6,0" Margin="0,0,6,0" MinWidth="0"
+                                WindowChrome.IsHitTestVisibleInChrome="True"
+                                Command="{Binding ShowUpdateCommand}" ToolTip="{Binding Updates.Status}"
                                 Visibility="{Binding Updates.IsReady, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding Updates.ReadyVersion, StringFormat=v{0}}" FontSize="10.5"
-                                       FontWeight="Bold" Foreground="#15120B"/>
-                        </Border>
+                            <Border Style="{StaticResource Pill}" Padding="8,1,8,2" Background="{StaticResource GoldBrush}">
+                                <TextBlock Text="{Binding Updates.ReadyVersion, StringFormat=v{0}}" FontSize="10.5"
+                                           FontWeight="Bold" Foreground="#15120B"/>
+                            </Border>
+                        </Button>
 
                         <!-- Messages from the maker. Hidden when there are none. -->
                         <Button x:Name="BellButton" Style="{StaticResource GhostButton}" Padding="10,0"
