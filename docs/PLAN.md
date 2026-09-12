@@ -8,17 +8,17 @@ session with no conversation history should be able to continue from here and
 
 ## 0. Where things stand
 
-**Last updated 2026-09-12. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 `c615d39`, M7 `79c5f41`, M8 `7e13667`, 3.0.3 in the commit after those (see `git log`).**
+**Last updated 2026-09-12. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 `c615d39`, M7 `79c5f41`, M8 `7e13667`, 3.0.4 in the commit after those (see `git log`).**
 
 | Area | State |
 |---|---|
 | Backend (`backend/`) | Copied from v2 at `6c69766` (v2.0.2 plus two overlay commits). Builds; **356 tests, all passing, nothing skipped**. M6 added the v2 importer; M7 revived the "installer never ships uploaded images" guard; M8 added `tests/packaging.test.ts`, which keeps the bundle's page list honest in both directions. |
 | Desktop app (`desktop/`) | WPF on .NET 10. Builds with no warnings. Starts or attaches to the backend, live title strip, sidebar, OBS source list, toasts, Thai/English, back stack (Esc / mouse back), notice bell, first-run licence. |
 | Native screens | **All of them**: Home, tournament detail, team registry, team profile, Control Panel, bracket, analytics, pick/ban history, Design, Hotkeys, Guide, Settings. No screen opens a web page any more, and since M8 the installer no longer carries the ten HTML operator pages they replaced. The manual (`/guide`) and the sound check (`/sfx-test`) still ship: nothing replaced those, and the Guide screen has a button that opens the manual in a browser. |
-| Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages; anything in its own window cannot be (§8), which is how 3.0.0 shipped unable to open one at all. 3.0.3 has been **installed from its own Setup and watched opening a real window**, serving its overlays and answering 410 on the pages the installer drops. The v2 import runs against a synthetic v2 install in the tests, with the v2 folder asserted byte-identical afterwards. The **clicking** flows are still unverified (§8). |
+| Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages; anything in its own window cannot be (§8), which is how 3.0.0 shipped unable to open one at all. 3.0.4 has been **installed from its own Setup and watched opening a real window**, serving its overlays and answering 410 on the pages the installer drops. The v2 import runs against a synthetic v2 install in the tests, with the v2 folder asserted byte-identical afterwards. The **clicking** flows are still unverified (§8). |
 | Updates / notifications | **Built** (§5). Velopack 1.2.0 against GitHub Releases, applied when the app closes and never on its own; a notice feed with a bell in the title bar. |
 
-Next: publish 3.0.3 when the user says to (§7), then watch the first real update land.
+Next: publish 3.0.4 when the user says to (§7), then watch the first real update land.
 
 ---
 
@@ -195,14 +195,14 @@ docs/v2/            v2's plan, guide and notes, for reference
 | M5 | Design, Hotkeys with native global hotkeys, Guide | done, commit after `c3ac12a` |
 | M6 | Import from v2: read its database and images, merge them in, never write to its folder | done, commit after `3fcb2a9` |
 | M7 | Packaging: bundled node, Velopack installer, updates, notice feed, licence dialog | done, commit after `c615d39` |
-| M8 | Release 3.0.0 | built; 3.0.0 could not open a window, so **3.0.3** is the release. Installed and working, not published |
+| M8 | Release 3.0.0 | built; 3.0.0 could not open a window, so **3.0.4** is the release. Installed and working, not published |
 
 ## 8. Open items
 
-- **3.0.3 is built and installed here, but not published.** `releases/` holds the
+- **3.0.4 is built and installed here, but not published.** `releases/` holds the
   installer, the portable zip and the full package. Publishing is one command and is the
   user's call:
-  `$env:GITHUB_TOKEN = (gh auth token); .\scripts\pack.ps1 -Version 3.0.3 -Publish`.
+  `$env:GITHUB_TOKEN = (gh auth token); .\scripts\pack.ps1 -Version 3.0.4 -Publish`.
 - **No update has been watched going from one version to the next.** Installing works;
   what is untested is Velopack replacing an existing install from the feed, then applying
   it on close. That needs a published release, so it cannot be proved before one.
