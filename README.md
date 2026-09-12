@@ -10,3 +10,12 @@ the same HTML pages as v2, served by the same backend, so existing scenes keep w
 - `docs/PLAN.md`: design, status and roadmap
 
 Status: early development. See `docs/PLAN.md` §0.
+
+## Licence
+
+Free for tournaments, community streams, school events and personal use. Selling,
+reselling, renting or bundling it into anything paid is not allowed, and neither is
+passing it off as your own work. See [LICENSE.md](LICENSE.md).
+
+v2, the released version people use today, is at
+[rov_pickban_overlay](https://github.com/LazyAF-zZzZ/rov_pickban_overlay).
