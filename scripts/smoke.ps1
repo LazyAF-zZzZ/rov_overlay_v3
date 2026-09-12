@@ -44,7 +44,9 @@ public class RovSmokeProbe {
   [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
   [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr h, StringBuilder s, int n);
   [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L, T, R, B; }
-  // Visible, and big enough to be a real window rather than one of WPF's hidden helpers.
+  // Visible, and big enough to be the real window rather than one of WPF's hidden
+  // helpers - or a message box. "This app is already open" is a visible window too, and
+  // a smoke test that accepts one passes while the app is broken.
   public static string Visible(uint target) {
     var sb = new StringBuilder();
     EnumWindows(delegate(IntPtr h, IntPtr p) {
@@ -52,7 +54,7 @@ public class RovSmokeProbe {
       if (pid == target && IsWindowVisible(h)) {
         RECT r; GetWindowRect(h, out r);
         int w = r.R - r.L, ht = r.B - r.T;
-        if (w > 200 && ht > 100) {
+        if (w >= 800 && ht >= 500) {
           var t = new StringBuilder(256); GetWindowText(h, t, 256);
           sb.AppendLine(string.Format("{0}x{1} at ({2},{3}) '{4}'", w, ht, r.L, r.T, t.ToString()));
         }
@@ -63,6 +65,13 @@ public class RovSmokeProbe {
   }
 }
 '@
+
+# One app per machine (the single-instance mutex), so a copy already running would make
+# the new one show "already open" and exit - which is not what this is testing.
+$already = Get-Process RovOverlayTool -ErrorAction SilentlyContinue
+if ($already) {
+    throw "ROV Overlay Tool is already running (pid $($already.Id -join ', ')). Close it first."
+}
 
 $settings = Join-Path $env:APPDATA 'RovOverlayTool3\settings.json'
 $backup = $null
