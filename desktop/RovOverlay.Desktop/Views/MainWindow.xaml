@@ -163,7 +163,16 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                                    <!-- Which sources actually carry the draft sounds -->
+                                                    <Border CornerRadius="8" Padding="6,0,6,1" Margin="7,0,0,0" VerticalAlignment="Center"
+                                                            Background="{StaticResource GoldSoftBrush}"
+                                                            Visibility="{Binding HasSfx, Converter={StaticResource BoolToVis}}">
+                                                        <TextBlock Text="{svc:T Obs.Sfx}" FontSize="9.5" FontWeight="Bold"
+                                                                   Foreground="{StaticResource GoldBrush}"/>
+                                                    </Border>
+                                                </StackPanel>
                                                 <TextBlock Text="{Binding SizeText}" FontSize="11" Foreground="{StaticResource MutedBrush}"/>
                                             </StackPanel>
                                             <TextBox Grid.Column="1" Text="{Binding Url, Mode=OneWay}" IsReadOnly="True" Margin="8,0"
@@ -179,6 +188,17 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+
+                        <!-- The two things that make sound look broken when it is not -->
+                        <Border Background="{StaticResource Surface1Brush}" BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="5" Padding="10,8" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="{svc:T Obs.SfxHint}" TextWrapping="Wrap" FontSize="11" LineHeight="17"
+                                           Foreground="{StaticResource Muted2Brush}"/>
+                                <TextBlock Text="{svc:T Obs.CacheHint}" TextWrapping="Wrap" FontSize="11" LineHeight="17"
+                                           Margin="0,6,0,0" Foreground="{StaticResource Muted2Brush}"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Border>
             </Popup>

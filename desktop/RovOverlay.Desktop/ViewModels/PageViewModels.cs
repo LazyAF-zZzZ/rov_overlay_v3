@@ -27,10 +27,11 @@ public sealed class ObsSourceRow : ObservableObject
 
     private readonly string? _size;
 
-    private ObsSourceRow(AppServices services, string name, string route, string? size)
+    private ObsSourceRow(AppServices services, string name, string route, string? size, bool hasSfx)
     {
         Name = name;
         _size = size;
+        HasSfx = hasSfx;
         Url = services.Url(route);
         CopyCommand = new RelayCommand(() => Clip.Copy(Url));
         OpenCommand = new RelayCommand(() => Browser.Open(Url));
@@ -38,15 +39,20 @@ public sealed class ObsSourceRow : ObservableObject
     }
 
     public static IReadOnlyList<ObsSourceRow> Create(AppServices services) =>
-        Sources.Select(s => new ObsSourceRow(services, s.Name, s.Sfx ? s.Path + "?sfx=1" : s.Path, s.Size)).ToList();
+        Sources.Select(s => new ObsSourceRow(services, s.Name, s.Sfx ? s.Path + "?sfx=1" : s.Path, s.Size, s.Sfx)).ToList();
 
     public static IReadOnlyList<ObsSourceRow> CreateForTournament(AppServices services, string tournamentId) =>
         Sources.Where(s => s.PerTournament)
-            .Select(s => new ObsSourceRow(services, s.Name, $"{s.Path}?tournament={Uri.EscapeDataString(tournamentId)}", s.Size))
+            .Select(s => new ObsSourceRow(services, s.Name, $"{s.Path}?tournament={Uri.EscapeDataString(tournamentId)}", s.Size, s.Sfx))
             .ToList();
 
     public string Name { get; }
     public string Url { get; }
+
+    // Sound is opt-in per URL: only the source carrying ?sfx=1 plays, or the 1080p
+    // overlay, the 1440p overlay and the result screen would all echo each other.
+    // Which ones those are is impossible to tell from the list otherwise.
+    public bool HasSfx { get; }
     public string SizeText => _size ?? Loc.T("Obs.SameSize");
     public ICommand CopyCommand { get; }
     public ICommand OpenCommand { get; }
