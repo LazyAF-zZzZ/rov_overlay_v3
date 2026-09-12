@@ -297,11 +297,16 @@
                 <Border Background="{StaticResource GoldSoftBrush}" BorderBrush="{StaticResource GoldLineBrush}" BorderThickness="1"
                         CornerRadius="6" Padding="12,7" Margin="0,10,0,0"
                         Visibility="{Binding HasLive, Converter={StaticResource BoolToVis}}">
-                    <StackPanel Orientation="Horizontal">
+                    <DockPanel>
+                        <!-- One click back to the bracket this match came from. -->
+                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Padding="10,0"
+                                Content="{svc:T Live.OpenBracket}" Command="{Binding OpenBracketCommand}"
+                                Visibility="{Binding HasLiveBracket, Converter={StaticResource BoolToVis}}"/>
                         <TextBlock Text="{svc:T Control.OnAir}" FontWeight="Bold" FontSize="10.5" Foreground="{StaticResource GoldBrush}"
                                    VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding LiveText}" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
-                    </StackPanel>
+                        <TextBlock Text="{Binding LiveText}" Margin="10,0,0,0" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextBrush}" TextTrimming="CharacterEllipsis"/>
+                    </DockPanel>
                 </Border>
 
                 <!-- ========== Draft ========== -->

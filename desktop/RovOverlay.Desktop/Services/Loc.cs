@@ -85,6 +85,7 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["Banner.OnTip"] = "Banner on air",
         ["Banner.OffTip"] = "Banner hidden",
         ["Live.Quick"] = "Quick match",
+        ["Live.OpenBracket"] = "Open its bracket",
         ["Live.Match"] = "{0} · {1} · Game {2}",
         ["Live.MatchNoGame"] = "{0} · {1}",
 
@@ -190,6 +191,7 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["Banner.OnTip"] = "แบนเนอร์ออกอากาศอยู่",
         ["Banner.OffTip"] = "ซ่อนแบนเนอร์อยู่",
         ["Live.Quick"] = "แมตช์เดี่ยว",
+        ["Live.OpenBracket"] = "ไปที่สายการแข่ง",
         ["Live.Match"] = "{0} · {1} · เกม {2}",
         ["Live.MatchNoGame"] = "{0} · {1}",
 

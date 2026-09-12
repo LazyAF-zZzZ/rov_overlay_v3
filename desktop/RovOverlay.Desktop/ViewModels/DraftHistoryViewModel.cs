@@ -182,7 +182,7 @@ public sealed class DraftHistoryViewModel : ObservableObject, IClosablePage
             var hero = heroes?.ElementAtOrDefault(i);
             if (string.IsNullOrEmpty(hero)) return new HeroTile(null, null, false);
             var hit = needle.Length > 0 && hero.Contains(needle, StringComparison.CurrentCultureIgnoreCase);
-            return new HeroTile(hero, _s.Url($"/images/heroes/{Uri.EscapeDataString(hero)}.png"), hit);
+            return new HeroTile(hero, _s.Url($"/images/heroes-icons/{Uri.EscapeDataString(hero)}.png"), hit);
         }).ToList();
 
     private static bool Matches(DraftGame game, string teamId, string needle)

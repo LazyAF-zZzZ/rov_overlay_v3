@@ -216,7 +216,7 @@ public sealed class AnalyticsViewModel : ObservableObject, IClosablePage
         foreach (var stat in _heroes.Where(h => h.Present > 0)
                      .Where(h => needle.Length == 0 || h.Hero.Contains(needle, StringComparison.CurrentCultureIgnoreCase)))
         {
-            Rows.Add(new HeroStatRow(stat, _s.Url($"/images/heroes/{Uri.EscapeDataString(stat.Hero)}.png")));
+            Rows.Add(new HeroStatRow(stat, _s.Url($"/images/heroes-icons/{Uri.EscapeDataString(stat.Hero)}.png")));
         }
 
         foreach (var name in new[]
@@ -236,9 +236,9 @@ public sealed class AnalyticsViewModel : ObservableObject, IClosablePage
         foreach (var (side, isBlue) in new[] { (state.Blue, true), (state.Red, false) })
         {
             foreach (var hero in side.Bans.Where(h => h is not null))
-                chips.Add(new LiveHeroChip(hero!, _s.Url($"/images/heroes/{Uri.EscapeDataString(hero!)}.png"), isBlue, true));
+                chips.Add(new LiveHeroChip(hero!, _s.Url($"/images/heroes-icons/{Uri.EscapeDataString(hero!)}.png"), isBlue, true));
             foreach (var hero in side.Picks.Where(h => h is not null))
-                chips.Add(new LiveHeroChip(hero!, _s.Url($"/images/heroes/{Uri.EscapeDataString(hero!)}.png"), isBlue, false));
+                chips.Add(new LiveHeroChip(hero!, _s.Url($"/images/heroes-icons/{Uri.EscapeDataString(hero!)}.png"), isBlue, false));
         }
 
         var complete = state.Blue.Picks.All(h => h is not null) && state.Blue.Bans.All(h => h is not null)

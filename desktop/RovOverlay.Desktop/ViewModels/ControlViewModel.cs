@@ -24,14 +24,18 @@ public sealed class ControlViewModel : ObservableObject
     private bool _matchSaved;
     private int _lastFocusedPhase = int.MinValue;
     private string? _liveText;
+    private string? _liveTournamentId;
+    private readonly ShellViewModel _shell;
 
-    public ControlViewModel(AppServices services)
+    public ControlViewModel(AppServices services, ShellViewModel shell)
     {
         Services = services;
+        _shell = shell;
         Blue = new SideViewModel(this, "teamBlue");
         Red = new SideViewModel(this, "teamRed");
         foreach (var key in SfxKeys) SfxRows.Add(new SfxRow(this, key));
 
+        OpenBracketCommand = new RelayCommand(OpenBracket);
         StartCommand = new RelayCommand(() => Emit("draftStart"));
         PauseCommand = new RelayCommand(() => Emit("draftPause"));
         ResumeCommand = new RelayCommand(() => Emit("draftResume"));
@@ -135,7 +139,10 @@ public sealed class ControlViewModel : ObservableObject
     public string PhaseLabel => _state is null || _state.DraftIdle ? Loc.T("Control.Ready") : _state.DraftLabel.ToUpperInvariant();
     public string TimerText => _state is null || _state.DraftIdle ? "--" : _state.Timer is { Length: > 0 } t ? t : "--";
     public bool IsUrgent => Seconds(TimerText) is > 0 and <= 10;
-    public string PhaseIndexText => Loc.F("Control.PhaseN", Math.Max(_state?.DraftPhaseIndex ?? -1, -1) + 1, Sequence.Count);
+    // A finished draft sits one past the last phase, which showed as "Phase 17 / 16" -
+    // a counter past its own total reads as a fault in the app.
+    public string PhaseIndexText =>
+        Loc.F("Control.PhaseN", Math.Clamp((_state?.DraftPhaseIndex ?? -1) + 1, 0, Sequence.Count), Sequence.Count);
     public bool IsRunning => _state?.DraftRunning == true;
 
     public string StatusText
@@ -163,6 +170,22 @@ public sealed class ControlViewModel : ObservableObject
     // ---- live match -------------------------------------------------------
 
     public string? LiveText { get => _liveText; private set => Set(ref _liveText, value); }
+
+    public bool HasLiveBracket => _liveTournamentId is not null;
+    public ICommand OpenBracketCommand { get; }
+
+    // The way back. Going on air from the bracket navigates here, which closes the pages
+    // behind it, and an operator moves between the draft and the bracket all evening:
+    // one game ends, the score goes in, the next match goes on air. Without this the trip
+    // back is Home, the tournament, then the bracket, every single time.
+    //
+    // Opened on top of this panel rather than navigated to, so Esc and the mouse's back
+    // button return to the draft exactly where it was.
+    private void OpenBracket()
+    {
+        if (_liveTournamentId is null) return;
+        _shell.Open(new BracketViewModel(Services, _shell, _liveTournamentId));
+    }
     public bool HasLive => LiveText is not null;
 
     // ---- heroes -----------------------------------------------------------
@@ -271,6 +294,8 @@ public sealed class ControlViewModel : ObservableObject
         try
         {
             var live = (await Services.Api.GetAsync<LiveResponse>("/api/live-match")).Live;
+            _liveTournamentId = live.MatchId is null ? null : live.TournamentId;
+            OnPropertyChanged(nameof(HasLiveBracket));
             LiveText = live.MatchId is null
                 ? null
                 : live.GameNo is int game

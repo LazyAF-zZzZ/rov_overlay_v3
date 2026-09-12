@@ -206,6 +206,16 @@ docs/v2/            v2's plan, guide and notes, for reference
 - **No update has been watched going from one version to the next.** Installing works;
   what is untested is Velopack replacing an existing install from the feed, then applying
   it on close. That needs a published release, so it cannot be proved before one.
+- **Flow annoyances still open**, from watching the screens after 3.0.1:
+  - **The tournament page has no per-match actions.** It reports "4 / 15 played" and
+    nothing else; the only way to put a match on air is the bracket, two clicks further
+    in. The obvious fix is a "next match" row on the tournament page with the same
+    button the bracket card has.
+  - **The bracket wastes the window on a small tournament.** A two-team event is one
+    card in the top-left of an otherwise empty page. Centre it, or scale to fit.
+  - **The Control Panel's match title is clipped mid-word** in its field
+    ("PSG Esports VS Buriram United : GAME 1 ["). It is only a display width, but that
+    field is what the operator checks before going on air.
 - **No notice has ever been sent end to end.** The feed is live and serving `[]`
   (`raw.githubusercontent.com/LazyAF-zZzZ/rov_overlay_v3/main/notices.json`, HTTP 200).
   What is untested is a real entry: add one, watch it reach an installed copy, and check

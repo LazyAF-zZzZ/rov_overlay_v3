@@ -402,6 +402,12 @@ public sealed class BracketViewModel : ObservableObject, IClosablePage
         Toasts.Info(Loc.F("Bracket.OnAir", reply.Live.GameNo ?? 1));
         _liveMatchId = card.Id;
         foreach (var other in _cards.Values) other.IsLive = other.Id == card.Id;
+
+        // Straight to the Control Panel with this match loaded, as v2 did. Putting a match
+        // on air is only ever the first half of the job: the next thing anyone wants is
+        // the draft board for it, and stopping here means finding it in the sidebar and
+        // wondering whether the right match came with you.
+        _shell.NavigateTo("Control");
     }
 
     internal async Task RecordResultAsync(MatchCard card)

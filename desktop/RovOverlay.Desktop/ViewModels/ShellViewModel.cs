@@ -74,7 +74,7 @@ public sealed class ShellViewModel : ObservableObject
         NavItems =
         [
             new NavItem(this, "Home", "\uE80F", () => new HomeViewModel(services, this)),
-            new NavItem(this, "Control", "\uE7FC", () => new ControlViewModel(services)),
+            new NavItem(this, "Control", "\uE7FC", () => new ControlViewModel(services, this)),
             new NavItem(this, "Teams", "\uE716", () => new TeamsViewModel(services, this)),
             new NavItem(this, "Analytics", "\uE9D2", () => new AnalyticsViewModel(services)),
             new NavItem(this, "Design", "\uE790", () => new DesignViewModel(services)),
