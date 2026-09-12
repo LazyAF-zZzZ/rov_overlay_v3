@@ -244,7 +244,14 @@ because the 1080p overlay, the 1440p overlay and the result screen all receive t
 state and would otherwise echo each other; and `play()` swallows everything until
 `RovSfx.arm()` is called at the end of the first `updateOverlay`, because that first state
 is the whole board arriving at once — without the gate, refreshing the source mid-draft
-fires a pick sound for every hero already on screen. Files live in
+fires a pick sound for every hero already on screen.
+
+**The same gate is used again whenever a whole board arrives at once.** Switching rounds
+loads a recorded draft in a single update, and every filled slot counted as a change:
+eighteen sounds together, loud enough to be unusable. `isBoardSwap()` in `overlay.js`
+calls `RovSfx.disarm()` for that update — a changed `state.round`, or more than two heroes
+landing at once, is a board being loaded rather than somebody drafting. The `arm()` at the
+end of `updateOverlay` turns sound back on, so only that one update is silent. Files live in
 `public/images/sounds` (`USER_SOUND_DIR`), served at `/sounds`, with fixed names from a
 table in the module — never from user text, same rule as `domain/media.ts`.
 

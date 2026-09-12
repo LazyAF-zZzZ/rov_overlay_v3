@@ -189,6 +189,45 @@ function timerToSeconds(timer) {
     return Number.isFinite(asNumber) ? asNumber : 0;
 }
 
+// รอบล่าสุดที่วาดไป ใช้ดูว่าอัปเดตนี้คือการสลับรอบหรือเปล่า
+let lastRound = null;
+
+// มีกี่ช่องที่กำลังจะมีฮีโร่ "ใหม่" ในอัปเดตนี้
+//
+// อ่านจาก dataset.hero ของช่องจริง ซึ่งเป็นตัวเดียวกับที่ updateBans/updatePicks
+// ใช้ตัดสินใจว่าจะเล่นเสียงไหม การนับกับการเล่นจึงไม่มีทางเห็นไม่ตรงกัน
+function countIncomingHeroes(state) {
+    let count = 0;
+    ['teamBlue', 'teamRed'].forEach((team) => {
+        const side = state[team] || {};
+        (side.bans || []).forEach((hero, index) => {
+            const slot = /** @type {HTMLElement | null} */ (
+                document.querySelector(`.ban-slot[data-team="${team}"][data-index="${index}"]`));
+            if (hero && slot && slot.dataset.hero !== hero) count += 1;
+        });
+        (side.picks || []).forEach((hero, index) => {
+            const slot = /** @type {HTMLElement | null} */ (
+                document.querySelector(`.pick-slot[data-team="${team}"][data-index="${index}"]`));
+            if (hero && slot && slot.dataset.hero !== hero) count += 1;
+        });
+    });
+    return count;
+}
+
+// กระดานมาทั้งกระดานพร้อมกันหรือเปล่า
+//
+// เกิดจริงตอนสลับรอบ: รอบที่ดราฟต์ไว้แล้วจะเด้งมาครบทั้งกระดานในอัปเดตเดียว
+// แล้วเสียงพิค/แบนจะดังพร้อมกันสิบกว่าเสียง ดังจนใช้งานจริงไม่ได้
+//
+// ดูสองอย่าง: เลขรอบเปลี่ยน และจำนวนช่องที่เพิ่งมีฮีโร่ ดราฟต์จริงลงทีละช่อง
+// (เฟสพิคคู่ก็ยังพิมพ์ทีละตัว) เกินสองช่องในอัปเดตเดียวแปลว่าโหลดกระดาน ไม่ใช่คนกำลังดราฟต์
+function isBoardSwap(state) {
+    const round = typeof state.round === 'number' ? state.round : null;
+    const roundChanged = lastRound !== null && round !== null && round !== lastRound;
+    lastRound = round;
+    return roundChanged || countIncomingHeroes(state) > 2;
+}
+
 function updateOverlay(state) {
     // Update team names
     document.getElementById('blueTeamName').textContent = state.teamBlue.name;
@@ -202,6 +241,11 @@ function updateOverlay(state) {
 
     // ระดับเสียงมากับ state ปรับจากหน้า Control แล้วมีผลทันทีโดยไม่ต้อง Refresh source
     RovSfx.setLevels(state.sfx);
+
+    // สลับรอบทำให้กระดานทั้งกระดานมาพร้อมกัน ถ้าปล่อยไว้เสียงจะดังรัวทั้งกระดาน
+    // ปิดเสียงเฉพาะอัปเดตนี้ แล้ว RovSfx.arm() ท้ายฟังก์ชันจะเปิดกลับให้เอง
+    // ต้องเรียกก่อนเสียงนาฬิกาและก่อน updateBans/updatePicks ทั้งหมด
+    if (isBoardSwap(state)) RovSfx.disarm();
 
     // Update team logos
     renderTeamLogo(document.getElementById('blueTeamLogo'), 'teamBlue', state.teamBlue.logo);

@@ -19,6 +19,8 @@ interface RovSfxApi {
   play(name: 'pick' | 'ban' | 'timer'): void;
   /** ปลดล็อกเสียง เรียกหลังวาด state ก้อนแรกเสร็จ */
   arm(): void;
+  /** กลืนเสียงของอัปเดตนี้ทิ้ง ใช้ตอนกระดานมาทั้งกระดาน เช่นสลับรอบ */
+  disarm(): void;
   /** ตั้งระดับเสียงต่อเหตุการณ์ จาก state.sfx */
   setLevels(levels: unknown): void;
 }

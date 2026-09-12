@@ -198,6 +198,14 @@
     armed = true;
   }
 
+  // กลืนเสียงของอัปเดตรอบนี้ทิ้ง แล้ว arm() ท้าย updateOverlay จะเปิดกลับให้เอง
+  //
+  // ใช้ตอนกระดานมาทั้งกระดานพร้อมกัน เช่นสลับรอบไปรอบที่ดราฟต์ไว้แล้ว
+  // เหตุผลเดียวกับ state ก้อนแรก: นั่นคือ "กระดานตอนนี้" ไม่ใช่ "เพิ่งมีอะไรเกิดขึ้น"
+  function disarm() {
+    armed = false;
+  }
+
   function play(name) {
     if (!enabled || !armed || !ctx || !gains[name]) return;
 
@@ -231,5 +239,5 @@
     load();
   }
 
-  global.RovSfx = { enabled, play, arm, setLevels };
+  global.RovSfx = { enabled, play, arm, disarm, setLevels };
 })(window);
