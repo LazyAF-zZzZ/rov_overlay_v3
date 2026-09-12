@@ -86,7 +86,8 @@ public sealed partial class Loc
 
         ["Tour.MatchSession"] = "MATCH SESSION",
         ["Tour.Played"] = "{0} / {1} played",
-        ["Tour.MatchesDrawn"] = "{0} matches drawn. Scores, the bracket and putting a match on air all live in the match session.",
+        ["Tour.MatchesDrawn"] = "{0} matches drawn. Put one on air from here, or open the bracket to record scores.",
+        ["Tour.NextMatches"] = "Ready to play",
         ["Tour.NeedTwoTeams"] = "Add at least two teams, then open the match session to draw the bracket.",
         ["Tour.NoBracket"] = "No bracket drawn yet. Open the match session to draw it.",
         ["Tour.OpenBracket"] = "Open match session",
@@ -265,7 +266,8 @@ public sealed partial class Loc
 
         ["Tour.MatchSession"] = "สายการแข่ง",
         ["Tour.Played"] = "แข่งแล้ว {0} / {1}",
-        ["Tour.MatchesDrawn"] = "จับสายแล้ว {0} คู่ การกรอกผล ดูสาย และเอาแมตช์ขึ้นจอ อยู่ในหน้าสายการแข่งทั้งหมด",
+        ["Tour.MatchesDrawn"] = "จับสายแล้ว {0} คู่ เอาขึ้นจอได้จากตรงนี้เลย หรือเปิดสายการแข่งเพื่อกรอกคะแนน",
+        ["Tour.NextMatches"] = "คู่ที่พร้อมแข่ง",
         ["Tour.NeedTwoTeams"] = "เพิ่มทีมอย่างน้อยสองทีม แล้วเปิดหน้าสายการแข่งเพื่อจับสาย",
         ["Tour.NoBracket"] = "ยังไม่ได้จับสาย เปิดหน้าสายการแข่งเพื่อจับ",
         ["Tour.OpenBracket"] = "เปิดสายการแข่ง",

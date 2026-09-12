@@ -77,7 +77,11 @@
 
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                           Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisInv}}">
-                <ItemsControl ItemsSource="{Binding Sections}" Margin="20,16,20,24" Focusable="False">
+                <!-- Centred, so a two-team event is not one card in the corner of an empty
+                     page. Once the bracket is bigger than the window the ScrollViewer takes
+                     over and the alignment stops mattering. -->
+                <ItemsControl ItemsSource="{Binding Sections}" Margin="20,16,20,24" Focusable="False"
+                              HorizontalAlignment="Center" VerticalAlignment="Center">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Margin="0,0,0,28">

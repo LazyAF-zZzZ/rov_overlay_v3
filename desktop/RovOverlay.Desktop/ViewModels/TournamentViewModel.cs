@@ -21,6 +21,23 @@ public sealed record TeamChoice(string Id, string Label)
     public override string ToString() => Label;
 }
 
+// A match that can be run right now, on the tournament page. The tournament page used to
+// report "4 / 15 played" and stop there, so the only way to put a match on air was to open
+// the bracket: two clicks further in, for the thing an operator does most.
+public sealed class NextMatchRow
+{
+    public NextMatchRow(TournamentViewModel owner, string id, string teamA, string teamB)
+    {
+        Id = id;
+        Label = $"{teamA}  vs  {teamB}";
+        PlayCommand = new AsyncRelayCommand(() => owner.PutOnAirAsync(id));
+    }
+
+    public string Id { get; }
+    public string Label { get; }
+    public ICommand PlayCommand { get; }
+}
+
 public sealed class RosterRow : TeamFace
 {
     private readonly TournamentViewModel _owner;
@@ -139,6 +156,7 @@ public sealed class TournamentViewModel : ObservableObject, IClosablePage
     private TournamentOptions? _options;
     private Tournament? _t;
     private List<Team> _registry = new();
+    private List<BracketMatch> _matches = new();
     private bool _notFound;
     private string _errorText = "";
 
@@ -281,6 +299,8 @@ public sealed class TournamentViewModel : ObservableObject, IClosablePage
     // ---- teams ------------------------------------------------------------
 
     public ObservableCollection<RosterRow> Roster { get; } = new();
+    public ObservableCollection<NextMatchRow> NextMatches { get; } = new();
+    public bool HasNextMatches => NextMatches.Count > 0;
     public ObservableCollection<TeamChoice> Available { get; } = new();
 
     public bool TeamsOpen
@@ -441,6 +461,10 @@ public sealed class TournamentViewModel : ObservableObject, IClosablePage
 
         RebuildAvailable();
         OnPropertyChanged(nameof(RosterEmpty));
+
+        // The match rows show team names, and the roster is where those names come from;
+        // whichever of the two arrives second has to rebuild them.
+        BuildNextMatches();
     }
 
     private async Task RefreshRegistryAsync()
@@ -471,16 +495,19 @@ public sealed class TournamentViewModel : ObservableObject, IClosablePage
 
     private async Task LoadMatchesAsync()
     {
-        List<MatchLite> matches;
+        List<BracketMatch> matches;
         try
         {
-            matches = (await _s.Api.GetAsync<MatchList>($"/api/tournaments/{E(_id)}/matches")).Matches ?? [];
+            matches = (await _s.Api.GetAsync<BracketMatchList>($"/api/tournaments/{E(_id)}/matches")).Matches ?? [];
         }
         catch (Exception error)
         {
             Toasts.Error(error.Message);
             return;
         }
+
+        _matches = matches;
+        BuildNextMatches();
 
         var total = matches.Count(m => !m.IsBye);
         var played = matches.Count(m => !m.IsBye && m.Status == "complete");
@@ -489,6 +516,44 @@ public sealed class TournamentViewModel : ObservableObject, IClosablePage
         MatchNote = total > 0
             ? Loc.F("Tour.MatchesDrawn", total)
             : Loc.T(_t is not null && _t.TeamCount < 2 ? "Tour.NeedTwoTeams" : "Tour.NoBracket");
+    }
+
+    // Only matches that can actually be played: both teams known, not already finished.
+    // Capped, because this is a shortcut on a summary card and not a second bracket.
+    private void BuildNextMatches()
+    {
+        var names = Roster.ToDictionary(r => r.Id, r => r.Name);
+        var rows = _matches
+            .Where(m => !m.IsBye && m.Status != "complete" && m.TeamAId is not null && m.TeamBId is not null)
+            .OrderBy(m => m.Round).ThenBy(m => m.Slot)
+            .Take(4)
+            .Select(m => new NextMatchRow(
+                this, m.Id,
+                names.TryGetValue(m.TeamAId!, out var a) ? a : Loc.T("Profile.Tbd"),
+                names.TryGetValue(m.TeamBId!, out var b) ? b : Loc.T("Profile.Tbd")))
+            .ToList();
+
+        if (rows.Select(r => r.Id).SequenceEqual(NextMatches.Select(r => r.Id))) return;
+
+        NextMatches.Clear();
+        foreach (var row in rows) NextMatches.Add(row);
+        OnPropertyChanged(nameof(HasNextMatches));
+    }
+
+    // On air and straight into the Control Panel, the same as double-clicking the card in
+    // the bracket.
+    internal async Task PutOnAirAsync(string matchId)
+    {
+        try
+        {
+            var reply = await _s.Api.PostAsync<GoLiveReply>($"/api/matches/{E(matchId)}/live", null);
+            Toasts.Info(Loc.F("Bracket.OnAir", reply.Live.GameNo ?? 1));
+            _shell.NavigateTo("Control");
+        }
+        catch (Exception error)
+        {
+            Toasts.Error(error.Message);
+        }
     }
 
     private async Task LoadStandingsAsync()

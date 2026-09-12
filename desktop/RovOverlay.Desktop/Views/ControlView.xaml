@@ -220,9 +220,13 @@
                                 <TextBlock Style="{StaticResource FieldLabel}" Text="{svc:T Control.Tournament}"/>
                                 <TextBox Text="{Binding Tournament, UpdateSourceTrigger=PropertyChanged}" MaxLength="60"/>
                             </StackPanel>
-                            <StackPanel Width="280" Margin="10,0,0,0">
+                            <!-- Wide enough for "TEAM A VS TEAM B : GAME 1" without clipping
+                                 mid-word. This is what the operator reads back before going
+                                 on air, so the tooltip carries the whole thing regardless. -->
+                            <StackPanel Width="440" Margin="10,0,0,0">
                                 <TextBlock Style="{StaticResource FieldLabel}" Text="{svc:T Control.MatchTitle}"/>
-                                <TextBox Text="{Binding MatchTitle, UpdateSourceTrigger=PropertyChanged}" MaxLength="60"/>
+                                <TextBox Text="{Binding MatchTitle, UpdateSourceTrigger=PropertyChanged}" MaxLength="60"
+                                         ToolTip="{Binding MatchTitle}"/>
                             </StackPanel>
                             <TextBlock Text="{Binding MatchSaveText}" FontSize="11" Foreground="{StaticResource MutedBrush}"
                                        VerticalAlignment="Bottom" Margin="12,0,0,8"/>
