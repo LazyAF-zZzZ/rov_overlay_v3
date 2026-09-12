@@ -265,6 +265,12 @@ docs/v2/            v2's plan, guide and notes, for reference
   left in that folder goes out with the real one, and users are offered a version nobody
   meant to ship. Clear the folder before packing a release, and accept that the first
   release therefore has no delta to build against.
+- **Backslashes disappear when a script is written through a shell heredoc.** The command
+  text is JSON-encoded before the shell sees it, so `\\` arrives as a single `\`, and
+  JavaScript then reads the `\s` and `\p` of `.\scripts\pack.ps1` as plain letters. This
+  file twice ended up telling the reader to run `.scriptspack.ps1`. Write anything
+  containing Windows paths with the editing tool instead, or build the character with
+  `String.fromCharCode(92)` as the glyph fixer does.
 - **A window shown before `Application.Run()` pumps messages is never created at all.**
   `OnStartup` is raised inside `Run()` but *before* the message loop starts. The licence
   dialog was asked for there, and being `WindowStyle=None`, `ShowInTaskbar=False` and
