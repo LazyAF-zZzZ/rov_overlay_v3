@@ -34,11 +34,22 @@ public partial class App : Application
         }
 
         // A bug in one screen must not close the app in the middle of a broadcast.
+        //
+        // But before the window exists there is nowhere to put a toast, and swallowing a
+        // failure there leaves a running process with no window and no explanation. That
+        // is exactly what 3.0.0 did on a first run: the app appeared not to start at all.
+        // A startup failure is therefore written down, shown, and fatal.
         DispatcherUnhandledException += (_, ev) =>
         {
-            Toasts.Error(ev.Exception.Message);
             ev.Handled = true;
+            if (MainWindow is not null)
+            {
+                Toasts.Error(ev.Exception.Message);
+                return;
+            }
+            ReportStartupFailure(ev.Exception);
         };
+
 
         var settings = AppSettings.Load();
         Loc.Instance.Language = args.Language ?? settings.Language;
@@ -47,20 +58,6 @@ public partial class App : Application
             settings.Language = Loc.Instance.Language;
             settings.Save();
         };
-
-        // The licence, once, before anything of the app opens. A snapshot run is a
-        // development aid with nobody at the keyboard, so it is never asked there.
-        if (args.SnapshotPath is null && settings.AgreedLicence < LicenceVersion)
-        {
-            string[] keys = ["Licence.Free", "Licence.May", "Licence.MayNot", "Licence.Keep", "Licence.Assets"];
-            if (!Dialogs.Agree(Loc.T("Licence.Title"), keys.Select(Loc.T), Loc.T("Licence.Agree"), Loc.T("Licence.Exit")))
-            {
-                Shutdown();
-                return;
-            }
-            settings.AgreedLicence = LicenceVersion;
-            settings.Save();
-        }
 
         _services = new AppServices(settings);
         var shell = new ShellViewModel(_services, args.Page) { OpenOnStart = args.Open, ThenOnStart = args.Then };
@@ -72,6 +69,29 @@ public partial class App : Application
         }
         MainWindow = window;
         window.Show();
+
+        // The licence, once, and only after the window exists.
+        //
+        // It used to be asked before anything opened, which looked right and was not:
+        // OnStartup runs before Application.Run() pumps messages, and the dialog is
+        // WindowStyle=None, ShowInTaskbar=False, CenterOwner with no owner yet. It never
+        // appeared at all - 3.0.0 installed, started, and sat there with no window. Now
+        // it opens over the window, owned by it, and the backend waits behind it.
+        //
+        // A snapshot run is a development aid with nobody at the keyboard, so it never asks.
+        if (args.SnapshotPath is null && settings.AgreedLicence < LicenceVersion)
+        {
+            string[] keys = ["Licence.Free", "Licence.May", "Licence.MayNot", "Licence.Keep", "Licence.Assets"];
+            var agreed = Dialogs.Agree(
+                Loc.T("Licence.Title"), keys.Select(Loc.T), Loc.T("Licence.Agree"), Loc.T("Licence.Exit"));
+            if (!agreed)
+            {
+                Shutdown();
+                return;
+            }
+            settings.AgreedLicence = LicenceVersion;
+            settings.Save();
+        }
 
         await shell.StartAsync();
 
@@ -98,6 +118,31 @@ public partial class App : Application
         }
         _singleInstance?.Dispose();
         base.OnExit(e);
+    }
+
+    // Something went wrong before there was a window to say so in. Write it where it can
+    // be read afterwards, say so on screen, and stop: a process sitting there with no
+    // window is the one failure nobody can report usefully.
+    private void ReportStartupFailure(Exception error)
+    {
+        var path = Path.Combine(AppSettings.Root, "startup-error.log");
+        try
+        {
+            Directory.CreateDirectory(AppSettings.Root);
+            File.AppendAllText(path,
+                $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}  {error}{Environment.NewLine}{Environment.NewLine}");
+        }
+        catch
+        {
+            // Nowhere to write it. The message below is still worth showing.
+        }
+
+        // Deliberately not translated: Loc itself is one of the things that can fail this
+        // early, and a crash handler must not depend on what may have crashed.
+        MessageBox.Show(
+            $"ROV Overlay Tool could not start.\nเปิดโปรแกรมไม่สำเร็จ\n\n{error.Message}\n\n{path}",
+            "ROV Overlay Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+        Shutdown();
     }
 
     private static void SaveSnapshot(Window window, string path)

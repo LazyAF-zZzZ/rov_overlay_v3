@@ -41,6 +41,15 @@ a screen without a person at the keyboard:
 RovOverlay.Desktop/bin/Debug/net10.0-windows/RovOverlayTool.exe --page Home --lang en --snapshot out.png
 ```
 
+**A snapshot is not proof the app starts.** `--snapshot` skips the first-run licence, and
+3.0.0 shipped unable to open a window at all because of it. Before releasing anything,
+run the smoke test, which launches the app for real and fails unless a visible window
+appears:
+
+```powershell
+.\scripts\smoke.ps1 -FreshLicence
+```
+
 ## Where things go
 
 - New operator screens: native, in `desktop/` (see `docs/PLAN.md` §3 for the recipe).

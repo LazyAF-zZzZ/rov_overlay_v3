@@ -8,17 +8,17 @@ session with no conversation history should be able to continue from here and
 
 ## 0. Where things stand
 
-**Last updated 2026-09-12. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 `c615d39`, M7 `79c5f41`, M8 in the commit after those (see `git log`).**
+**Last updated 2026-09-12. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 `c615d39`, M7 `79c5f41`, M8 `7e13667`, 3.0.1 in the commit after those (see `git log`).**
 
 | Area | State |
 |---|---|
 | Backend (`backend/`) | Copied from v2 at `6c69766` (v2.0.2 plus two overlay commits). Builds; **356 tests, all passing, nothing skipped**. M6 added the v2 importer; M7 revived the "installer never ships uploaded images" guard; M8 added `tests/packaging.test.ts`, which keeps the bundle's page list honest in both directions. |
 | Desktop app (`desktop/`) | WPF on .NET 10. Builds with no warnings. Starts or attaches to the backend, live title strip, sidebar, OBS source list, toasts, Thai/English, back stack (Esc / mouse back), notice bell, first-run licence. |
 | Native screens | **All of them**: Home, tournament detail, team registry, team profile, Control Panel, bracket, analytics, pick/ban history, Design, Hotkeys, Guide, Settings. No screen opens a web page any more, and since M8 the installer no longer carries the ten HTML operator pages they replaced. The manual (`/guide`) and the sound check (`/sfx-test`) still ship: nothing replaced those, and the Guide screen has a button that opens the manual in a browser. |
-| Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages; anything in its own window cannot be (§8). The v2 import runs against a synthetic v2 install in the tests, with the v2 folder asserted byte-identical afterwards. 3.0.0 packs clean: 9 of 9 overlays present, all ten operator pages gone, no uploaded images, and a measured delta of **841 KB** from the previous build against 124 MB full. The **clicking** flows, and the installer itself, have not been tried by a person (§8). |
+| Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages; anything in its own window cannot be (§8), which is how 3.0.0 shipped unable to open one at all. 3.0.1 has been **installed from its own Setup and watched opening a real window**, serving its overlays and answering 410 on the pages the installer drops. The v2 import runs against a synthetic v2 install in the tests, with the v2 folder asserted byte-identical afterwards. The **clicking** flows are still unverified (§8). |
 | Updates / notifications | **Built** (§5). Velopack 1.2.0 against GitHub Releases, applied when the app closes and never on its own; a notice feed with a bell in the title bar. |
 
-Next: publish 3.0.0 when the user says to (§7), then watch the first real update land.
+Next: publish 3.0.1 when the user says to (§7), then watch the first real update land.
 
 ---
 
@@ -195,17 +195,17 @@ docs/v2/            v2's plan, guide and notes, for reference
 | M5 | Design, Hotkeys with native global hotkeys, Guide | done, commit after `c3ac12a` |
 | M6 | Import from v2: read its database and images, merge them in, never write to its folder | done, commit after `3fcb2a9` |
 | M7 | Packaging: bundled node, Velopack installer, updates, notice feed, licence dialog | done, commit after `c615d39` |
-| M8 | Release 3.0.0 | **built, not published**: artifacts in `releases/`, commit after `79c5f41` |
+| M8 | Release 3.0.0 | built; 3.0.0 could not open a window, so **3.0.1** is the release. Installed and working, not published |
 
 ## 8. Open items
 
-- **3.0.0 is built but not published.** `releases/` holds the installer, the portable
-  zip and the full package; nothing has been uploaded, so no user can receive it yet.
-  Publishing is one command and is the user's call:
-  `$env:GITHUB_TOKEN = (gh auth token); .\scripts\pack.ps1 -Version 3.0.0 -Publish`.
-- **The installer has never been run.** `pack.ps1` builds it, but nobody has installed
-  it on a clean machine, and no update has been watched going from one version to the
-  next. Both before M8.
+- **3.0.1 is built and installed here, but not published.** `releases/` holds the
+  installer, the portable zip and the full package. Publishing is one command and is the
+  user's call:
+  `$env:GITHUB_TOKEN = (gh auth token); .scriptspack.ps1 -Version 3.0.1 -Publish`.
+- **No update has been watched going from one version to the next.** Installing works;
+  what is untested is Velopack replacing an existing install from the feed, then applying
+  it on close. That needs a published release, so it cannot be proved before one.
 - **No notice has ever been sent end to end.** The feed is live and serving `[]`
   (`raw.githubusercontent.com/LazyAF-zZzZ/rov_overlay_v3/main/notices.json`, HTTP 200).
   What is untested is a real entry: add one, watch it reach an installed copy, and check
@@ -255,6 +255,21 @@ docs/v2/            v2's plan, guide and notes, for reference
   left in that folder goes out with the real one, and users are offered a version nobody
   meant to ship. Clear the folder before packing a release, and accept that the first
   release therefore has no delta to build against.
+- **A window shown before `Application.Run()` pumps messages is never created at all.**
+  `OnStartup` is raised inside `Run()` but *before* the message loop starts. The licence
+  dialog was asked for there, and being `WindowStyle=None`, `ShowInTaskbar=False` and
+  `CenterOwner` with no owner yet, it never materialised: `ShowDialog()` waited for an
+  answer from a window that did not exist. 3.0.0 installed, started, and sat as a healthy
+  process with no window. Show the main window first and let anything modal own it.
+- **A handler that sets `Handled = true` can hide the failure completely.** The startup
+  exception path showed a toast, and a toast needs a window. Before the window exists,
+  write the failure to `%APPDATA%\RovOverlayTool3\startup-error.log`, show a plain
+  `MessageBox` (no `Loc` — it may be what broke) and stop.
+- **`--snapshot` proves a screen renders, not that the app starts.** It deliberately skips
+  the first-run licence, so the one path every new user takes was the one path never run
+  in seven milestones of verification. `scripts/smoke.ps1` launches the built app and
+  fails unless a real visible window appears; `-FreshLicence` does it as a new user.
+  Run it before any release.
 - **`execFileSync` blocks Node's event loop**, so a server in the same script cannot
   answer while a child process runs. A local notice feed served that way looked exactly
   like a broken notice service: the app's request went unanswered until its own 15-second
