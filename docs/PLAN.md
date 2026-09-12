@@ -213,13 +213,14 @@ docs/v2/            v2's plan, guide and notes, for reference
   file in Explorer, which is the only way to get real paths, working shortcuts and a
   correct icon. Check the tournaments survived afterwards; if not, the data is under
   `Packages\Claude_*\LocalCache\Roaming\RovOverlayTool3` and copies straight across.
-- **3.0.5 is built and installed here, but not published.** `releases/` holds the
-  installer, the portable zip and the full package. Publishing is one command and is the
-  user's call:
-  `$env:GITHUB_TOKEN = (gh auth token); .\scripts\pack.ps1 -Version 3.0.5 -Publish`.
-- **No update has been watched going from one version to the next.** Installing works;
-  what is untested is Velopack replacing an existing install from the feed, then applying
-  it on close. That needs a published release, so it cannot be proved before one.
+- **3.0.5 is published.** Released 2026-09-12 as `v3.0.5` on
+  `LazyAF-zZzZ/rov_overlay_v3`, public, five assets, with `releases.win.json` offering
+  3.0.5 Full. That is the first thing anyone outside this machine can install.
+- **An update has now gone from one version to the next on its own.** The installed 3.0.4
+  found 3.0.5 in the feed, downloaded it into `packages/`, and `current/` became 3.0.5
+  without anyone running Setup. What is *not* verified is the operator's view of it: the
+  updated app restarts outside the agent session's sandbox, so its API stops being
+  reachable from here and the window is the only thing left to read.
 - **A notice has been delivered; dismissing one has not been checked.** A test entry was
   pushed to `notices.json` on 2026-09-12 and reached the installed 3.0.4 on its next
   start: the bell showed a count of one, photographed from the running app. What is still
