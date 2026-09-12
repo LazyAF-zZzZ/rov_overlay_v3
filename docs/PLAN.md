@@ -206,10 +206,11 @@ docs/v2/            v2's plan, guide and notes, for reference
 - **No update has been watched going from one version to the next.** Installing works;
   what is untested is Velopack replacing an existing install from the feed, then applying
   it on close. That needs a published release, so it cannot be proved before one.
-- **No notice has ever been sent end to end.** The feed is live and serving `[]`
-  (`raw.githubusercontent.com/LazyAF-zZzZ/rov_overlay_v3/main/notices.json`, HTTP 200).
-  What is untested is a real entry: add one, watch it reach an installed copy, and check
-  that dismissing it sticks across a restart.
+- **A notice has been delivered; dismissing one has not been checked.** A test entry was
+  pushed to `notices.json` on 2026-09-12 and reached the installed 3.0.4 on its next
+  start: the bell showed a count of one, photographed from the running app. What is still
+  untried is pressing "Got it" and confirming it stays gone after a restart, which is the
+  half that writes to `settings.json`.
 - **Anything in its own window cannot be checked by a render.** `--snapshot` draws the
   main window's content with `RenderTargetBitmap`, and a `Popup` or a modal `Window` is a
   separate HWND it never sees. So the notice panel, the OBS source list, the confirm box
