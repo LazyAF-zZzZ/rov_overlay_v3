@@ -70,6 +70,23 @@
                 </StackPanel>
             </Border>
 
+            <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Import.Section}" Margin="0,24,0,8"/>
+            <Border Style="{StaticResource Card}" Padding="16,12">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource MutedText}" Text="{svc:T Import.Hint}" Margin="0,0,0,10"/>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="{svc:T Import.Import}"
+                                Command="{Binding ImportCommand}" Margin="8,0,0,0" MinWidth="110"/>
+                        <Button DockPanel.Dock="Right" Content="{svc:T Import.Browse}" Command="{Binding BrowseImportCommand}"
+                                Margin="8,0,0,0"/>
+                        <TextBox Text="{Binding ImportPath, UpdateSourceTrigger=PropertyChanged}"
+                                 FontFamily="{StaticResource MonoFont}" FontSize="11.5" Tag="{svc:T Import.PathHint}"/>
+                    </DockPanel>
+                    <TextBlock Text="{Binding ImportFound}" FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="0,8,0,0"
+                               TextWrapping="Wrap" Visibility="{Binding ImportFound, Converter={StaticResource NullToVis}}"/>
+                </StackPanel>
+            </Border>
+
             <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Settings.Server}" Margin="0,24,0,8"/>
             <Border Style="{StaticResource Card}" Padding="16,12">
                 <Grid>

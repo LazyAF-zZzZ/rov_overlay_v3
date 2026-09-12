@@ -8,17 +8,17 @@ session with no conversation history should be able to continue from here and
 
 ## 0. Where things stand
 
-**Last updated 2026-09-12. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 in the commit after those (see `git log`).**
+**Last updated 2026-09-12. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 in the commit after those (see `git log`).**
 
 | Area | State |
 |---|---|
-| Backend (`backend/`) | Copied from v2 at `6c69766` (v2.0.2 plus two overlay commits). Builds; **350 tests: 349 pass, 1 skipped on purpose** (§8). Unchanged by M2 and M3. |
+| Backend (`backend/`) | Copied from v2 at `6c69766` (v2.0.2 plus two overlay commits). Builds; **352 tests: 351 pass, 1 skipped on purpose** (§8). M6 added the v2 importer and its two tests. |
 | Desktop app (`desktop/`) | WPF on .NET 10. Builds with no warnings. Starts or attaches to the backend, live title strip, sidebar, OBS source list, toasts, Thai/English, back stack (Esc / mouse back). |
 | Native screens | **All of them**: Home, tournament detail, team registry, team profile, Control Panel, bracket, analytics, pick/ban history, Design, Hotkeys, Guide, Settings. No screen opens a web page any more, and the HTML operator pages are now dead weight the packaging step can drop (§8). |
-| Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages, including a staged draft, a played bracket, one recorded draft, an uploaded background image and system-wide hotkeys switched on (four registered, one shown as held by another program). The **clicking** flows have not been clicked through by a person yet (§8). |
+| Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages. The v2 import is covered by tests: a synthetic v2 install is imported, its rows and logo land in v3, a second import adds nothing, and the v2 folder is asserted byte-identical afterwards. The **clicking** flows have not been clicked through by a person yet (§8). |
 | Updates / notifications | Designed (§5), not built. |
 
-Next: M6, importing data from v2 (§7).
+Next: M7, packaging, updates and notifications (§7).
 
 ---
 
@@ -187,12 +187,15 @@ docs/v2/            v2's plan, guide and notes, for reference
 | M3 | Native Control Panel (draft, picks/bans, timer, scores, live match) | done, commit after `6f736b3` |
 | M4 | Bracket, analytics, tournament drafts | done, commit after `ab3bdf8` |
 | M5 | Design, Hotkeys with native global hotkeys, Guide | done, commit after `c3ac12a` |
-| M6 | Import from v2: copy v2 data folder in, explicitly, never in place | next |
-| M7 | Packaging: bundled node, Velopack installer, updates, notice feed, licence dialog | |
+| M6 | Import from v2: read its database and images, merge them in, never write to its folder | done, commit after `3fcb2a9` |
+| M7 | Packaging: bundled node, Velopack installer, updates, notice feed, licence dialog | next |
 | M8 | Release 3.0.0 | |
 
 ## 8. Open items
 
+- **No v2 data exists on this machine to import.** `%APPDATA%\ROV Overlay Tool` does not
+  exist and the database in the v2 repo has zero rows, so the importer was proved
+  against a synthetic v2 install instead. Run it once against a real one.
 - **Click through M2 and M3 by hand.** Create a tournament and a team, edit a roster
   inline, upload and clear a logo, remove a team, delete a tournament, save a backup and
   restore it; then run a real draft: type heroes, Enter to confirm, the timer, the
@@ -232,6 +235,9 @@ docs/v2/            v2's plan, guide and notes, for reference
   `DisplayMemberPath`**, with our own ComboBox template. The position picker showed
   `RovOverlay.Desktop.ViewModels.PositionChoice`. Every choice type overrides
   `ToString()` to return its label; do the same for any new one.
+- **A v2 database can be in WAL mode**, and its newest rows live in the `-wal` file.
+  Copy the database and its `-wal`/`-shm` aside and open the copy: opening v2's own
+  file would replay the log and write to the folder we promised never to touch.
 - **A `Style` attribute plus a `<TextBlock.Style>` element on the same control is a
   compile error, not a merge.** Put `BasedOn` inside the inline style instead.
 - **`PathFigure` / `PolyLineSegment` do not take bindings** the way a normal element

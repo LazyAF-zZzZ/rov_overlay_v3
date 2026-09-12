@@ -15,6 +15,7 @@ import { pageRoutes } from './http/pages';
 import { ensureSoundDir } from './domain/media';
 import { stateRoutes } from './http/api-state';
 import { appInfoRoutes } from './http/api-app-info';
+import { importRoutes } from './http/api-import';
 import { mediaRoutes } from './http/api-media';
 import { tournamentRoutes } from './http/api-tournaments';
 import { teamRoutes } from './http/api-teams';
@@ -83,6 +84,8 @@ export function createApp(): Express {
 
   app.use(pageRoutes());
   app.use(appInfoRoutes());
+
+  app.use(importRoutes());
 
   app.use(stateRoutes());
   app.use(mediaRoutes());

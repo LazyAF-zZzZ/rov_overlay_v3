@@ -120,7 +120,23 @@ public sealed record PlayoffReply(bool Ok, int Promoted);
 public sealed record BackupSummary(int Teams, int Tournaments, int Matches, int Drafts, int Logos, string? ExportedAt);
 public sealed record AlreadyHere(int Teams, int Tournaments);
 public sealed record BackupPreview(BackupSummary Summary, AlreadyHere AlreadyHere);
-public sealed record RestoreReport(int TeamsAdded, int TournamentsAdded);
+public sealed record RestoreReport(
+    int TeamsAdded,
+    int TeamsSkipped,
+    int TournamentsAdded,
+    int TournamentsSkipped,
+    int MatchesAdded,
+    int GamesAdded,
+    int LogosWritten,
+    int SkinsWritten,
+    string? Mode);
+
+// ---- Importing a v2 installation ------------------------------------------
+
+public sealed record V2Source(string Root, string Label, string DbPath, string? MediaDir);
+public sealed record V2Candidates(List<V2Source>? Sources);
+public sealed record ImportPreview(V2Source Source, BackupSummary Summary, AlreadyHere AlreadyHere);
+public sealed record ImportReply(bool Ok, V2Source Source, BackupSummary Summary, RestoreReport Report);
 public sealed record RestoreReply(bool Ok, RestoreReport Report);
 
 public sealed record OkReply(bool Ok);

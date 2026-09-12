@@ -26,6 +26,13 @@ public static class Dialogs
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
+    // Used to point at a v2 installation folder.
+    public static string? PickFolder(string title)
+    {
+        var dialog = new OpenFolderDialog { Title = title, Multiselect = false };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FolderName : null;
+    }
+
     public static string? PickSave(string fileName, string filter)
     {
         var dialog = new SaveFileDialog

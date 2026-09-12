@@ -65,6 +65,9 @@ public sealed class SettingsViewModel : ObservableObject
         OpenMediaFolderCommand = new RelayCommand(() => Browser.OpenFolder(MediaDir));
         SaveBackupCommand = new AsyncRelayCommand(SaveBackupAsync);
         RestoreCommand = new AsyncRelayCommand(RestoreAsync);
+        ImportCommand = new AsyncRelayCommand(ImportAsync, () => ImportPath.Length > 0);
+        BrowseImportCommand = new AsyncRelayCommand(BrowseImportAsync);
+        _ = FindV2Async();
         Loc.Instance.Changed += () =>
         {
             OnPropertyChanged(nameof(Language));
@@ -95,6 +98,85 @@ public sealed class SettingsViewModel : ObservableObject
 
     public ICommand SaveBackupCommand { get; }
     public ICommand RestoreCommand { get; }
+    public ICommand ImportCommand { get; }
+    public ICommand BrowseImportCommand { get; }
+
+    // ---- Importing from v2 ------------------------------------------------
+
+    private string _importPath = "";
+    private string? _importFound;
+
+    public string ImportPath
+    {
+        get => _importPath;
+        set
+        {
+            if (Set(ref _importPath, value ?? "")) System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+        }
+    }
+
+    /// What was found on this machine, or a line saying nothing was.
+    public string? ImportFound { get => _importFound; private set => Set(ref _importFound, value); }
+
+    private async Task FindV2Async()
+    {
+        try
+        {
+            var sources = (await _services.Api.GetAsync<V2Candidates>("/api/import/v2/candidates")).Sources ?? [];
+            if (sources.Count == 0)
+            {
+                ImportFound = Loc.T("Import.NoneFound");
+                return;
+            }
+            ImportPath = sources[0].Root;
+            ImportFound = Loc.F("Import.Found", sources.Count);
+        }
+        catch
+        {
+            // Not being able to look is not worth an error; the operator can still browse.
+        }
+    }
+
+    private async Task BrowseImportAsync()
+    {
+        var folder = Dialogs.PickFolder(Loc.T("Import.PickFolder"));
+        if (folder is null) return;
+        ImportPath = folder;
+        await Task.CompletedTask;
+    }
+
+    // Preview first, then merge. v2's folder is only ever read.
+    private async Task ImportAsync()
+    {
+        ImportPreview preview;
+        try
+        {
+            preview = await _services.Api.PostAsync<ImportPreview>("/api/import/v2/preview", new { path = ImportPath });
+        }
+        catch (Exception error)
+        {
+            Toasts.Error(error.Message);
+            return;
+        }
+
+        var s = preview.Summary;
+        var body = new List<string>
+        {
+            Loc.F("Import.FoundIn", preview.Source.Root),
+            Loc.F("Import.Holds", s.Teams, s.Tournaments, s.Matches, s.Drafts, s.Logos)
+        };
+        if (preview.AlreadyHere.Teams > 0 || preview.AlreadyHere.Tournaments > 0)
+            body.Add(Loc.F("Backup.AlreadyHere", preview.AlreadyHere.Teams, preview.AlreadyHere.Tournaments));
+        body.Add(Loc.T("Import.MergeRule"));
+        body.Add(Loc.T("Import.Untouched"));
+
+        if (!Dialogs.Confirm(Loc.T("Import.Title"), body, Loc.T("Import.Import"))) return;
+
+        var reply = await _services.Api.PostAsync<ImportReply>("/api/import/v2", new { path = ImportPath });
+        var report = reply.Report;
+        Toasts.Info(Loc.F("Import.Done", report.TeamsAdded, report.TournamentsAdded, report.GamesAdded));
+        ImportFound = Loc.F("Import.LastRun", report.TeamsAdded, report.TeamsSkipped);
+    }
 
     private void RefreshLog() => LogText = string.Join(Environment.NewLine, _services.Backend.RecentLog());
 
