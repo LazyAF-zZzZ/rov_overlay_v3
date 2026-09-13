@@ -377,6 +377,7 @@ public sealed class BracketViewModel : ObservableObject, IClosablePage
         "main" => Loc.T("Bracket.Winners"),
         "losers" => Loc.T("Bracket.Losers"),
         "grand" => Loc.T("Round.Grand"),
+        "third" => Loc.T("Bracket.ThirdPlace"),
         "playoff" => Loc.T("Bracket.Playoff"),
         _ => Loc.F("Tour.Group", bracket)
     };
@@ -384,6 +385,7 @@ public sealed class BracketViewModel : ObservableObject, IClosablePage
     private static string RoundTitle(int round, int totalRounds, string bracket, bool elimination, int column)
     {
         if (bracket == "grand") return Loc.T(round == 1 ? "Round.Grand" : "Bracket.Reset");
+        if (bracket == "third") return Loc.T("Bracket.ThirdPlace");
         if (bracket != "main" || !elimination) return Loc.F("Round.Main", column);
         return (totalRounds - round) switch
         {

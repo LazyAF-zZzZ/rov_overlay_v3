@@ -274,3 +274,62 @@ test('too few teams produces no matches rather than a broken bracket', () => {
   assert.deepStrictEqual(generateMatches({ format: 'single_elim', teamIds: ['solo'] }).matches, []);
   assert.deepStrictEqual(generateMatches({ format: 'round_robin', teamIds: ['solo'] }).matches, []);
 });
+
+// ---- THIRD PLACE ----
+//
+// ผู้ใช้ขอมา: รายการไม่ได้มีแค่แชมป์ ที่สามก็ต้องรู้ว่าใคร
+
+test('single elimination adds a third place match fed by the two semifinal losers', () => {
+  const matches = generateMatches({ format: 'single_elim', teamIds: ['a', 'b', 'c', 'd'] }).matches ?? [];
+
+  const third = matches.filter((m) => m.bracket === 'third');
+  assert.strictEqual(third.length, 1, 'exactly one third place match');
+  assert.strictEqual(third[0].teamAId, null, 'it starts empty, waiting for the semifinals');
+  assert.strictEqual(third[0].teamBId, null);
+  assert.strictEqual(third[0].winnerTo, null, 'nobody advances out of it');
+
+  const semis = matches.filter((m) => m.bracket === 'main' && m.round === 1);
+  assert.strictEqual(semis.length, 2);
+  semis.forEach((semi) => {
+    assert.ok(semi.loserTo, 'a semifinal loser now has somewhere to go');
+    assert.strictEqual(semi.loserTo?.bracket, 'third');
+    assert.strictEqual(semi.loserTo?.round, 1);
+    assert.strictEqual(semi.loserTo?.slot, 0);
+  });
+
+  // คนละฝั่งกัน ไม่งั้นผู้แพ้คนที่สองจะไปทับคนแรก
+  assert.notStrictEqual(semis[0].loserTo?.side, semis[1].loserTo?.side);
+});
+
+test('the final still ends the tournament, and only the semifinals feed third place', () => {
+  const matches = generateMatches({
+    format: 'single_elim',
+    teamIds: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+  }).matches ?? [];
+  const final = matches.find((m) => m.bracket === 'main' && m.round === 3);
+
+  assert.ok(final, 'eight teams make a three round bracket');
+  assert.strictEqual(final?.winnerTo, null, 'the champion goes nowhere');
+  assert.strictEqual(final?.loserTo, null, 'and the runner up is not sent to third place');
+
+  const feeding = matches.filter((m) => m.loserTo?.bracket === 'third');
+  assert.strictEqual(feeding.length, 2, 'only the two semifinals feed it');
+  feeding.forEach((m) => assert.strictEqual(m.round, 2, 'which is round two of eight teams'));
+});
+
+test('fewer than four teams gets no third place match', () => {
+  // สามทีมมีบายในรอบแรก ผู้แพ้ของคู่ที่เป็นบายคือไม่มีใคร
+  const third = (teamIds: string[]) =>
+    (generateMatches({ format: 'single_elim', teamIds }).matches ?? []).filter((m) => m.bracket === 'third');
+
+  assert.strictEqual(third(['a', 'b', 'c']).length, 0);
+  assert.strictEqual(third(['a', 'b']).length, 0);
+
+  // และแบบแพ้สองครั้งไม่มีนัดชิงที่สาม ผู้แพ้รอบรองยังต้องตกลงสายแพ้ตามเดิม
+  const dbl = generateMatches({ format: 'double_elim', teamIds: ['a', 'b', 'c', 'd'] }).matches ?? [];
+  assert.strictEqual(dbl.filter((m) => m.bracket === 'third').length, 0);
+  assert.ok(
+    dbl.some((m) => m.loserTo?.bracket === 'losers'),
+    'double elimination still sends its losers to the losers bracket'
+  );
+});

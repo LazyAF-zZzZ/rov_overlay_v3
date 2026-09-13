@@ -37,10 +37,10 @@ test('drawing a bracket stores it and a redraw replaces it rather than piling up
   const { matches, tournament } = stores('single_elim', 3, 4);
 
   const first = must(matches.generate(tournament.id).matches);
-  assert.strictEqual(first.length, 3, 'two semis and a final');
+  assert.strictEqual(first.length, 4, 'two semis, a final, and the third place match');
 
   const second = must(matches.generate(tournament.id).matches);
-  assert.strictEqual(second.length, 3, 'redrawing replaces, never appends');
+  assert.strictEqual(second.length, 4, 'redrawing replaces, never appends');
   assert.notStrictEqual(second[0]?.id, first[0]?.id, 'a redraw is a fresh set of matches');
 });
 

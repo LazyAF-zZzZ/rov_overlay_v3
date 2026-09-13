@@ -295,7 +295,8 @@ test('changing the series length reaches the matches that have not been played',
     name: 'Cup', format: 'single_elim', bestOf: 5, status: 'active', note: ''
   });
   assert.strictEqual(must(result.tournament).bestOf, 5);
-  assert.strictEqual(result.matchesRetimed, 2, 'the two untouched matches were retimed');
+  // ที่เหลือคือ รอบรองอีกคู่ รอบชิง และนัดชิงที่สาม
+  assert.strictEqual(result.matchesRetimed, 3, 'the untouched matches were retimed');
 
   const after = matches.list(tournament.id);
   assert.strictEqual(must(after.find((m) => m.id === semi.id)).bestOf, 3, 'a finished match keeps what it was played at');
@@ -374,7 +375,7 @@ test('a match with a recorded draft is not retimed, even at 0-0', () => {
   });
 
   assert.strictEqual(must(matches.get(drafted.id)).bestOf, 7, 'the drafted match keeps its length');
-  assert.strictEqual(result.matchesRetimed, 2, 'and the count matches what was actually changed');
+  assert.strictEqual(result.matchesRetimed, 3, 'and the count matches what was actually changed');
 
   matches.list(tournament.id).filter((m) => m.id !== drafted.id).forEach((m) => {
     assert.strictEqual(m.bestOf, 3, 'untouched matches still retime normally');

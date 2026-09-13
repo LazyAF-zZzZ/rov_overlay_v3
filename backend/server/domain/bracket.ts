@@ -193,8 +193,49 @@ export function singleElimination(teamIds: readonly string[]): PlannedMatch[] {
   return matches.filter((m) => !(isFirstRoundEmpty(m)));
 }
 
+// นัดชิงที่สาม: ผู้แพ้จากรอบรองชนะเลิศสองคนมาเจอกัน
+//
+// อยู่ตรงนี้ ไม่ได้อยู่ใน singleElimination() เพราะ singleElimination() ถูกใช้เป็น
+// โครงของแบบอื่นด้วย ทั้งสายชนะของแบบแพ้สองครั้ง และสายน็อกเอาต์หลังรอบแบ่งกลุ่ม
+// ครั้งแรกที่เขียนไว้ข้างในนั้น มันไปทับ loserTo ของรอบรองในแบบแพ้สองครั้ง
+// ผู้แพ้จึงถูกส่งไปชิงที่สามแทนที่จะตกลงสายแพ้ เทสต์ค่าคงที่ของสายจับได้
+//
+// มีต่อเมื่อมีรอบรองจริง คือตั้งแต่สี่ทีมขึ้นไป สามทีมจะมีบายในรอบแรก
+// และผู้แพ้ของคู่ที่เป็นบายคือไม่มีใคร นัดชิงที่สามจะเหลือทีมเดียว
+//
+// ใช้ loserTo ซึ่งเป็นทางเดียวกับที่สายแพ้ใช้อยู่แล้ว ตัวเลื่อนผู้แพ้ในสโตร์
+// จึงทำงานให้เองโดยไม่ต้องรู้จักนัดนี้เป็นพิเศษ
+export function addThirdPlace(matches: PlannedMatch[]): PlannedMatch[] {
+  const main = matches.filter((m) => m.bracket === 'main');
+  const totalRounds = main.reduce((most, m) => Math.max(most, m.round), 0);
+  if (totalRounds < 2) return matches;
+
+  const semis = main.filter((m) => m.round === totalRounds - 1 && !m.isBye);
+  if (semis.length !== 2) return matches;
+
+  semis.forEach((semi) => {
+    semi.loserTo = { bracket: THIRD_PLACE, round: 1, slot: 0, side: (semi.slot % 2) as 0 | 1 };
+  });
+
+  return matches.concat({
+    bracket: THIRD_PLACE,
+    round: 1,
+    slot: 0,
+    teamAId: null,
+    teamBId: null,
+    winnerTo: null,
+    loserTo: null,
+    isBye: false,
+    winnerId: null
+  });
+}
+
+// ช่องว่างล้วนของ "รอบแรกในสายหลัก" เท่านั้น
+//
+// ต้องเช็คชื่อสายด้วย ไม่งั้นนัดชิงที่สามซึ่งเป็นรอบ 1 ของสายตัวเองและเริ่มต้น
+// ด้วยทีมว่างทั้งคู่ (รอผู้แพ้จากรอบรอง) จะถูกกวาดทิ้งไปพร้อมกัน
 function isFirstRoundEmpty(m: PlannedMatch): boolean {
-  return m.round === 1 && m.teamAId === null && m.teamBId === null;
+  return m.bracket === 'main' && m.round === 1 && m.teamAId === null && m.teamBId === null;
 }
 
 // ---- DOUBLE ELIMINATION ---------------------------------------------
@@ -442,7 +483,7 @@ export function generateMatches(plan: GeneratePlan): GenerateResult {
   }
 
   if (format === 'single_elim') {
-    return { matches: singleElimination(teamIds) };
+    return { matches: addThirdPlace(singleElimination(teamIds)) };
   }
 
   if (format === 'double_elim') {
@@ -467,7 +508,14 @@ export function generateMatches(plan: GeneratePlan): GenerateResult {
 // (เห็นมาแล้ว: กระดานขึ้นเป็นห้ากลุ่ม ทั้งที่รายการมีสี่กลุ่ม)
 // และการเลื่อนชั้นรอบถัดไปก็จะพยายามเลื่อนทีมออกจากสายน็อกเอาต์ด้วย
 export const PLAYOFF_BRACKET = 'playoff';
-export const KNOCKOUT_BRACKETS: readonly string[] = [PLAYOFF_BRACKET, 'losers', 'grand'];
+
+// นัดชิงที่สาม อยู่สายของตัวเอง ไม่ใช่ท้ายสายหลัก
+//
+// เหตุผลเดียวกับสายอื่นในรายการนี้: ถ้าปล่อยไว้ในสายหลัก บนจอมันจะไปยืนอยู่
+// คอลัมน์เดียวกับรอบชิงชนะเลิศโดยไม่มีอะไรบอกว่ามันคนละนัดกัน
+export const THIRD_PLACE = 'third';
+
+export const KNOCKOUT_BRACKETS: readonly string[] = [PLAYOFF_BRACKET, 'losers', 'grand', THIRD_PLACE];
 
 export function isKnockoutBracket(bracket: string): boolean {
   return KNOCKOUT_BRACKETS.includes(bracket);
