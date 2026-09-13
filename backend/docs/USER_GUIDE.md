@@ -78,9 +78,13 @@ For a single match that is not part of a tournament.
 1. Go to **CONTROL**
 2. Type the team names, or choose a saved team from **From registry**
 3. Type the player names
-4. During the draft, type hero names into **HERO PICK** and **BAN** — press Enter to confirm
-5. Use the **Draft Timer**: `START` · `PAUSE` · `RESUME` · `PREV` · `NEXT`
-6. `SHOW` / `HIDE` at the top hides the banner without removing the source in OBS
+4. During the draft, type hero names into **HERO PICK** and **BAN** — press Enter to put them on the board
+5. **A pick takes one more step.** The hero appears on the overlay straight away, but
+   silently: no sound, no animation. Press the gold ✓ next to it to lock it in. That is
+   when the pick sound and the animation play, and when the draft moves on. Until then the
+   teams can keep swapping heroes on screen and nothing is final. Bans are one step, as before
+6. Use the **Draft Timer**: `START` · `PAUSE` · `RESUME` · `PREV` · `NEXT`
+7. `SHOW` / `HIDE` at the top hides the banner without removing the source in OBS
 
 **ROUND**, at the right of the draft panel, is which game of the series you are on. Press `>`
 when a game ends: the draft on the board is filed away as that round and the board starts clean.
@@ -96,9 +100,12 @@ Bottom buttons: **UNDO** (last change), **SWITCH TEAMS** (swap sides), **CLEAR P
 1. ไปหน้า **CONTROL**
 2. พิมพ์ชื่อทีม หรือเลือกทีมที่บันทึกไว้จากช่อง **From registry**
 3. พิมพ์ชื่อผู้เล่น
-4. ตอนดราฟต์ พิมพ์ชื่อฮีโร่ในช่อง **HERO PICK** และ **BAN** แล้วกด Enter
-5. ใช้ **Draft Timer**: `START` · `PAUSE` · `RESUME` · `PREV` · `NEXT`
-6. ปุ่ม `SHOW` / `HIDE` ด้านบนใช้ซ่อนแถบ overlay โดยไม่ต้องปิด source ใน OBS
+4. ตอนดราฟต์ พิมพ์ชื่อฮีโร่ในช่อง **HERO PICK** และ **BAN** แล้วกด Enter เพื่อวางลงกระดาน
+5. **ช่องพิคมีอีกขั้นหนึ่ง** ฮีโร่จะขึ้นบน overlay ทันทีแต่ยังเงียบ ไม่มีเสียงและไม่มีอนิเมชัน
+   กดปุ่ม ✓ สีทองข้าง ๆ เพื่อยืนยัน ตอนนั้นแหละที่เสียงพิคกับอนิเมชันจะเล่น และดราฟต์ถึงจะไปเฟสถัดไป
+   ก่อนกดยืนยัน ทีมยังสลับตัวไปมาบนจอได้เรื่อย ๆ โดยที่ยังไม่นับว่าล็อก ส่วนช่องแบนเหมือนเดิม กดครั้งเดียวจบ
+6. ใช้ **Draft Timer**: `START` · `PAUSE` · `RESUME` · `PREV` · `NEXT`
+7. ปุ่ม `SHOW` / `HIDE` ด้านบนใช้ซ่อนแถบ overlay โดยไม่ต้องปิด source ใน OBS
 
 **ROUND** ที่มุมขวาของแผงดราฟต์ คือเกมที่เท่าไหร่ของซีรีส์ จบเกมแล้วกด `>` ดราฟต์ที่อยู่บนกระดานจะถูกเก็บเป็นรอบนั้น
 แล้วกระดานเริ่มใหม่ กด `<` เพื่อถอยกลับ ดราฟต์ของรอบก่อนจะกลับขึ้นมา กดผิดจึงไม่เสียอะไร รอบที่เก็บไว้เหล่านี้คือสิ่งที่ซอร์ส
@@ -136,8 +143,11 @@ Saved teams appear in **From registry** on the control panel and can be added to
 1. **HOME → + NEW TOURNAMENT** → name, format, Best of → **CREATE**
 2. **+ ADD TEAM** — pick saved teams, or create new ones here
 3. Click **OPEN MATCH SESSION**, then **DRAW MATCHES**
-4. Click a match box to put it on air — the control panel opens with both teams filled in
+4. Double-click a match box, or press its play button, to put it on air — the Control Panel
+   opens with both teams filled in. The **ON AIR** strip there has a button back to the bracket
 5. Type the scores into the bracket. Winners move to the next round by themselves
+6. With four teams or more in a single elimination draw, a **Third place** section appears
+   below the bracket. The two semifinal losers drop into it on their own
 
 To delete a tournament: open it and click **DELETE TOURNAMENT**, or use the **DELETE** button on its card on the home page. This cannot be undone — the bracket and every saved draft go with it. Your teams stay.
 
@@ -146,8 +156,11 @@ To delete a tournament: open it and click **DELETE TOURNAMENT**, or use the **DE
 1. **HOME → + NEW TOURNAMENT** → ชื่อ รูปแบบ จำนวนเกม → **CREATE**
 2. **+ ADD TEAM** — เลือกทีมที่บันทึกไว้ หรือสร้างทีมใหม่ตรงนั้นเลย
 3. กด **OPEN MATCH SESSION** แล้วกด **DRAW MATCHES**
-4. คลิกที่กล่องคู่แข่งเพื่อเอาขึ้นจอ หน้า Control จะเปิดพร้อมชื่อทีมทั้งสองฝั่งให้เลย
+4. ดับเบิลคลิกที่กล่องคู่แข่ง หรือกดปุ่มเล่นบนกล่องนั้น เพื่อเอาขึ้นจอ หน้าคุมงานจะเปิดพร้อมชื่อทีมทั้งสองฝั่งให้เลย
+   และบนแถบ **ออนแอร์** ในหน้าคุมงานมีปุ่มกลับไปที่สายการแข่งด้วย
 5. กรอกคะแนนในสาย ผู้ชนะจะเลื่อนไปรอบถัดไปเอง
+6. ถ้าเป็นแบบแพ้คัดออกและมีตั้งแต่สี่ทีมขึ้นไป จะมีส่วน **ชิงที่ 3** อยู่ใต้สาย
+   ผู้แพ้จากรอบรองชนะเลิศสองคู่จะตกลงมาที่นัดนี้เอง
 
 ถ้าจะลบทัวร์นาเมนต์: เข้าไปในทัวร์นาเมนต์แล้วกด **DELETE TOURNAMENT** หรือกดปุ่ม **DELETE** บนการ์ดที่หน้าแรก ลบแล้วกู้ไม่ได้ สายการแข่งกับดราฟต์ที่บันทึกไว้หายไปด้วย แต่ทีมในทะเบียนยังอยู่
 

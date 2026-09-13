@@ -1,15 +1,17 @@
 [
   {
-    "id": "test-2026-09-12",
+    "id": "update-3-0-6",
     "level": "info",
     "title": {
-      "th": "ทดสอบระบบแจ้งเตือน",
-      "en": "Notification test"
+      "th": "อัปเดต 3.0.6 พร้อมแล้ว",
+      "en": "Update 3.0.6 is ready"
     },
     "body": {
-      "th": "ถ้าเห็นข้อความนี้ แปลว่าข้อความจากคนทำแอปส่งถึงเครื่องผู้ใช้ได้จริง กดรับทราบเพื่อปิดทิ้ง แล้วมันจะไม่กลับมาอีก",
-      "en": "If you can read this, messages from the maker reach the app. Press Got it to dismiss it; it will not come back."
+      "th": "ทัวร์นาเมนต์แบบแพ้คัดออกตั้งแต่สี่ทีมขึ้นไปจะมีนัดชิงที่ 3 ให้เอง และช่องพิคต้องกดปุ่ม ✓ ยืนยันก่อน เสียงพิคถึงจะดัง ระหว่างที่ทีมสลับตัวกันไปมา ภาพขึ้นจอตามได้เลยโดยไม่มีเสียงรัว แอปจะโหลดอัปเดตให้เองแล้วติดตั้งตอนคุณปิดโปรแกรม ไม่ต้องโหลดไฟล์เอง",
+      "en": "Single elimination tournaments with four teams or more now get a third place match, and picks need the ✓ button before the pick sound plays, so the teams can swap heroes around without it firing every time. The app downloads the update on its own and puts it in when you close it - nothing to download by hand."
     },
-    "expires": "2026-09-14T00:00:00Z"
+    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.6",
+    "maxVersion": "3.0.5",
+    "expires": "2026-10-15T00:00:00Z"
   }
 ]

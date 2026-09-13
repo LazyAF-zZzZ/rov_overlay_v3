@@ -8,7 +8,7 @@ session with no conversation history should be able to continue from here and
 
 ## 0. Where things stand
 
-**Last updated 2026-09-12. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 `c615d39`, M7 `79c5f41`, M8 `7e13667`, 3.0.5 in the commit after those (see `git log`).**
+**Last updated 2026-09-12. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 `c615d39`, M7 `79c5f41`, M8 `7e13667`, 3.0.6 in the commit after those (see `git log`).**
 
 | Area | State |
 |---|---|
@@ -18,7 +18,8 @@ session with no conversation history should be able to continue from here and
 | Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages; anything in its own window cannot be (§8), which is how 3.0.0 shipped unable to open one at all. 3.0.5 has been **installed from its own Setup and watched opening a real window**, serving its overlays and answering 410 on the pages the installer drops. The v2 import runs against a synthetic v2 install in the tests, with the v2 folder asserted byte-identical afterwards. The **clicking** flows are still unverified (§8). |
 | Updates / notifications | **Built** (§5). Velopack 1.2.0 against GitHub Releases, applied when the app closes and never on its own; a notice feed with a bell in the title bar. |
 
-Next: publish 3.0.5 when the user says to (§7), then watch the first real update land.
+Next: whatever the people using it ask for. 3.0.5 and 3.0.6 are published; updates reach
+them on their own.
 
 ---
 
@@ -203,7 +204,7 @@ docs/v2/            v2's plan, guide and notes, for reference
 | M5 | Design, Hotkeys with native global hotkeys, Guide | done, commit after `c3ac12a` |
 | M6 | Import from v2: read its database and images, merge them in, never write to its folder | done, commit after `3fcb2a9` |
 | M7 | Packaging: bundled node, Velopack installer, updates, notice feed, licence dialog | done, commit after `c615d39` |
-| M8 | Release 3.0.0 | built; 3.0.0 could not open a window, so **3.0.5** is the release. Installed and working, not published |
+| M8 | Release 3.0.0 | done. 3.0.0 could not open a window; **3.0.5** was the first published release and **3.0.6** the first that reached anyone by updating itself |
 
 ## 8. Open items
 
@@ -221,9 +222,6 @@ docs/v2/            v2's plan, guide and notes, for reference
   without anyone running Setup. What is *not* verified is the operator's view of it: the
   updated app restarts outside the agent session's sandbox, so its API stops being
   reachable from here and the window is the only thing left to read.
-- **The user guide still describes the old pick flow.** Picks are now chosen and then
-  confirmed, and `backend/docs/USER_GUIDE.md` (which is what the Guide screen renders)
-  says nothing about it. Anyone reading the manual is told picks happen in one step.
 - **Third place exists only for single elimination.** The knockout stage drawn after a
   group stage is the same shape with the same need; `addThirdPlace()` drops straight into
   that path when someone asks for it.
