@@ -148,3 +148,21 @@ test('pointing at a folder with no v2 data says so instead of importing nothing'
     fs.rmSync(empty, { recursive: true, force: true });
   }
 });
+
+// The auto-detect had an off-by-one: this module runs from build/server/domain/, and
+// counting three levels up lands on `backend`, not on the v3 root. The candidate came
+// out as `rov_overlay_v3/rov_pickban_overlay` — a path that cannot exist — so the
+// "v2 is still sitting beside us" fallback found nothing and never said why.
+test('the v2-beside-v3 candidate points outside the v3 folder, not inside it', () => {
+  const { candidatePaths } = require('../server/domain/import-v2') as typeof import('../server/domain/import-v2');
+  const beside = candidatePaths().filter((p) => p.endsWith('rov_pickban_overlay'));
+  assert.strictEqual(beside.length, 1, 'the sibling-folder candidate must be offered');
+
+  // Derived from where the module under test actually sits, not from this test file:
+  // the two live at different depths, which is exactly what the bug was made of.
+  const moduleDir = path.dirname(require.resolve('../server/domain/import-v2'));
+  const v3Root = path.resolve(moduleDir, '..', '..', '..', '..');
+  assert.strictEqual(path.basename(v3Root), 'rov_overlay_v3');
+  assert.strictEqual(beside[0], path.join(path.dirname(v3Root), 'rov_pickban_overlay'));
+  assert.ok(!beside[0].startsWith(v3Root + path.sep), 'v2 is a sibling of v3, never inside it');
+});

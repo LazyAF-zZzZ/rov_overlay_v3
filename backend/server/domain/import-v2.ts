@@ -50,9 +50,13 @@ export function candidatePaths(): string[] {
   const appData = process.env.APPDATA;
   if (appData) list.push(path.join(appData, 'ROV Overlay Tool'));
 
-  // The v2 project folder, if it still sits beside this one.
-  const here = path.resolve(__dirname, '..', '..', '..');       // backend/ -> v3 root
-  list.push(path.join(path.dirname(here), 'rov_pickban_overlay'));
+  // The v2 project folder, if it still sits beside this one. This file runs from
+  // build/server/domain/, so the v3 root is four levels up, not three — counting to
+  // `backend` and calling it the root made this candidate resolve to
+  // `rov_overlay_v3/rov_pickban_overlay`, a path that never exists, and the whole
+  // fallback silently found nothing.
+  const v3Root = path.resolve(__dirname, '..', '..', '..', '..');
+  list.push(path.join(path.dirname(v3Root), 'rov_pickban_overlay'));
 
   return list.filter((dir, index) => list.indexOf(dir) === index);
 }
