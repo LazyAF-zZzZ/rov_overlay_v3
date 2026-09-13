@@ -221,6 +221,12 @@ docs/v2/            v2's plan, guide and notes, for reference
   without anyone running Setup. What is *not* verified is the operator's view of it: the
   updated app restarts outside the agent session's sandbox, so its API stops being
   reachable from here and the window is the only thing left to read.
+- **The user guide still describes the old pick flow.** Picks are now chosen and then
+  confirmed, and `backend/docs/USER_GUIDE.md` (which is what the Guide screen renders)
+  says nothing about it. Anyone reading the manual is told picks happen in one step.
+- **Third place exists only for single elimination.** The knockout stage drawn after a
+  group stage is the same shape with the same need; `addThirdPlace()` drops straight into
+  that path when someone asks for it.
 - **A notice has been delivered; dismissing one has not been checked.** A test entry was
   pushed to `notices.json` on 2026-09-12 and reached the installed 3.0.4 on its next
   start: the bell showed a count of one, photographed from the running app. What is still
