@@ -8,7 +8,7 @@ session with no conversation history should be able to continue from here and
 
 ## 0. Where things stand
 
-**Last updated 2026-09-12. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 `c615d39`, M7 `79c5f41`, M8 `7e13667`, 3.0.6 in the commit after those (see `git log`).**
+**Last updated 2026-09-13. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 `c615d39`, M7 `79c5f41`, M8 `7e13667`, 3.0.6 and 3.0.7 in the commits after those (see `git log`).**
 
 | Area | State |
 |---|---|
@@ -18,9 +18,8 @@ session with no conversation history should be able to continue from here and
 | Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages; anything in its own window cannot be (§8), which is how 3.0.0 shipped unable to open one at all. 3.0.5 has been **installed from its own Setup and watched opening a real window**, serving its overlays and answering 410 on the pages the installer drops. The v2 import runs against a synthetic v2 install in the tests, with the v2 folder asserted byte-identical afterwards. The **clicking** flows are still unverified (§8). |
 | Updates / notifications | **Built** (§5). Velopack 1.2.0 against GitHub Releases, applied when the app closes and never on its own; a notice feed with a bell in the title bar. |
 
-Next: whatever the people using it ask for. 3.0.5 and 3.0.6 are published; updates reach
-them on their own. `main` is one overlay change ahead of 3.0.6 (the grey preselection
-filter, §8).
+Next: whatever the people using it ask for. 3.0.5, 3.0.6 and 3.0.7 are published; updates
+reach them on their own.
 
 ---
 
@@ -223,12 +222,14 @@ docs/v2/            v2's plan, guide and notes, for reference
   without anyone running Setup. What is *not* verified is the operator's view of it: the
   updated app restarts outside the agent session's sandbox, so its API stops being
   reachable from here and the window is the only thing left to read.
-- **The grey preselection filter is on `main` but in no release.** `46beae2` greys a
-  chosen-but-unconfirmed pick (`.pick-slot.pending .hero-image`, `grayscale(1)` at
-  `opacity: .7`) so viewers can see what is not final yet. 3.0.6 went out before it, so
-  nobody has it until the next release carries it. Verified by reading the computed
-  styles off the running overlay, and by a side-by-side render of the two states — not
-  in OBS, where the CSS cache still has to be refreshed by hand (§9).
+- **3.0.7 shipped without the smoke test, because the operator's own app was running.**
+  `scripts\smoke.ps1` refuses to start a second copy (the single-instance mutex would
+  make it show "already open" and exit, which is not what it tests), and closing the
+  user's live app to satisfy it was not something to do unasked. 3.0.7 changes only
+  `overlay.css`, `overlay.js`, the guide and the version number — no C# at all — and
+  3.0.6 was the build running on screen at the time. **That reasoning does not
+  generalise**: any release that touches `desktop/` must wait for the app to be closed
+  and be smoke-tested for real.
 - **Third place exists only for single elimination.** The knockout stage drawn after a
   group stage is the same shape with the same need; `addThirdPlace()` drops straight into
   that path when someone asks for it.
