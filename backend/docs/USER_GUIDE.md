@@ -80,9 +80,10 @@ For a single match that is not part of a tournament.
 3. Type the player names
 4. During the draft, type hero names into **HERO PICK** and **BAN** — press Enter to put them on the board
 5. **A pick takes one more step.** The hero appears on the overlay straight away, but
-   silently: no sound, no animation. Press the gold ✓ next to it to lock it in. That is
-   when the pick sound and the animation play, and when the draft moves on. Until then the
-   teams can keep swapping heroes on screen and nothing is final. Bans are one step, as before
+   silently: no sound, no animation, and **in grey**, so viewers can see it is not final.
+   Press the gold ✓ next to it to lock it in. That is when the picture turns full colour,
+   the pick sound and the animation play, and the draft moves on. Until then the teams can
+   keep swapping heroes on screen and nothing is final. Bans are one step, as before
 6. Use the **Draft Timer**: `START` · `PAUSE` · `RESUME` · `PREV` · `NEXT`
 7. `SHOW` / `HIDE` at the top hides the banner without removing the source in OBS
 
@@ -102,7 +103,8 @@ Bottom buttons: **UNDO** (last change), **SWITCH TEAMS** (swap sides), **CLEAR P
 3. พิมพ์ชื่อผู้เล่น
 4. ตอนดราฟต์ พิมพ์ชื่อฮีโร่ในช่อง **HERO PICK** และ **BAN** แล้วกด Enter เพื่อวางลงกระดาน
 5. **ช่องพิคมีอีกขั้นหนึ่ง** ฮีโร่จะขึ้นบน overlay ทันทีแต่ยังเงียบ ไม่มีเสียงและไม่มีอนิเมชัน
-   กดปุ่ม ✓ สีทองข้าง ๆ เพื่อยืนยัน ตอนนั้นแหละที่เสียงพิคกับอนิเมชันจะเล่น และดราฟต์ถึงจะไปเฟสถัดไป
+   และภาพจะเป็น **ขาวดำจาง ๆ** ให้คนดูรู้ว่ายังไม่ล็อก
+   กดปุ่ม ✓ สีทองข้าง ๆ เพื่อยืนยัน ตอนนั้นแหละที่ภาพจะกลับมาเป็นสีเต็ม เสียงพิคกับอนิเมชันจะเล่น และดราฟต์ถึงจะไปเฟสถัดไป
    ก่อนกดยืนยัน ทีมยังสลับตัวไปมาบนจอได้เรื่อย ๆ โดยที่ยังไม่นับว่าล็อก ส่วนช่องแบนเหมือนเดิม กดครั้งเดียวจบ
 6. ใช้ **Draft Timer**: `START` · `PAUSE` · `RESUME` · `PREV` · `NEXT`
 7. ปุ่ม `SHOW` / `HIDE` ด้านบนใช้ซ่อนแถบ overlay โดยไม่ต้องปิด source ใน OBS
