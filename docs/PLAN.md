@@ -19,7 +19,8 @@ session with no conversation history should be able to continue from here and
 | Updates / notifications | **Built** (§5). Velopack 1.2.0 against GitHub Releases, applied when the app closes and never on its own; a notice feed with a bell in the title bar. |
 
 Next: whatever the people using it ask for. 3.0.5 and 3.0.6 are published; updates reach
-them on their own.
+them on their own. `main` is one overlay change ahead of 3.0.6 (the grey preselection
+filter, §8).
 
 ---
 
@@ -222,6 +223,12 @@ docs/v2/            v2's plan, guide and notes, for reference
   without anyone running Setup. What is *not* verified is the operator's view of it: the
   updated app restarts outside the agent session's sandbox, so its API stops being
   reachable from here and the window is the only thing left to read.
+- **The grey preselection filter is on `main` but in no release.** `46beae2` greys a
+  chosen-but-unconfirmed pick (`.pick-slot.pending .hero-image`, `grayscale(1)` at
+  `opacity: .7`) so viewers can see what is not final yet. 3.0.6 went out before it, so
+  nobody has it until the next release carries it. Verified by reading the computed
+  styles off the running overlay, and by a side-by-side render of the two states — not
+  in OBS, where the CSS cache still has to be refreshed by hand (§9).
 - **Third place exists only for single elimination.** The knockout stage drawn after a
   group stage is the same shape with the same need; `addThirdPlace()` drops straight into
   that path when someone asks for it.
