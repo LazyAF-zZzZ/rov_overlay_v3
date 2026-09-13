@@ -80,7 +80,11 @@ export function checkAndAdvancePhase(): void {
   const allFilled = slots.every((slotId) => {
     const parsed = parseSlotId(slotId);
     if (!parsed) return false;
-    return Boolean(state[parsed.team][parsed.type][parsed.index]);
+    if (!state[parsed.team][parsed.type][parsed.index]) return false;
+    // พิคที่ยังไม่ยืนยันไม่นับว่าลงช่องแล้ว เฟสต้องค้างไว้ให้ทีมสลับตัวได้จนกว่าจะกดยืนยัน
+    // ไม่งั้นเวลาจะเดินต่อไปเองตั้งแต่ตอนที่ยังเลือกไม่เสร็จ
+    if (parsed.type === 'picks') return state[parsed.team].picksPending[parsed.index] !== true;
+    return true;
   });
   if (allFilled) startDraftPhase(state.draftPhaseIndex + 1);
 }

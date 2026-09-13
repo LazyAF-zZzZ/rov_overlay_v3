@@ -318,8 +318,8 @@ function updateOverlay(state) {
     updateBans('teamRed', state.teamRed.bans);
     
     // Update picks
-    updatePicks('teamBlue', state.teamBlue.picks, state.teamBlue.positions);
-    updatePicks('teamRed', state.teamRed.picks, state.teamRed.positions);
+    updatePicks('teamBlue', state.teamBlue.picks, state.teamBlue.positions, state.teamBlue.picksPending);
+    updatePicks('teamRed', state.teamRed.picks, state.teamRed.positions, state.teamRed.picksPending);
 
     // state ก้อนแรกคือ "กระดานตอนนี้" ไม่ใช่ "มีอะไรเพิ่งเกิดขึ้น"
     // ทุก pick/ban ที่มีอยู่แล้วเพิ่งถูกนับเป็นการเปลี่ยนแปลงไปเมื่อกี้
@@ -443,18 +443,37 @@ function showHeroArtWhenReady(slot, heroImage, hero, cssUrl) {
     preload.src = imageUrl('heroes', hero);
 }
 
-function updatePicks(team, picks, positions) {
+// pending = ช่องที่เลือกฮีโร่ไว้แล้วแต่ยังไม่กดยืนยัน
+//
+// ระหว่างที่ทีมสลับตัวกันไปมา ภาพบนจอเปลี่ยนตามได้เรื่อยๆ แต่ต้องเงียบสนิท
+// และไม่มีอนิเมชัน เสียงพิคคือการประกาศว่า "ล็อกแล้ว" ถ้าดังทุกครั้งที่เปลี่ยนใจ
+// มันก็ไม่เหลือความหมายอะไร ตอนกดยืนยันถึงจะเล่นเสียงและอนิเมชันตามปกติ
+function updatePicks(team, picks, positions, pending) {
     picks.forEach((hero, index) => {
         const slot = /** @type {HTMLElement} */ (document.querySelector(`.pick-slot[data-team="${team}"][data-index="${index}"]`));
         if (slot) {
             // ไอคอนตำแหน่งอยู่หลังภาพฮีโร่ ช่องที่ยังไม่ถูกเลือกจึงบอกได้ว่าเป็นเลนอะไร
             renderPositionIcon(slot, (positions && positions[index]) || '');
             const heroImage = /** @type {HTMLElement} */ (slot.querySelector('.hero-image'));
+            const isPending = Boolean(pending && pending[index]);
+            const wasPending = slot.dataset.pending === '1';
+
             if (hero) {
                 slot.classList.add('filled');
                 const nextImage = `url("${imageUrl('heroes', hero)}")`;
-                if (slot.dataset.hero !== hero) {
-                    slot.dataset.hero = hero;
+                const changed = slot.dataset.hero !== hero;
+                slot.dataset.hero = hero;
+                slot.dataset.pending = isPending ? '1' : '';
+
+                if (isPending) {
+                    // ยังไม่ยืนยัน: ขึ้นภาพให้เห็นเฉยๆ
+                    heroImage.style.backgroundImage = nextImage;
+                    return;
+                }
+
+                // ยืนยันแล้ว ทั้งสองทาง: เพิ่งเปลี่ยนฮีโร่ในช่องที่ยืนยันอยู่แล้ว
+                // หรือเพิ่งกดยืนยันฮีโร่ที่ค้างไว้ (ภาพเดิม แต่ pending หายไป)
+                if (changed || wasPending) {
                     RovSfx.play('pick');
                     // รอให้รูปโหลดเสร็จก่อนค่อยเริ่มอนิเมชัน
                     // ไม่งั้นกล่องเปล่าจะขยับก่อน แล้วรูปเด้งขึ้นมากลางทาง
@@ -466,6 +485,7 @@ function updatePicks(team, picks, positions) {
             } else {
                 slot.classList.remove('filled');
                 slot.dataset.hero = '';
+                slot.dataset.pending = '';
                 heroImage.style.backgroundImage = '';
             }
         }

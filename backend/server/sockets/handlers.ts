@@ -151,6 +151,20 @@ export function registerHandlers(socket: Socket): void {
     }
     pushUndo();
     state[team].picks[index] = next;
+    // เลือกแล้วแต่ยังไม่ยืนยัน overlay จะขึ้นภาพให้เลยแต่ยังเงียบอยู่
+    // ลบฮีโร่ออกก็ถือว่าไม่มีอะไรค้างให้ยืนยัน
+    state[team].picksPending[index] = next !== null;
+    emitState();
+    checkAndAdvancePhase();
+  });
+
+  // ยืนยันพิค: จังหวะนี้เองที่ overlay เล่นเสียงและอนิเมชัน และเฟสถึงจะเดินต่อ
+  controlEvent(socket, 'confirmPick', ({ team, index }) => {
+    if (!isTeamKey(team) || !isPickIndex(index)) return;
+    const state = getState();
+    if (!state[team].picks[index] || !state[team].picksPending[index]) return;
+    pushUndo();
+    state[team].picksPending[index] = false;
     emitState();
     checkAndAdvancePhase();
   });
@@ -174,6 +188,7 @@ export function registerHandlers(socket: Socket): void {
     if (!isTeamKey(team) || !isPickIndex(index)) return;
     pushUndo();
     getState()[team].picks[index] = null;
+    getState()[team].picksPending[index] = false;
     emitState();
   });
 

@@ -123,3 +123,46 @@ test('scores and names stay inside their limits', () => {
   assert.strictEqual(state.teamRed.name, 'RED');
   assert.strictEqual(state.teamRed.score, 0);
 });
+
+// ---- PRESELECTED PICKS ----
+//
+// ผู้ใช้ขอมา: ระหว่างที่ทีมสลับตัวกันไปมา ภาพขึ้นจอได้เลย แต่เสียงกับอนิเมชันของการพิค
+// ต้องรอจนกดยืนยัน สถานะ "เลือกแล้วแต่ยังไม่ยืนยัน" จึงต้องเดินทางไปกับ state ถึง overlay
+
+test('a state written before preselect existed has nothing pending', () => {
+  const state = sanitizeState({ teamBlue: { picks: ['airi', null, null, null, null] } });
+
+  assert.deepStrictEqual(
+    state.teamBlue.picksPending,
+    [false, false, false, false, false],
+    'old saves, old recorded drafts and every ban must behave exactly as they did'
+  );
+});
+
+test('pending travels with the state, one flag per pick slot', () => {
+  const state = sanitizeState({
+    teamBlue: { picks: ['airi', 'alice', null, null, null], picksPending: [true, false] }
+  });
+
+  assert.strictEqual(state.teamBlue.picksPending.length, state.teamBlue.picks.length);
+  assert.deepStrictEqual(state.teamBlue.picksPending.slice(0, 2), [true, false]);
+  assert.deepStrictEqual(state.teamBlue.picksPending.slice(2), [false, false, false],
+    'slots nobody mentioned are confirmed, not pending');
+});
+
+test('anything other than true is not pending', () => {
+  // มาจาก socket ค่าอะไรก็โผล่มาได้ ต้องไม่พังและต้องไม่กลายเป็น "ค้างอยู่"
+  const state = sanitizeState({
+    teamBlue: {
+      picks: ['airi', null, null, null, null],
+      picksPending: ['yes', 1, null, {}, 'true']
+    }
+  });
+
+  assert.deepStrictEqual(state.teamBlue.picksPending, [false, false, false, false, false]);
+});
+
+test('a fresh state starts with nothing pending on either side', () => {
+  assert.deepStrictEqual(defaultState.teamBlue.picksPending, [false, false, false, false, false]);
+  assert.deepStrictEqual(defaultState.teamRed.picksPending, [false, false, false, false, false]);
+});

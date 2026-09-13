@@ -41,6 +41,15 @@ export interface TeamState {
   score: number;
   logo: Logo;
   picks: (string | null)[];
+  // ช่องพิคที่ "เลือกไว้แล้วแต่ยังไม่ยืนยัน" เรียงตรงกับ picks
+  //
+  // ระหว่างที่ทีมสลับตัวกันไปมา คนคุมงานพิมพ์ฮีโร่ลงไปได้เลย overlay จะขึ้นภาพให้เห็น
+  // แต่ยังไม่เล่นเสียงและอนิเมชัน จนกว่าจะกดยืนยัน เพราะเสียงพิคคือการประกาศว่า
+  // "ล็อกแล้ว" ถ้าดังทุกครั้งที่เปลี่ยนใจ มันก็ไม่ได้แปลว่าอะไรอีกต่อไป
+  //
+  // ค่าเริ่มต้นคือ false ทั้งหมด state เก่าที่ไม่มีฟิลด์นี้จึงทำงานเหมือนเดิมทุกอย่าง
+  // แบนไม่มีเรื่องนี้ ผู้ใช้ขอมาเฉพาะพิค
+  picksPending: boolean[];
   bans: (string | null)[];
   players: string[];
   // ตำแหน่ง (เลน) ของผู้เล่นแต่ละช่อง เรียงตรงกับ players และ picks
@@ -100,6 +109,7 @@ function emptyTeam(name: string): TeamState {
     // อย่าง skin (หน้า overlay เป็นภาพออกอากาศ ลองผิดลองถูกแล้วภาพกระพริบ)
     logo: { v: 0, ext: '' },
     picks: Array.from({ length: PICK_COUNT }, () => null),
+    picksPending: Array.from({ length: PICK_COUNT }, () => false),
     bans: Array.from({ length: BAN_COUNT }, () => null),
     players: Array.from({ length: PICK_COUNT }, (_, i) => `Player ${i + 1}`),
     positions: Array.from({ length: PICK_COUNT }, () => '' as PositionValue)
@@ -214,6 +224,7 @@ export function sanitizeTeam(team: unknown, fallback: TeamState): TeamState {
     score: clampNumber(source.score, 0, 99),
     logo: sanitizeLogo(source.logo),
     picks: normalizeArray(source.picks, PICK_COUNT, sanitizeHero),
+    picksPending: normalizeArray(source.picksPending, PICK_COUNT, (flag) => flag === true),
     bans: normalizeArray(source.bans, BAN_COUNT, sanitizeHero),
     players: normalizeArray(source.players, PICK_COUNT, (name, index) => (
       sanitizeText(name, 24) || `Player ${index + 1}`

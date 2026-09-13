@@ -237,6 +237,10 @@ public sealed class ControlViewModel : ObservableObject
     public void SendHero(HeroSlot slot, string? hero) =>
         Emit(slot.IsBan ? "updateBan" : "updatePick", new { team = slot.Team, index = slot.Index, hero });
 
+    // ยืนยันพิค: overlay เล่นเสียงและอนิเมชันตอนนี้ และเฟสดราฟต์ถึงจะเดินต่อ
+    public void ConfirmPick(HeroSlot slot) =>
+        Emit("confirmPick", new { team = slot.Team, index = slot.Index });
+
     // ---- wiring -----------------------------------------------------------
 
     public void Emit(string command, object? payload = null) => _ = Services.Socket?.EmitAsync(command, payload);

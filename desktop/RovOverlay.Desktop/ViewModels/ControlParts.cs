@@ -72,6 +72,17 @@ public sealed class HeroSlot : ObservableObject
     public string? IconUrl => Hero is null ? null : _owner.HeroIconUrl(Hero);
     public bool HasHero => Hero is not null;
 
+    // เลือกไว้แล้วแต่ยังไม่ยืนยัน
+    //
+    // ผู้ใช้ขอมา: ระหว่างที่ทีมสลับตัวกันไปมา อยากให้ภาพขึ้นจอตามได้เลย
+    // แต่เสียงกับอนิเมชันของการพิคต้องรอจนกดยืนยัน เพราะนั่นคือจังหวะที่ล็อกจริง
+    private bool _isPending;
+    private ICommand? _confirm;
+
+    public bool IsPending { get => _isPending; private set => Set(ref _isPending, value); }
+
+    public ICommand ConfirmCommand => _confirm ??= new RelayCommand(() => _owner.ConfirmPick(this));
+
     // The slot the draft is waiting on right now.
     public bool IsActive { get => _isActive; set => Set(ref _isActive, value); }
 
@@ -84,9 +95,11 @@ public sealed class HeroSlot : ObservableObject
     }
 
     // Called when the server's state arrives: never fights what is being typed.
-    public void Apply(string? hero, bool editing)
+    // pending มีความหมายเฉพาะกับพิค แบนไม่มีขั้นยืนยัน จึงปล่อยค่าเริ่มต้นไว้
+    public void Apply(string? hero, bool editing, bool pending = false)
     {
         Hero = hero;
+        IsPending = pending;
         if (!editing) Text = hero ?? "";
     }
 
@@ -414,7 +427,8 @@ public sealed class SideViewModel : ObservableObject
             Players[i].Apply(side.Players.ElementAtOrDefault(i) ?? "", side.Positions.ElementAtOrDefault(i) ?? "",
                 isEditing(Players[i]), isEditing(Players[i]));
 
-        for (var i = 0; i < Picks.Count; i++) Picks[i].Apply(side.Picks.ElementAtOrDefault(i), isEditing(Picks[i]));
+        for (var i = 0; i < Picks.Count; i++)
+            Picks[i].Apply(side.Picks.ElementAtOrDefault(i), isEditing(Picks[i]), side.PicksPending.ElementAtOrDefault(i));
         for (var i = 0; i < Bans.Count; i++) Bans[i].Apply(side.Bans.ElementAtOrDefault(i), isEditing(Bans[i]));
     }
 

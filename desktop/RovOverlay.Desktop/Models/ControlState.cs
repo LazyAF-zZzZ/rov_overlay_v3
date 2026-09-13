@@ -86,6 +86,8 @@ public sealed class SideState
     public IReadOnlyList<string> Players { get; private init; } = [];
     public IReadOnlyList<string> Positions { get; private init; } = [];
     public IReadOnlyList<string?> Picks { get; private init; } = [];
+    // ช่องพิคที่เลือกไว้แล้วแต่ยังไม่ได้กดยืนยัน overlay ขึ้นภาพแล้วแต่ยังเงียบอยู่
+    public IReadOnlyList<bool> PicksPending { get; private init; } = [];
     public IReadOnlyList<string?> Bans { get; private init; } = [];
 
     public static SideState From(JsonNode? node, string fallbackName) => new()
@@ -98,8 +100,17 @@ public sealed class SideState
         Players = Texts(node?["players"], ControlState.PickCount),
         Positions = Texts(node?["positions"], ControlState.PickCount),
         Picks = Heroes(node?["picks"], ControlState.PickCount),
+        PicksPending = Flags(node?["picksPending"], ControlState.PickCount),
         Bans = Heroes(node?["bans"], ControlState.BanCount)
     };
+
+    private static List<bool> Flags(JsonNode? node, int count)
+    {
+        var array = node as JsonArray;
+        return Enumerable.Range(0, count)
+            .Select(i => J.Bool(array?.ElementAtOrDefault(i)) == true)
+            .ToList();
+    }
 
     private static List<string> Texts(JsonNode? node, int count)
     {
