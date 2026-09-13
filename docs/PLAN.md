@@ -222,6 +222,15 @@ docs/v2/            v2's plan, guide and notes, for reference
   without anyone running Setup. What is *not* verified is the operator's view of it: the
   updated app restarts outside the agent session's sandbox, so its API stops being
   reachable from here and the window is the only thing left to read.
+- **3.0.7 was published twice, replacing itself.** The first `v3.0.7` (the grey filter
+  alone) was deleted with `gh release delete v3.0.7 --cleanup-tag` and packed again from
+  `d1c607f`, which added the guide's v2-import section and the `candidatePaths()` fix.
+  Two things this depends on: the local `releases/` 3.0.7 nupkgs must be deleted first or
+  the delta is built against 3.0.7 rather than 3.0.6, and **anyone who already downloaded
+  the first 3.0.7 never receives the second** — same version number, so the updater has
+  nothing to offer them. One `-full.nupkg` download had already happened. Replacing a
+  version in place is only safe in the first minutes after publishing, before a notice
+  goes out; otherwise cut the next number.
 - **3.0.7 shipped without the smoke test, because the operator's own app was running.**
   `scripts\smoke.ps1` refuses to start a second copy (the single-instance mutex would
   make it show "already open" and exit, which is not what it tests), and closing the
