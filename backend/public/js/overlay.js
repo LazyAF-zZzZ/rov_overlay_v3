@@ -464,6 +464,8 @@ function updatePicks(team, picks, positions, pending) {
                 const changed = slot.dataset.hero !== hero;
                 slot.dataset.hero = hero;
                 slot.dataset.pending = isPending ? '1' : '';
+                // ชั้น CSS ทำให้ภาพที่ยังไม่ยืนยันเป็นขาวดำและจางลง ดูออกทันทีว่ายังไม่ล็อก
+                slot.classList.toggle('pending', isPending);
 
                 if (isPending) {
                     // ยังไม่ยืนยัน: ขึ้นภาพให้เห็นเฉยๆ
@@ -484,6 +486,7 @@ function updatePicks(team, picks, positions, pending) {
                 heroImage.style.backgroundImage = nextImage;
             } else {
                 slot.classList.remove('filled');
+                slot.classList.remove('pending');
                 slot.dataset.hero = '';
                 slot.dataset.pending = '';
                 heroImage.style.backgroundImage = '';

@@ -941,6 +941,15 @@ body {
     filter: saturate(0.25) brightness(0.7);
 }
 
+/* Chosen but not confirmed: grey and at 70%, so viewers can tell at a glance
+   that nothing is final yet. The teams swap around inside this state, and
+   colour arriving at full strength is what confirming looks like.
+   The transition on .pick-slot .hero-image above carries both back. */
+.pick-slot.pending .hero-image {
+    filter: grayscale(1) contrast(1.06);
+    opacity: 0.7;
+}
+
 /* --- Entrance motion -------------------------------------- */
 
 /* The slot elements themselves are left alone on purpose. `.pick-slot.active`
