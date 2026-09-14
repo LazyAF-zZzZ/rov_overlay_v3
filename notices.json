@@ -1,17 +1,17 @@
 [
   {
-    "id": "update-3-0-6",
+    "id": "update-3-0-8",
     "level": "info",
     "title": {
-      "th": "อัปเดต 3.0.6 พร้อมแล้ว",
-      "en": "Update 3.0.6 is ready"
+      "th": "อัปเดต 3.0.8 พร้อมแล้ว",
+      "en": "Update 3.0.8 is ready"
     },
     "body": {
-      "th": "ทัวร์นาเมนต์แบบแพ้คัดออกตั้งแต่สี่ทีมขึ้นไปจะมีนัดชิงที่ 3 ให้เอง และช่องพิคต้องกดปุ่ม ✓ ยืนยันก่อน เสียงพิคถึงจะดัง ระหว่างที่ทีมสลับตัวกันไปมา ภาพขึ้นจอตามได้เลยโดยไม่มีเสียงรัว แอปจะโหลดอัปเดตให้เองแล้วติดตั้งตอนคุณปิดโปรแกรม ไม่ต้องโหลดไฟล์เอง",
-      "en": "Single elimination tournaments with four teams or more now get a third place match, and picks need the ✓ button before the pick sound plays, so the teams can swap heroes around without it firing every time. The app downloads the update on its own and puts it in when you close it - nothing to download by hand."
+      "th": "จบเกมด้วยปุ่มเดียว: กด จบเกม → ทีมที่ชนะ แล้วโปรแกรมให้แต้ม บันทึกผู้ชนะ เก็บดราฟต์ และขึ้นเกมถัดไปให้เอง พอจบซีรีส์ก็เอาคู่ถัดไปขึ้นจอได้ทันที หน้าคุมงานพับส่วนตั้งค่าทีมเก็บเองตอนเริ่มดราฟต์ และหน้าแรกบอกว่ากำลังออกอากาศคู่ไหนกับคู่ไหนพร้อมเล่น แอปจะโหลดอัปเดตให้เองแล้วติดตั้งตอนคุณปิดโปรแกรม ไม่ต้องโหลดไฟล์เอง",
+      "en": "End a game with one button: press GAME OVER → the team that won, and the app adds the point, records the winner, keeps the draft and puts the next game up. When a series ends, the next match goes on air from the same panel. Team setup folds away when the draft starts, and Home shows what is on air and what is ready to play. The app downloads the update on its own and puts it in when you close it - nothing to download by hand."
     },
-    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.6",
-    "maxVersion": "3.0.5",
+    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.8",
+    "maxVersion": "3.0.7",
     "expires": "2026-10-15T00:00:00Z"
   }
 ]
