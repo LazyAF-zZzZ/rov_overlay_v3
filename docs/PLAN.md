@@ -8,7 +8,7 @@ session with no conversation history should be able to continue from here and
 
 ## 0. Where things stand
 
-**Last updated 2026-09-13. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 `c615d39`, M7 `79c5f41`, M8 `7e13667`, 3.0.6 and 3.0.7 in the commits after those (see `git log`).**
+**Last updated 2026-09-14. M1 `e826fb3`, M2 `6f736b3`, M3 `ab3bdf8`, M4 `c3ac12a`, M5 `3fcb2a9`, M6 `c615d39`, M7 `79c5f41`, M8 `7e13667`, 3.0.6 and 3.0.7 in the commits after those, the flow and UI work in `83e558c`, 3.0.8 in `182ea91`.**
 
 | Area | State |
 |---|---|
@@ -18,11 +18,12 @@ session with no conversation history should be able to continue from here and
 | Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages; anything in its own window cannot be (§8), which is how 3.0.0 shipped unable to open one at all. 3.0.5 has been **installed from its own Setup and watched opening a real window**, serving its overlays and answering 410 on the pages the installer drops. The v2 import runs against a synthetic v2 install in the tests, with the v2 folder asserted byte-identical afterwards. The **game-over flow has been clicked through for real** (2026-09-14): `scripts/uia.ps1` pressed GAME OVER, the confirm dialog, the deciding game and Put on air in a live window against a throwaway backend, with the server's record checked after every press. The other clicking flows are still unverified (§8). |
 | Updates / notifications | **Built** (§5). Velopack 1.2.0 against GitHub Releases, applied when the app closes and never on its own; a notice feed with a bell in the title bar. |
 
-Next: whatever the people using it ask for. 3.0.5, 3.0.6 and 3.0.7 are published; updates
-reach them on their own. **`main` is ahead of 3.0.7** with the flow and UI work, not yet in
-any release: one-press GAME OVER with SERIES OVER and Put on air (`POST /api/live-match/finish`),
-a Control Panel whose team setup and sound fold away, and a Home that shows what is on air and
-what is ready to play (`GET /api/ready-matches`).
+Next: whatever the people using it ask for. 3.0.5 through **3.0.8** are published; updates
+reach them on their own. 3.0.8 carries the flow and UI work: one-press GAME OVER with SERIES
+OVER and Put on air (`POST /api/live-match/finish`), a Control Panel whose team setup and sound
+fold away, and a Home that shows what is on air and what is ready to play
+(`GET /api/ready-matches`). It was smoke-tested for real before packing. No notice has been
+pushed for it.
 
 ---
 
