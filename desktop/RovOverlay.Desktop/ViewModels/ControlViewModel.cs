@@ -26,6 +26,11 @@ public sealed class ControlViewModel : ObservableObject
     private string? _liveText;
     private string? _liveTournamentId;
     private readonly ShellViewModel _shell;
+    private bool _showSetup = true;
+    private bool _showSound;
+    private bool _seriesOver;
+    private string? _seriesMatchId;
+    private ReadyMatchInfo? _nextMatch;
 
     public ControlViewModel(AppServices services, ShellViewModel shell)
     {
@@ -39,6 +44,7 @@ public sealed class ControlViewModel : ObservableObject
         StartCommand = new RelayCommand(() => Emit("draftStart"));
         PauseCommand = new RelayCommand(() => Emit("draftPause"));
         ResumeCommand = new RelayCommand(() => Emit("draftResume"));
+        TogglePauseCommand = new RelayCommand(TogglePause);
         NextCommand = new RelayCommand(() => Emit("draftNext"));
         PrevCommand = new RelayCommand(() => Emit("draftPrev"));
         ResetDraftCommand = new RelayCommand(() => Emit("draftReset"));
@@ -58,6 +64,11 @@ public sealed class ControlViewModel : ObservableObject
         {
             if (p is HeroSlot slot) (slot.Team == "teamBlue" ? Blue : Red).SwapPick(slot);
         });
+        ToggleSetupCommand = new RelayCommand(() => ShowSetup = !ShowSetup);
+        ToggleSoundCommand = new RelayCommand(() => ShowSound = !ShowSound);
+        FinishBlueCommand = new AsyncRelayCommand(() => FinishGameAsync("blue"));
+        FinishRedCommand = new AsyncRelayCommand(() => FinishGameAsync("red"));
+        PutNextOnAirCommand = new AsyncRelayCommand(PutNextOnAirAsync, () => _nextMatch is not null);
 
         services.StateUpdated += OnState;
         services.DataChanged += OnDataChanged;
@@ -78,6 +89,7 @@ public sealed class ControlViewModel : ObservableObject
     public ICommand StartCommand { get; }
     public ICommand PauseCommand { get; }
     public ICommand ResumeCommand { get; }
+    public ICommand TogglePauseCommand { get; }
     public ICommand NextCommand { get; }
     public ICommand PrevCommand { get; }
     public ICommand ResetDraftCommand { get; }
@@ -90,10 +102,27 @@ public sealed class ControlViewModel : ObservableObject
     public ICommand HideBannerCommand { get; }
     public ICommand StepRoundCommand { get; }
     public ICommand SwapPickCommand { get; }
+    public ICommand ToggleSetupCommand { get; }
+    public ICommand ToggleSoundCommand { get; }
+    public ICommand FinishBlueCommand { get; }
+    public ICommand FinishRedCommand { get; }
+    public ICommand PutNextOnAirCommand { get; }
 
     // What the view says is being typed in right now, so a push from the server never
     // overwrites a field under the operator's hands.
     public Func<object, bool> IsEditing { get; set; } = _ => false;
+
+    // ---- layout -----------------------------------------------------------
+
+    // Team names, logos, nicknames and lanes are set once, before the draft. For the rest
+    // of the game they only stand between the operator and the picks, so they fold away
+    // by themselves when the draft starts. The toggle brings them back at any time, and
+    // nothing folds while a field is being typed in: the fields keep their values either way.
+    public bool ShowSetup { get => _showSetup; set => Set(ref _showSetup, value); }
+
+    // Sound levels are set once per event and adjusted rarely. Folded by default so three
+    // full-width sliders do not sit under the draft for the whole broadcast.
+    public bool ShowSound { get => _showSound; set => Set(ref _showSound, value); }
 
     // ---- match info -------------------------------------------------------
 
@@ -145,6 +174,10 @@ public sealed class ControlViewModel : ObservableObject
         Loc.F("Control.PhaseN", Math.Clamp((_state?.DraftPhaseIndex ?? -1) + 1, 0, Sequence.Count), Sequence.Count);
     public bool IsRunning => _state?.DraftRunning == true;
 
+    // One button that says what pressing it will do. Pause and resume were two buttons side
+    // by side, and only one of them ever did anything at a given moment.
+    public string PauseResumeText => Loc.T(IsRunning ? "Control.Pause" : "Control.Resume");
+
     public string StatusText
     {
         get
@@ -160,6 +193,90 @@ public sealed class ControlViewModel : ObservableObject
     public string RoundText => (_state?.Round ?? 1).ToString();
     public bool CanPrevRound => (_state?.Round ?? 1) > 1;
     public string? RoundNote => _state is { RoundsOnBoard: > 0 } s ? Loc.F("Control.RoundsOnBoard", s.RoundsOnBoard) : null;
+
+    // ---- game over --------------------------------------------------------
+
+    public string BlueWonText => Loc.F("Flow.Won", SideName(Blue));
+    public string RedWonText => Loc.F("Flow.Won", SideName(Red));
+
+    public bool SeriesOver { get => _seriesOver; private set => Set(ref _seriesOver, value); }
+    public bool HasNextMatch => _nextMatch is not null;
+    public string NextMatchText => _nextMatch is null
+        ? Loc.T("Flow.NoNext")
+        : Loc.F("Flow.Next", _nextMatch.BlueName, _nextMatch.RedName);
+
+    private static string SideName(SideViewModel side) =>
+        string.IsNullOrWhiteSpace(side.Name) ? Loc.T(side.IsBlue ? "Control.BlueTeam" : "Control.RedTeam") : side.Name;
+
+    // Ending a game used to be two separate actions with nothing on screen saying which
+    // came first: add the point in the score box, then press the round arrow. Forget the
+    // first and the game has no winner, so hero win rates quietly lose it; forget the
+    // second and the next draft is written over the game just played. The server does
+    // both in the right order and refuses to count a game twice.
+    //
+    // Confirmed first, because a wrong press mid-broadcast moves the board off the draft
+    // viewers are looking at. The round arrow brings it back, and the dialog says so.
+    private async Task FinishGameAsync(string winner)
+    {
+        var name = SideName(winner == "blue" ? Blue : Red);
+        var game = _state?.Round ?? 1;
+        if (!Dialogs.Confirm(Loc.T("Flow.FinishTitle"),
+                [Loc.F("Flow.FinishQ", name, game), Loc.F("Flow.FinishBody", name)],
+                Loc.F("Flow.Won", name)))
+            return;
+
+        FinishGameReply reply;
+        try
+        {
+            reply = await Services.Api.PostAsync<FinishGameReply>("/api/live-match/finish", new { winner });
+        }
+        catch (ApiException error)
+        {
+            Toasts.Error(error.Code switch
+            {
+                "game-decided" => Loc.T("Flow.Err.GameDecided"),
+                "series-over" => Loc.T("Flow.Err.SeriesOver"),
+                "round-limit" => Loc.T("Flow.Err.RoundLimit"),
+                "not-recorded" => Loc.T("Flow.Err.NotRecorded"),
+                _ => error.Message
+            });
+            return;
+        }
+
+        if (reply.SeriesOver)
+        {
+            _seriesMatchId = reply.Live.MatchId;
+            _nextMatch = reply.NextMatch;
+            SeriesOver = true;
+            OnPropertyChanged(nameof(HasNextMatch));
+            OnPropertyChanged(nameof(NextMatchText));
+            Toasts.Info(Loc.T("Flow.SeriesDone"));
+        }
+        else
+        {
+            Toasts.Info(Loc.F("Flow.NextGame", reply.Round));
+        }
+    }
+
+    // The next match goes on air from here, so the end of a series does not mean a trip to
+    // the bracket and back.
+    private async Task PutNextOnAirAsync()
+    {
+        if (_nextMatch is null) return;
+        var reply = await Services.Api.PostAsync<GoLiveReply>($"/api/matches/{Uri.EscapeDataString(_nextMatch.MatchId)}/live", null);
+        ClearSeriesOver();
+        Toasts.Info(Loc.F("Bracket.OnAir", reply.Live.GameNo ?? 1));
+    }
+
+    private void ClearSeriesOver()
+    {
+        if (!SeriesOver && _nextMatch is null) return;
+        _seriesMatchId = null;
+        _nextMatch = null;
+        SeriesOver = false;
+        OnPropertyChanged(nameof(HasNextMatch));
+        OnPropertyChanged(nameof(NextMatchText));
+    }
 
     // ---- overlay switches -------------------------------------------------
 
@@ -306,6 +423,10 @@ public sealed class ControlViewModel : ObservableObject
                     ? Loc.F("Live.Match", live.TournamentName ?? "", live.MatchLabel ?? "", game)
                     : Loc.F("Live.MatchNoGame", live.TournamentName ?? "", live.MatchLabel ?? "");
             OnPropertyChanged(nameof(HasLive));
+
+            // "Series over" belongs to the match that just finished. Once anything else is on
+            // air - from here, the bracket, Home, or a reset - it no longer describes the board.
+            if (SeriesOver && live.MatchId != _seriesMatchId) ClearSeriesOver();
         }
         catch
         {
@@ -322,7 +443,12 @@ public sealed class ControlViewModel : ObservableObject
     private void OnState(JsonNode node)
     {
         var state = ControlState.From(node);
+        var previous = _state;
         _state = state;
+
+        // The draft just started: the set-up fields have done their job. Only on that edge,
+        // so an operator who opens them again mid-draft is not overruled on the next update.
+        if (previous is not null && previous.DraftPhaseIndex < 0 && state.DraftPhaseIndex >= 0) ShowSetup = false;
 
         if (!IsEditing(this))
         {
@@ -360,8 +486,8 @@ public sealed class ControlViewModel : ObservableObject
         foreach (var name in new[]
                  {
                      nameof(PhaseLabel), nameof(TimerText), nameof(IsUrgent), nameof(PhaseIndexText), nameof(IsRunning),
-                     nameof(StatusText), nameof(RoundText), nameof(CanPrevRound), nameof(RoundNote),
-                     nameof(Is1080), nameof(Is1440), nameof(BannerOn)
+                     nameof(PauseResumeText), nameof(StatusText), nameof(RoundText), nameof(CanPrevRound), nameof(RoundNote),
+                     nameof(Is1080), nameof(Is1440), nameof(BannerOn), nameof(BlueWonText), nameof(RedWonText)
                  })
             OnPropertyChanged(name);
 
@@ -461,7 +587,8 @@ public sealed class ControlViewModel : ObservableObject
         foreach (var name in new[]
                  {
                      nameof(PhaseLabel), nameof(PhaseIndexText), nameof(StatusText), nameof(RoundNote),
-                     nameof(MatchSaveText)
+                     nameof(MatchSaveText), nameof(PauseResumeText), nameof(BlueWonText), nameof(RedWonText),
+                     nameof(NextMatchText)
                  })
             OnPropertyChanged(name);
         _ = RefreshLiveAsync();

@@ -49,10 +49,17 @@ public partial class ControlView : UserControl
         _window = null;
     }
 
-    // True when the keyboard is inside the element bound to this view model object, so a
-    // push from the server leaves that field alone.
+    // True when the keyboard is inside a field bound to this view model object, so a push
+    // from the server leaves that field alone.
+    //
+    // Only fields someone types or chooses in count. It used to be any focused element, and
+    // every button on this panel shares the panel's DataContext: after pressing "Put on air",
+    // the button kept focus, the panel counted as being edited, and the match title field
+    // went on showing the previous match while the new one was on air.
     private static bool IsEditing(object target) =>
-        Keyboard.FocusedElement is FrameworkElement element && ReferenceEquals(element.DataContext, target);
+        Keyboard.FocusedElement is TextBoxBase or ComboBox
+        && Keyboard.FocusedElement is FrameworkElement element
+        && ReferenceEquals(element.DataContext, target);
 
     private static bool TypingHere()
     {

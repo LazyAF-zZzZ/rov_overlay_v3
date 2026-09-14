@@ -12,14 +12,17 @@ session with no conversation history should be able to continue from here and
 
 | Area | State |
 |---|---|
-| Backend (`backend/`) | Copied from v2 at `6c69766` (v2.0.2 plus two overlay commits). Builds; **356 tests, all passing, nothing skipped**. M6 added the v2 importer; M7 revived the "installer never ships uploaded images" guard; M8 added `tests/packaging.test.ts`, which keeps the bundle's page list honest in both directions. |
+| Backend (`backend/`) | Copied from v2 at `6c69766` (v2.0.2 plus two overlay commits). Builds; **373 tests, all passing, nothing skipped**. M6 added the v2 importer; M7 revived the "installer never ships uploaded images" guard; M8 added `tests/packaging.test.ts`, which keeps the bundle's page list honest in both directions. |
 | Desktop app (`desktop/`) | WPF on .NET 10. Builds with no warnings. Starts or attaches to the backend, live title strip, sidebar, OBS source list, toasts, Thai/English, back stack (Esc / mouse back), notice bell, first-run licence. |
 | Native screens | **All of them**: Home, tournament detail, team registry, team profile, Control Panel, bracket, analytics, pick/ban history, Design, Hotkeys, Guide, Settings. No screen opens a web page any more, and since M8 the installer no longer carries the ten HTML operator pages they replaced. The manual (`/guide`) and the sound check (`/sfx-test`) still ship: nothing replaced those, and the Guide screen has a button that opens the manual in a browser. |
-| Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages; anything in its own window cannot be (§8), which is how 3.0.0 shipped unable to open one at all. 3.0.5 has been **installed from its own Setup and watched opening a real window**, serving its overlays and answering 410 on the pages the installer drops. The v2 import runs against a synthetic v2 install in the tests, with the v2 folder asserted byte-identical afterwards. The **clicking** flows are still unverified (§8). |
+| Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages; anything in its own window cannot be (§8), which is how 3.0.0 shipped unable to open one at all. 3.0.5 has been **installed from its own Setup and watched opening a real window**, serving its overlays and answering 410 on the pages the installer drops. The v2 import runs against a synthetic v2 install in the tests, with the v2 folder asserted byte-identical afterwards. The **game-over flow has been clicked through for real** (2026-09-14): `scripts/uia.ps1` pressed GAME OVER, the confirm dialog, the deciding game and Put on air in a live window against a throwaway backend, with the server's record checked after every press. The other clicking flows are still unverified (§8). |
 | Updates / notifications | **Built** (§5). Velopack 1.2.0 against GitHub Releases, applied when the app closes and never on its own; a notice feed with a bell in the title bar. |
 
 Next: whatever the people using it ask for. 3.0.5, 3.0.6 and 3.0.7 are published; updates
-reach them on their own.
+reach them on their own. **`main` is ahead of 3.0.7** with the flow and UI work, not yet in
+any release: one-press GAME OVER with SERIES OVER and Put on air (`POST /api/live-match/finish`),
+a Control Panel whose team setup and sound fold away, and a Home that shows what is on air and
+what is ready to play (`GET /api/ready-matches`).
 
 ---
 
@@ -39,6 +42,10 @@ Settled with the user on 2026-09-11. Do not re-litigate.
   gets a native screen or stays reachable as its HTML page until it does.
 - **Future: real-time patches and notifications to users** (§5). Built in later
   milestones, but designed now so nothing blocks them.
+- **The tournament page keeps its OBS source list** (decided 2026-09-14). v2 removed it
+  from `/tournament/:id` on 2026-09-08 at the user's request, and `backend/CLAUDE.md` still
+  says so; asked again for v3, the user chose to keep the per-tournament links (Standings,
+  Team list, Stats board for that tournament). Do not remove it on the rulebook's word.
 - **All data stays local**, as in v2. The update and notice checks only *read* public
   files; there are no accounts and no telemetry.
 
@@ -256,10 +263,15 @@ docs/v2/            v2's plan, guide and notes, for reference
 - **No v2 data exists on this machine to import.** `%APPDATA%\ROV Overlay Tool` does not
   exist and the database in the v2 repo has zero rows, so the importer was proved
   against a synthetic v2 install instead. Run it once against a real one.
-- **Click through M2 and M3 by hand.** Create a tournament and a team, edit a roster
+- **Click through M2 and M3.** Create a tournament and a team, edit a roster
   inline, upload and clear a logo, remove a team, delete a tournament, save a backup and
   restore it; then run a real draft: type heroes, Enter to confirm, the timer, the
-  shortcuts, swap, undo. Rendering is verified; these flows are not (no UI automation here).
+  shortcuts, swap, undo. Rendering is verified; these flows are not. **There is UI
+  automation now**: `scripts/uia.ps1` presses buttons by their text, reads fields back and
+  captures windows and dialogs, against a snapshot build left open with a long
+  `--snapshot-delay` beside a throwaway backend. It has only been pointed at the game-over
+  flow so far, and on its first run it found a real bug there (the match title field
+  frozen after Put on air). The flows above are the next thing to point it at.
 - **The Control Panel's shortcuts only work while the app has focus.** System-wide
   hotkeys are M5 (Win32 `RegisterHotKey`), as v2 had through Electron.
 - **Sound effects still need an overlay page open to be heard on air** (§8, unchanged by
@@ -277,6 +289,14 @@ docs/v2/            v2's plan, guide and notes, for reference
 
 - **Do not run anything in `../rov_pickban_overlay`.** Its `npm start` rebuilds its
   `build/` and opens its `data/tournament.db`.
+- **To UI Automation, a window with an Owner is not a top-level window.** The confirm
+  dialog (`Owner` = the main window) is listed *underneath* the main window, not among the
+  desktop's children. Searching the desktop's children for it finds nothing, which reads
+  exactly like "the button never opened a dialog". Look for `ControlType.Window`
+  descendants of the main window instead (`scripts/uia.ps1` does).
+- **PowerShell variable names ignore case.** A function parameter named `$scope` hid the
+  script's `$Scope` (the `TreeScope` type) inside that one function, so
+  `$Scope::Descendants` became null there and worked everywhere else.
 - **Icon glyphs as raw characters vanish or get mangled.** Perl's and sed's `\u` in a
   replacement means "uppercase the next character", which turned `\uE80F` into `E80F`.
   Write escapes by hand, or rewrite with Node.

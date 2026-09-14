@@ -21,6 +21,14 @@ public sealed record BracketMatchList(List<BracketMatch>? Matches);
 public sealed record MatchResultReply(bool Ok, BracketMatch Match, List<BracketMatch>? Matches);
 public sealed record GoLiveReply(bool Ok, LiveInfo Live);
 
+// A match that can go on air right now: both teams known, not a bye, series not over.
+public sealed record ReadyMatchInfo(string MatchId, string TournamentId, string TournamentName, string MatchLabel, string BlueName, string RedName);
+public sealed record ReadyMatchesReply(List<ReadyMatchInfo>? Matches);
+
+// A game finished from the Control Panel. NextMatch is set only when that game ended the
+// series, and is the next playable match in the same tournament.
+public sealed record FinishGameReply(bool Ok, LiveInfo Live, int Round, bool SeriesOver, ReadyMatchInfo? NextMatch);
+
 // One side of a recorded draft: who played, what they picked and banned, and whether
 // they won that game. Names are the frozen snapshot, not today's registry.
 public sealed record DraftSide(string? TeamId, string Name, List<string?>? Picks, List<string?>? Bans, bool Won);

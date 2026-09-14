@@ -11,7 +11,7 @@ import express, { Router } from 'express';
 import { getStores } from '../store/index';
 import { FORMATS, BEST_OF_OPTIONS, STATUSES, MAX_TEAMS } from '../domain/tournament';
 import { requireControl } from './auth';
-import { goLive, clearLive, describeLive, notifyAnalytics } from '../services/live-match';
+import { goLive, clearLive, describeLive, notifyAnalytics, finishGame, readyMatches } from '../services/live-match';
 import { toHeroStats, summarise, rankHeroes, isRankMode } from '../domain/analytics';
 import { notifyData } from '../services/sync';
 import { recordSeriesResult } from '../services/series';
@@ -425,6 +425,31 @@ export function tournamentRoutes(): Router {
 
   router.delete('/api/live-match', requireControl, (_req, res) => {
     res.json({ ok: true, live: clearLive() });
+  });
+
+  // จบเกมที่ออกอากาศอยู่ด้วยปุ่มเดียว: บวกคะแนนฝั่งที่ชนะ บันทึกผู้ชนะรายเกม แล้วเดินไปเกมถัดไป
+  // ส่ง code กลับไปด้วย หน้าแอปแปลข้อความจาก code ได้ ไม่ต้องเทียบประโยคภาษาอังกฤษ
+  router.post('/api/live-match/finish', requireControl, (req, res) => {
+    const raw = ((req.body || {}) as { winner?: unknown }).winner;
+    if (raw !== 'blue' && raw !== 'red') {
+      res.status(400).json({ error: 'Winner must be blue or red', code: 'bad-winner' });
+      return;
+    }
+    const outcome = finishGame(raw);
+    if (outcome.error !== undefined) {
+      res.status(outcome.code === 'not-found' ? 404 : 400).json({ error: outcome.error, code: outcome.code });
+      return;
+    }
+    res.json({ ok: true, ...outcome.result });
+  });
+
+  // คู่ที่เล่นได้เลยจากทุกทัวร์นาเมนต์ที่ยัง active ไม่รวมคู่ที่ออกอากาศอยู่ ซึ่งหน้าแรกแสดงแยกไว้แล้ว
+  // รายการที่กำลังออกอากาศขึ้นก่อน เพราะคู่ถัดไปของงานนั้นคือคู่ที่จะถูกกดต่อ
+  router.get('/api/ready-matches', (_req, res) => {
+    const live = describeLive();
+    res.json({
+      matches: readyMatches({ exceptMatchId: live.matchId, preferTournamentId: live.tournamentId, limit: 6 })
+    });
   });
 
   // ดราฟต์ที่บันทึกไว้ของแมตช์นี้ ใช้ดูย้อนหลังและเป็นวัตถุดิบของสถิติ

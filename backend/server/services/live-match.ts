@@ -22,6 +22,8 @@ import type { Match } from '../store/matches';
 import { seriesWinner, PLAYOFF_BRACKET } from '../domain/bracket';
 import { FIRST_ROUND, MAX_ROUND_NUMBER } from '../domain/rounds';
 import { boardToRound, clearBoard, fileRound, restoreRound, roundsBefore, takeRound } from './rounds';
+import { pushOverlayScoreToMatch } from './series';
+import { clampNumber } from '../lib/sanitize';
 
 export interface LiveInfo {
   matchId: string | null;
@@ -92,15 +94,17 @@ function airingGameNo(match: Match): number {
   return decided ? Math.max(played, FIRST_ROUND) : played + 1;
 }
 
+function emptyLive(): LiveInfo {
+  return {
+    matchId: null, gameId: null, gameNo: null, tournamentId: null,
+    tournamentName: null, matchLabel: null, winner: null, draftLocked: false
+  };
+}
+
 export function describeLive(): LiveInfo {
   const { liveMatch, matches, games, tournaments } = getStores();
   const pointer = liveMatch.get();
-  if (!pointer.matchId) {
-    return {
-      matchId: null, gameId: null, gameNo: null, tournamentId: null,
-      tournamentName: null, matchLabel: null, winner: null, draftLocked: false
-    };
-  }
+  if (!pointer.matchId) return emptyLive();
 
   const match = matches.get(pointer.matchId);
   const game = pointer.gameId ? games.get(pointer.gameId) : null;
@@ -305,6 +309,164 @@ export function stepRound(delta: number): StepRoundResult {
   resetDraft();
 
   return { result: { round: state.round, rounds: state.rounds.length } };
+}
+
+// ---- จบเกม ----
+
+export type GameWinner = 'blue' | 'red';
+
+// คู่ที่พร้อมเล่น: รู้ทั้งสองทีมแล้ว ไม่ใช่บาย และซีรีส์ยังไม่จบ
+export interface ReadyMatch {
+  matchId: string;
+  tournamentId: string;
+  tournamentName: string;
+  matchLabel: string;
+  blueName: string;
+  redName: string;
+}
+
+export interface ReadyMatchOptions {
+  tournamentId?: string;
+  exceptMatchId?: string | null;
+  // ทัวร์นาเมนต์ที่ขึ้นก่อนรายการอื่น ปกติคือรายการที่กำลังออกอากาศ
+  preferTournamentId?: string | null;
+  limit?: number;
+}
+
+// กติกาเดียวกับการ์ด "พร้อมเล่น" ในหน้าทัวร์นาเมนต์: เรียงตามรอบ แล้วตามช่อง
+//
+// ไม่ได้ตัดสินว่าคู่ไหน "ควร" เล่นก่อน แค่เรียงแบบที่คนอ่านสายแล้วเจอก่อน
+// ไม่ระบุทัวร์นาเมนต์ = ทุกรายการที่ยัง active อยู่ ซึ่งคือสิ่งที่หน้าแรกต้องการ
+// รายการที่จบไปแล้วไม่ควรมีคู่โผล่มาให้กดออกอากาศโดยไม่ตั้งใจ
+//
+// รายการที่กำลังออกอากาศต้องมาก่อน: เห็นกับตาแล้วว่าถ้าเรียงตามลำดับรายการเฉยๆ
+// หกช่องบนหน้าแรกเต็มไปด้วยคู่ของรายการอื่น ส่วนรอบรองอีกคู่ของงานที่กำลังถ่ายทอด
+// ซึ่งเป็นคู่ที่คนคุมงานจะกดต่อจริงๆ หลุดออกไปไม่ได้แสดง
+export function readyMatches(options: ReadyMatchOptions = {}): ReadyMatch[] {
+  const { tournaments, matches, teams } = getStores();
+  const scope = options.tournamentId
+    ? [tournaments.get(options.tournamentId)].filter((t): t is NonNullable<typeof t> => Boolean(t))
+    : tournaments.list().filter((t) => t.status === 'active');
+  const preferred = options.preferTournamentId;
+  if (preferred) scope.sort((a, b) => Number(b.id === preferred) - Number(a.id === preferred));
+  const limit = options.limit ?? Number.POSITIVE_INFINITY;
+
+  const found: ReadyMatch[] = [];
+  for (const tournament of scope) {
+    const ready = matches.list(tournament.id)
+      .filter((m) => !m.isBye && m.status !== 'complete' && m.teamAId !== null && m.teamBId !== null
+        && m.id !== options.exceptMatchId)
+      .sort((a, b) => a.round - b.round || a.slot - b.slot);
+    for (const m of ready) {
+      if (found.length >= limit) return found;
+      found.push({
+        matchId: m.id,
+        tournamentId: tournament.id,
+        tournamentName: tournament.name,
+        matchLabel: label(m.bracket, m.round),
+        blueName: teams.get(m.teamAId as string)?.name ?? '',
+        redName: teams.get(m.teamBId as string)?.name ?? ''
+      });
+    }
+  }
+  return found;
+}
+
+export type FinishGameCode = 'not-found' | 'series-over' | 'game-decided' | 'round-limit' | 'not-recorded';
+
+export interface FinishGameResult {
+  live: LiveInfo;
+  round: number;
+  seriesOver: boolean;
+  nextMatch: ReadyMatch | null;
+}
+
+export type FinishGameOutcome =
+  | { result: FinishGameResult; error?: undefined; code?: undefined }
+  | { error: string; code: FinishGameCode; result?: undefined };
+
+// เพดานเดียวกับช่องคะแนนบนหน้า Control (updateScore)
+const MAX_SCORE = 99;
+
+// ปุ่ม "จบเกม: ฝั่งนี้ชนะ" บนหน้า Control
+//
+// เดิมจบเกมหนึ่งต้องทำสองอย่างแยกกัน และไม่มีอะไรบนจอบอกว่าต้องทำตามลำดับไหน:
+// บวกคะแนนในช่อง แล้วกด > ที่ตัวเดินรอบ ลืมอย่างแรก เกมไม่มีผู้ชนะ อัตราชนะรายฮีโร่หาย
+// ลืมอย่างหลัง ดราฟต์เกมถัดไปเขียนทับเกมที่เพิ่งจบ
+//
+// ตรงนี้ไม่ได้คิดกติกาใหม่ แค่เรียกสองทางเดิมให้ถูกลำดับในครั้งเดียว
+// คะแนนไหลผ่าน pushOverlayScoreToMatch เหมือนพิมพ์ในช่อง ผู้ชนะรายเกมจึงถูกบันทึก
+// ด้วยกติกาเดียวกันทุกประการ แล้วค่อยเดินรอบด้วย stepRound ตัวเดิม
+//
+// กันนับซ้ำสองชั้น ไม่ใช่ชั้นเดียว:
+//   1. เกมที่มีผู้ชนะแล้วถูกปฏิเสธก่อนแตะอะไร (คนคุมงานพิมพ์คะแนนเองไปก่อนแล้ว)
+//   2. หลังบวกแล้ว ต้องมีเกมเพิ่มขึ้นหนึ่งเกมพอดีในตารางแข่ง ไม่งั้นถอยคะแนนบนจอกลับ
+//      จอกับสายที่คะแนนไม่ตรงกันคือสิ่งที่ต้องไม่เกิดกลางถ่ายทอด
+export function finishGame(winner: GameWinner): FinishGameOutcome {
+  const key = winner === 'blue' ? 'teamBlue' : 'teamRed';
+  const pointer = isDatabaseOpen() ? getStores().liveMatch.get() : { matchId: null, gameId: null };
+
+  if (!pointer.matchId) return finishQuickGame(key);
+
+  const { matches, games } = getStores();
+  const match = matches.get(pointer.matchId);
+  if (!match) return { error: 'Match not found', code: 'not-found' };
+  if (seriesWinner(match.bestOf, match.scoreA, match.scoreB) !== null) {
+    return { error: 'This series is already over', code: 'series-over' };
+  }
+  const game = pointer.gameId ? games.get(pointer.gameId) : null;
+  if (game?.winner) {
+    return { error: 'This game already has a winner', code: 'game-decided' };
+  }
+
+  const state = getState();
+  const before = state[key].score;
+  state[key].score = clampNumber(before + 1, 0, MAX_SCORE);
+  emitState();
+  pushOverlayScoreToMatch();
+
+  const after = matches.get(match.id) ?? match;
+  if (after.scoreA + after.scoreB !== match.scoreA + match.scoreB + 1) {
+    getState()[key].score = before;
+    emitState();
+    return { error: 'The score could not be recorded against this match', code: 'not-recorded' };
+  }
+
+  // ซีรีส์จบแล้วห้ามเดินรอบ: เกมถัดไปไม่มีอยู่จริง และ goLive จะตัดกลับมาที่เกมเดิม
+  // ซึ่งอ่านเหมือนปุ่มไม่ทำงาน บอกไปตรงๆ ว่าจบแล้ว พร้อมคู่ถัดไปที่เล่นได้
+  const seriesOver = seriesWinner(after.bestOf, after.scoreA, after.scoreB) !== null;
+  if (!seriesOver) {
+    const stepped = stepRound(1);
+    if (stepped.error !== undefined) return { error: stepped.error, code: 'round-limit' };
+  }
+
+  return {
+    result: {
+      live: describeLive(),
+      round: getState().round,
+      seriesOver,
+      nextMatch: seriesOver
+        ? readyMatches({ tournamentId: after.tournamentId, exceptMatchId: after.id, limit: 1 })[0] ?? null
+        : null
+    }
+  };
+}
+
+// แมตช์เดี่ยว: ไม่มีตารางแข่งให้บันทึก บวกคะแนนแล้วเก็บดราฟต์เป็นรอบก่อนหน้า
+//
+// เช็กเพดานรอบก่อนแตะคะแนน ไม่งั้นคะแนนขึ้นไปแล้วแต่รอบไม่เดิน
+// ไม่เรียก describeLive() เพราะมันเปิดฐานข้อมูล คนที่ใช้แค่แมตช์เดี่ยวไม่ควรมี
+// tournament.db งอกขึ้นมาเพราะกดจบเกม (เหตุผลเดียวกับ releaseLiveMatch)
+function finishQuickGame(key: 'teamBlue' | 'teamRed'): FinishGameOutcome {
+  const state = getState();
+  if (state.round >= MAX_ROUND_NUMBER) {
+    return { error: 'Round is already at the limit', code: 'round-limit' };
+  }
+  state[key].score = clampNumber(state[key].score + 1, 0, MAX_SCORE);
+  emitState();
+  const stepped = stepRound(1);
+  if (stepped.error !== undefined) return { error: stepped.error, code: 'round-limit' };
+  return { result: { live: emptyLive(), round: getState().round, seriesOver: false, nextMatch: null } };
 }
 
 // เอาทีมจากทะเบียนมาใส่ฝั่งหนึ่งของ overlay โดยไม่ต้องมีทัวร์นาเมนต์

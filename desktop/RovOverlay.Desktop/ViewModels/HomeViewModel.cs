@@ -53,12 +53,32 @@ public sealed class TournamentRow
     }
 }
 
+// One match that can go on air from Home.
+public sealed class ReadyMatchRow
+{
+    public ReadyMatchRow(ReadyMatchInfo info, Func<ReadyMatchRow, Task> play)
+    {
+        Id = info.MatchId;
+        Teams = $"{info.BlueName}  vs  {info.RedName}";
+        Where = $"{info.TournamentName} · {info.MatchLabel}";
+        PlayCommand = new AsyncRelayCommand(() => play(this));
+    }
+
+    public string Id { get; }
+    public string Teams { get; }
+    public string Where { get; }
+    public ICommand PlayCommand { get; }
+}
+
 public sealed class HomeViewModel : ObservableObject
 {
     private readonly AppServices _services;
+    private readonly ShellViewModel _shell;
     private List<Tournament> _tournaments = new();
     private TournamentOptions? _options;
+    private LiveInfo? _live;
     private bool _loaded;
+    private bool _readyLoaded;
     private bool _isCreating;
     private string _searchText = "";
     private string _statusFilter = "all";
@@ -70,6 +90,7 @@ public sealed class HomeViewModel : ObservableObject
     public HomeViewModel(AppServices services, ShellViewModel shell)
     {
         _services = services;
+        _shell = shell;
         View = CollectionViewSource.GetDefaultView(Rows);
         View.Filter = Matches;
 
@@ -85,17 +106,31 @@ public sealed class HomeViewModel : ObservableObject
             if (p is TournamentRow row) shell.Open(new TournamentViewModel(services, shell, row.Id));
         });
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
+        GoToControlCommand = new RelayCommand(() => shell.NavigateTo("Control"));
+        OpenLiveBracketCommand = new RelayCommand(() =>
+        {
+            if (_live?.TournamentId is string id) shell.Open(new BracketViewModel(services, shell, id));
+        });
 
         // Tournaments change from other places too: another window, the web pages,
         // a restore. The team count on each row moves with the roster.
+        //
+        // What is on air and what is ready to play move with every result and every match
+        // put on air, from the Control Panel or the bracket, so Home follows those too.
         services.DataChanged += change =>
         {
             if (change.Topic is "tournaments" or "roster") _ = LoadListAsync();
+            if (change.Topic is "live" or "matches" or "tournaments" or "roster" or "teams") _ = LoadLiveAsync();
+        };
+        services.ConnectionChanged += connected =>
+        {
+            if (connected) _ = LoadLiveAsync();
         };
         Loc.Instance.Changed += () =>
         {
             RebuildFormats();
             RebuildRows();
+            OnPropertyChanged(nameof(LiveWhere));
         };
 
         _ = LoadAsync();
@@ -105,12 +140,41 @@ public sealed class HomeViewModel : ObservableObject
     public ICollectionView View { get; }
     public ObservableCollection<FormatChoice> Formats { get; } = new();
     public ObservableCollection<int> BestOfOptions { get; } = new();
+    public ObservableCollection<ReadyMatchRow> ReadyMatches { get; } = new();
 
     public ICommand ShowCreateCommand { get; }
     public ICommand CancelCreateCommand { get; }
     public ICommand CreateCommand { get; }
     public ICommand OpenCommand { get; }
     public ICommand RefreshCommand { get; }
+    public ICommand GoToControlCommand { get; }
+    public ICommand OpenLiveBracketCommand { get; }
+
+    // The title bar already tracks the names and score on air; Home reads the same values
+    // rather than keeping a second copy that could disagree with it.
+    public ShellViewModel Shell => _shell;
+
+    // ---- on air -----------------------------------------------------------
+
+    public bool IsTournamentLive => _live?.MatchId is not null;
+
+    public string LiveWhere
+    {
+        get
+        {
+            if (_live?.MatchId is null) return Loc.T("Home.QuickMatch");
+            var tournament = _live.TournamentName ?? "";
+            var match = _live.MatchLabel ?? "";
+            return _live.GameNo is int game
+                ? Loc.F("Live.Match", tournament, match, game)
+                : Loc.F("Live.MatchNoGame", tournament, match);
+        }
+    }
+
+    public bool HasReady => ReadyMatches.Count > 0;
+    public bool NoReady => _readyLoaded && ReadyMatches.Count == 0;
+
+    // ---- tournaments ------------------------------------------------------
 
     public bool IsCreating { get => _isCreating; set => Set(ref _isCreating, value); }
     public string NewName { get => _newName; set => Set(ref _newName, value); }
@@ -154,6 +218,7 @@ public sealed class HomeViewModel : ObservableObject
     {
         await LoadOptionsAsync();
         await LoadListAsync();
+        await LoadLiveAsync();
     }
 
     private async Task LoadOptionsAsync()
@@ -186,6 +251,47 @@ public sealed class HomeViewModel : ObservableObject
         }
         _loaded = true;
         RebuildRows();
+    }
+
+    // Quiet on failure: this is a summary above the list, and the connection light already
+    // says when the server cannot be reached.
+    private async Task LoadLiveAsync()
+    {
+        try
+        {
+            _live = (await _services.Api.GetAsync<LiveResponse>("/api/live-match")).Live;
+            OnPropertyChanged(nameof(IsTournamentLive));
+            OnPropertyChanged(nameof(LiveWhere));
+
+            var ready = (await _services.Api.GetAsync<ReadyMatchesReply>("/api/ready-matches")).Matches ?? [];
+            if (!ready.Select(m => m.MatchId).SequenceEqual(ReadyMatches.Select(r => r.Id)))
+            {
+                ReadyMatches.Clear();
+                foreach (var match in ready) ReadyMatches.Add(new ReadyMatchRow(match, PlayAsync));
+            }
+            _readyLoaded = true;
+            OnPropertyChanged(nameof(HasReady));
+            OnPropertyChanged(nameof(NoReady));
+        }
+        catch
+        {
+            // Keep what is shown.
+        }
+    }
+
+    // On air and straight into the Control Panel, the same as the bracket's play button.
+    private async Task PlayAsync(ReadyMatchRow row)
+    {
+        try
+        {
+            var reply = await _services.Api.PostAsync<GoLiveReply>($"/api/matches/{Uri.EscapeDataString(row.Id)}/live", null);
+            Toasts.Info(Loc.F("Bracket.OnAir", reply.Live.GameNo ?? 1));
+            _shell.NavigateTo("Control");
+        }
+        catch (Exception error)
+        {
+            Toasts.Error(error.Message);
+        }
     }
 
     private void RebuildFormats()

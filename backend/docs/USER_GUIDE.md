@@ -84,11 +84,26 @@ For a single match that is not part of a tournament.
    Press the gold ✓ next to it to lock it in. That is when the picture turns full colour,
    the pick sound and the animation play, and the draft moves on. Until then the teams can
    keep swapping heroes on screen and nothing is final. Bans are one step, as before
-6. Use the **Draft Timer**: `START` · `PAUSE` · `RESUME` · `PREV` · `NEXT`
+6. Use the **Draft Timer**: `START`, then `PREV` · `PAUSE`/`RESUME` (one button) · `NEXT`.
+   `RESET` sits at the far end of that row, away from `START`
 7. `SHOW` / `HIDE` at the top hides the banner without removing the source in OBS
+8. **When a game ends, press `GAME OVER` → *team* won** at the top of the draft panel. After
+   one confirmation it gives that side the point, records who won the game, keeps the draft
+   with that game and puts the next game on the board. Pressed the wrong side? `<` on ROUND
+   brings the game back, and the score box takes the point off
 
-**ROUND**, at the right of the draft panel, is which game of the series you are on. Press `>`
-when a game ends: the draft on the board is filed away as that round and the board starts clean.
+**Team setup folds away by itself when the draft starts.** Names, logos, nicknames and lanes
+are done by then, so the picks get the room. The **Team setup** button above the two teams
+opens it again at any time. Sound levels are folded under **SOUND EFFECTS** at the bottom.
+
+In a tournament, when the game that decides the series is recorded, the panel shows
+**SERIES OVER** with the next match that is ready to play and a **Put on air** button, so the
+next match goes on air without a trip to the bracket. **HOME** shows the same thing from the
+other side: what is on air now, and the matches ready to play, with the tournament on air first.
+
+**ROUND**, at the right of the draft panel, is which game of the series you are on. `GAME OVER`
+moves it on for you; `>` does the same without touching the score: the draft on the board is
+filed away as that round and the board starts clean.
 `<` goes back and puts the earlier draft on screen again, so a mis-click costs nothing. Those
 filed rounds are what the *Previous picks & bans* source shows. While a tournament
 match is on air the number is the game number of that series, so it stays in step with the score
@@ -106,10 +121,21 @@ Bottom buttons: **UNDO** (last change), **SWITCH TEAMS** (swap sides), **CLEAR P
    และภาพจะเป็น **ขาวดำจาง ๆ** ให้คนดูรู้ว่ายังไม่ล็อก
    กดปุ่ม ✓ สีทองข้าง ๆ เพื่อยืนยัน ตอนนั้นแหละที่ภาพจะกลับมาเป็นสีเต็ม เสียงพิคกับอนิเมชันจะเล่น และดราฟต์ถึงจะไปเฟสถัดไป
    ก่อนกดยืนยัน ทีมยังสลับตัวไปมาบนจอได้เรื่อย ๆ โดยที่ยังไม่นับว่าล็อก ส่วนช่องแบนเหมือนเดิม กดครั้งเดียวจบ
-6. ใช้ **Draft Timer**: `START` · `PAUSE` · `RESUME` · `PREV` · `NEXT`
+6. ใช้ **Draft Timer**: `START` แล้วแถวล่างคือ `PREV` · `PAUSE`/`RESUME` (ปุ่มเดียวกัน) · `NEXT`
+   ปุ่ม `RESET` อยู่ท้ายแถว ห่างจาก `START`
 7. ปุ่ม `SHOW` / `HIDE` ด้านบนใช้ซ่อนแถบ overlay โดยไม่ต้องปิด source ใน OBS
+8. **จบเกมแล้ว กด `จบเกม` → *ทีมที่* ชนะ** ที่หัวแผงดราฟต์ ยืนยันหนึ่งครั้ง แล้วโปรแกรมจะให้แต้มฝั่งนั้น
+   บันทึกว่าใครชนะเกมนี้ เก็บดราฟต์ไว้กับเกมนี้ และขึ้นเกมถัดไปบนกระดานให้เลย
+   กดผิดฝั่ง? กด `<` ที่ ROUND เพื่อพาเกมกลับมา แล้วแก้แต้มในช่องคะแนน
 
-**ROUND** ที่มุมขวาของแผงดราฟต์ คือเกมที่เท่าไหร่ของซีรีส์ จบเกมแล้วกด `>` ดราฟต์ที่อยู่บนกระดานจะถูกเก็บเป็นรอบนั้น
+**ส่วนตั้งค่าทีมจะพับเก็บเองเมื่อเริ่มดราฟต์** ชื่อทีม โลโก้ ชื่อผู้เล่น และเลน ตั้งเสร็จไปแล้วตอนนั้น ช่องพิคจึงได้ที่เต็ม
+กดปุ่ม **ตั้งค่าทีม** เหนือสองทีมเพื่อเปิดกลับมาได้ทุกเมื่อ ส่วนระดับเสียงพับไว้ใต้ **เสียงเอฟเฟกต์** ด้านล่าง
+
+ในทัวร์นาเมนต์ เมื่อบันทึกเกมที่ตัดสินซีรีส์ แผงจะขึ้นว่า **ซีรีส์จบแล้ว** พร้อมคู่ถัดไปที่พร้อมเล่นและปุ่ม **ขึ้นจอ**
+เอาคู่ถัดไปขึ้นจอได้เลยโดยไม่ต้องกลับไปที่สายการแข่ง **หน้าแรก** ก็แสดงเรื่องเดียวกันจากอีกฝั่ง
+คือคู่ที่กำลังออกอากาศ และคู่ที่พร้อมเล่น โดยรายการที่กำลังออกอากาศขึ้นก่อน
+
+**ROUND** ที่มุมขวาของแผงดราฟต์ คือเกมที่เท่าไหร่ของซีรีส์ ปุ่ม `จบเกม` เดินรอบให้เอง ส่วน `>` ทำแบบเดียวกันแต่ไม่แตะคะแนน ดราฟต์ที่อยู่บนกระดานจะถูกเก็บเป็นรอบนั้น
 แล้วกระดานเริ่มใหม่ กด `<` เพื่อถอยกลับ ดราฟต์ของรอบก่อนจะกลับขึ้นมา กดผิดจึงไม่เสียอะไร รอบที่เก็บไว้เหล่านี้คือสิ่งที่ซอร์ส
 *Previous picks & bans* เอาไปแสดง ถ้ากำลังออกอากาศแมตช์ของทัวร์นาเมนต์ เลขนี้คือเลขเกมของซีรีส์นั้น
 มันจึงตรงกับคะแนนเองโดยไม่ต้องมาคอยตั้ง

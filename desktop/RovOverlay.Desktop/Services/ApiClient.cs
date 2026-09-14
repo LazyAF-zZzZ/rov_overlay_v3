@@ -7,9 +7,13 @@ using System.Text.Json.Nodes;
 
 namespace RovOverlay.Desktop.Services;
 
-public sealed class ApiException(string message, int status) : Exception(message)
+public sealed class ApiException(string message, int status, string? code = null) : Exception(message)
 {
     public int Status { get; } = status;
+
+    // A stable name for the failure when the server sends one ({"error": "...", "code": "..."}),
+    // so a screen can say it in the app's language instead of showing the English sentence.
+    public string? Code { get; } = code;
 }
 
 // The same REST API the HTML operator pages use. Errors come back as {"error": "..."}
@@ -75,14 +79,15 @@ public sealed class ApiClient
         var text = await response.Content.ReadAsStringAsync(ct);
 
         if (!response.IsSuccessStatusCode)
-            throw new ApiException(ErrorText(text) ?? response.ReasonPhrase ?? "Request failed", (int)response.StatusCode);
+            throw new ApiException(ErrorField(text, "error") ?? response.ReasonPhrase ?? "Request failed",
+                (int)response.StatusCode, ErrorField(text, "code"));
 
         return (text, (int)response.StatusCode);
     }
 
-    private static string? ErrorText(string body)
+    private static string? ErrorField(string body, string name)
     {
-        try { return JsonNode.Parse(body)?["error"]?.GetValue<string>(); }
+        try { return JsonNode.Parse(body)?[name]?.GetValue<string>(); }
         catch { return null; }
     }
 }

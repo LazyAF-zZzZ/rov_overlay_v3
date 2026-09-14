@@ -4,7 +4,13 @@
              xmlns:svc="clr-namespace:RovOverlay.Desktop.Services"
              xmlns:ctl="clr-namespace:RovOverlay.Desktop.Views.Controls">
     <UserControl.Resources>
-        <!-- One side of the board. DataContext: a SideViewModel. -->
+        <!-- One side of the board. DataContext: a SideViewModel.
+
+             Two layouts in one template, switched by the panel's ShowSetup. Set-up shows
+             everything that is typed before the draft (name, registry, logo, nicknames,
+             lanes). Draft hides those and leaves the picks the room. The hero box is the same
+             element in both, never a second copy: two pickers bound to one slot would both
+             answer the "focus the slot the draft is waiting on" request. -->
         <DataTemplate x:Key="SidePanel">
             <Border Style="{StaticResource Card}">
                 <Border.Resources>
@@ -24,6 +30,13 @@
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
+                    <!-- Visible in set-up, collapsed during the draft. -->
+                    <Style x:Key="SetupOnly" TargetType="FrameworkElement">
+                        <Setter Property="Visibility" Value="{Binding DataContext.ShowSetup, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"/>
+                    </Style>
+                    <Style x:Key="DraftOnly" TargetType="FrameworkElement">
+                        <Setter Property="Visibility" Value="{Binding DataContext.ShowSetup, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisInv}}"/>
+                    </Style>
                 </Border.Resources>
                 <StackPanel>
                     <Border Height="2" Style="{StaticResource SideAccent}" CornerRadius="6,6,0,0"/>
@@ -33,10 +46,29 @@
                             <TextBox Text="{Binding ScoreText, UpdateSourceTrigger=PropertyChanged}" Width="54" MaxLength="2"
                                      FontSize="18" FontWeight="Bold" HorizontalContentAlignment="Center"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding Title}" Style="{StaticResource SideTitle}" VerticalAlignment="Center"/>
+                        <!-- During the draft the side is identified by its logo and name, read-only. -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Style="{StaticResource DraftOnly}">
+                            <Border Width="30" Height="30" CornerRadius="4" Margin="0,0,10,0"
+                                    Background="{StaticResource Surface3Brush}" BorderBrush="{StaticResource BorderStrongBrush}" BorderThickness="1">
+                                <Image Source="{Binding LogoUrl, Converter={StaticResource UrlToImage}}" Stretch="Uniform" Margin="2"
+                                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Title}" Style="{StaticResource SideTitle}"/>
+                                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" MaxWidth="320"
+                                           TextTrimming="CharacterEllipsis" Margin="0,1,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Title}" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource SideTitle}">
+                                    <Setter Property="Visibility" Value="{Binding DataContext.ShowSetup, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"/>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </DockPanel>
 
-                    <Grid Margin="14,0,12,10">
+                    <Grid Margin="14,0,12,10" Style="{StaticResource SetupOnly}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="56"/>
                             <ColumnDefinition Width="*"/>
@@ -83,19 +115,22 @@
                         </StackPanel>
                     </Grid>
 
-                    <!-- Players and picks -->
+                    <!-- Players and picks. The lane and player-swap columns are Auto, so when
+                         their contents collapse during the draft the nickname and the pick
+                         share the width they leave. The header uses the same widths. -->
                     <Grid Margin="14,0,12,0" TextElement.Foreground="{StaticResource MutedBrush}" TextElement.FontSize="10.5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="20"/>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="116"/>
-                            <ColumnDefinition Width="38"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="1.5*"/>
                             <ColumnDefinition Width="38"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="#"/>
                         <TextBlock Grid.Column="1" Text="{svc:T Control.Nickname}" Margin="4,0"/>
-                        <TextBlock Grid.Column="2" Text="{svc:T Control.Lane}" Margin="4,0"/>
+                        <TextBlock Grid.Column="2" Text="{svc:T Control.Lane}" Width="116" Margin="4,0" Style="{StaticResource SetupOnly}"/>
+                        <Border Grid.Column="3" Width="38" Style="{StaticResource SetupOnly}"/>
                         <TextBlock Grid.Column="4" Text="{svc:T Control.HeroPick}" Margin="4,0"/>
                     </Grid>
                     <ItemsControl ItemsSource="{Binding Rows}" Margin="14,4,12,0" Focusable="False">
@@ -105,9 +140,9 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="20"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="116"/>
-                                        <ColumnDefinition Width="38"/>
-                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="1.5*"/>
                                         <ColumnDefinition Width="38"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="{Binding Player.Number}" VerticalAlignment="Center" FontWeight="Bold" FontSize="11.5"
@@ -116,15 +151,37 @@
                                          also setting DataContext to Player looks for Player.Player.Name (§9). -->
                                     <TextBox Grid.Column="1" Margin="4,0" DataContext="{Binding Player}"
                                              Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
-                                             MaxLength="24" Tag="{Binding Placeholder}"/>
-                                    <ComboBox Grid.Column="2" Margin="4,0" DataContext="{Binding Player}" ItemsSource="{Binding Positions}"
-                                              DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding Position}"/>
-                                    <Button Grid.Column="3" DataContext="{Binding Player}" Content="{Binding SwapLabel}"
-                                            Command="{Binding SwapCommand}" Padding="0" FontSize="10.5" ToolTip="{svc:T Control.SwapPlayerTip}">
+                                             MaxLength="24" Tag="{Binding Placeholder}">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                                <Setter Property="Visibility" Value="{Binding DataContext.ShowSetup, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"/>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                    <TextBlock Grid.Column="1" Margin="8,0,4,0" VerticalAlignment="Center" Text="{Binding Player.Name}"
+                                               TextTrimming="CharacterEllipsis" Style="{StaticResource DraftOnly}"/>
+                                    <ComboBox Grid.Column="2" Margin="4,0" Width="116" DataContext="{Binding Player}" ItemsSource="{Binding Positions}"
+                                              DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding Position}">
+                                        <ComboBox.Style>
+                                            <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                                                <Setter Property="Visibility" Value="{Binding DataContext.ShowSetup, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"/>
+                                            </Style>
+                                        </ComboBox.Style>
+                                    </ComboBox>
+                                    <Button Grid.Column="3" Width="38" DataContext="{Binding Player}"
+                                            Command="{Binding SwapCommand}" Padding="0" ToolTip="{svc:T Control.SwapPlayerTip}">
                                         <Button.Style>
                                             <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                                <!-- A swap icon rather than "SW", which said nothing about what it did.
+                                                     While armed it turns into a red cross that cancels. -->
+                                                <Setter Property="Content" Value="&#xE8AB;"/>
+                                                <Setter Property="FontFamily" Value="{StaticResource IconFont}"/>
+                                                <Setter Property="FontSize" Value="12"/>
+                                                <Setter Property="Visibility" Value="{Binding DataContext.ShowSetup, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsSwapping}" Value="True">
+                                                        <Setter Property="Content" Value="{Binding SwapLabel}"/>
+                                                        <Setter Property="FontFamily" Value="Segoe UI"/>
                                                         <Setter Property="Foreground" Value="{StaticResource RedBrush}"/>
                                                         <Setter Property="BorderBrush" Value="{StaticResource RedBrush}"/>
                                                     </DataTrigger>
@@ -133,7 +190,7 @@
                                         </Button.Style>
                                     </Button>
                                     <ctl:HeroPickerView Grid.Column="4" Margin="4,0" DataContext="{Binding Pick}"/>
-                                    <Button Grid.Column="5" Content="{svc:T Control.Swap}" Padding="0" FontSize="10.5"
+                                    <Button Grid.Column="5" Content="&#xE8AB;" FontFamily="{StaticResource IconFont}" FontSize="12" Padding="0"
                                             ToolTip="{svc:T Control.SwapPickTip}" CommandParameter="{Binding Pick}"
                                             Command="{Binding DataContext.SwapPickCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                                 </Grid>
@@ -171,11 +228,14 @@
     </UserControl.Resources>
 
     <DockPanel>
-        <!-- ========== Bottom bar: always reachable ========== -->
+        <!-- ========== Bottom bar: always reachable ==========
+             Safe actions on the left, the one that wipes the whole match alone at the far
+             right. UNDO is not gold: gold means the main action or what is live, and undo
+             is neither. -->
         <Border DockPanel.Dock="Bottom" Background="{StaticResource Surface0Brush}" BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="0,1,0,0" Padding="14,8">
             <DockPanel LastChildFill="False">
-                <Button Style="{StaticResource PrimaryButton}" Command="{Binding UndoCommand}" MinWidth="96">
+                <Button Command="{Binding UndoCommand}" MinWidth="96">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Style="{StaticResource Icon}" Text="&#xE7A7;" FontSize="12" Margin="0,0,7,0"/>
                         <TextBlock Text="{svc:T Control.Undo}"/>
@@ -183,9 +243,12 @@
                 </Button>
                 <Button Content="{svc:T Control.SwitchTeams}" Command="{Binding SwitchTeamsCommand}" Margin="8,0,0,0"/>
                 <Rectangle Width="1" Margin="14,2" Fill="{StaticResource BorderBrush}"/>
-                <Button Style="{StaticResource DangerButton}" Content="{svc:T Control.ResetMatch}" Command="{Binding ResetMatchCommand}"/>
-                <Button Style="{StaticResource DangerButton}" Content="{svc:T Control.ClearPicksBans}" Command="{Binding ClearAllCommand}" Margin="8,0,0,0"/>
+                <Button Style="{StaticResource DangerButton}" Content="{svc:T Control.ClearPicksBans}" Command="{Binding ClearAllCommand}"/>
                 <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Margin="16,0,0,0" Foreground="{StaticResource Muted2Brush}"/>
+
+                <Button DockPanel.Dock="Right" Style="{StaticResource DangerButton}" Content="{svc:T Control.ResetMatch}"
+                        Command="{Binding ResetMatchCommand}"/>
+                <Rectangle DockPanel.Dock="Right" Width="1" Margin="14,2" Fill="{StaticResource BorderBrush}"/>
                 <ItemsControl DockPanel.Dock="Right" ItemsSource="{Binding Hints}" VerticalAlignment="Center" Focusable="False">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
@@ -313,6 +376,25 @@
                     </DockPanel>
                 </Border>
 
+                <!-- The series just ended: say so, and offer the next match right here. -->
+                <Border Background="{StaticResource Surface2Brush}" BorderBrush="{StaticResource GoldBrush}" BorderThickness="1"
+                        CornerRadius="6" Padding="12,7" Margin="0,8,0,0"
+                        Visibility="{Binding SeriesOver, Converter={StaticResource BoolToVis}}">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Padding="12,0" Command="{Binding PutNextOnAirCommand}"
+                                Visibility="{Binding HasNextMatch, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE768;" FontSize="11" Margin="0,0,7,0"/>
+                                <TextBlock Text="{svc:T Flow.PutOnAir}"/>
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="{svc:T Flow.SeriesOver}" FontWeight="Bold" FontSize="10.5" Foreground="{StaticResource GoldBrush}"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding NextMatchText}" Margin="10,0,0,0" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextBrush}" TextTrimming="CharacterEllipsis"/>
+                    </DockPanel>
+                </Border>
+
                 <!-- ========== Draft ========== -->
                 <Border Style="{StaticResource Card}" Margin="0,10,0,0">
                     <StackPanel>
@@ -332,6 +414,25 @@
                                                VerticalAlignment="Center" Margin="6,0,8,0"/>
                                 </StackPanel>
                             </Border>
+
+                            <!-- Game over, one press per game. Coloured by side so the two
+                                 buttons cannot be confused with each other at a glance. -->
+                            <Border DockPanel.Dock="Right" Style="{StaticResource SegmentGroup}" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{svc:T Flow.GameOver}" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" Margin="8,0,6,0"/>
+                                    <Button Style="{StaticResource GhostButton}" Padding="10,0" MinHeight="24"
+                                            Command="{Binding FinishBlueCommand}" ToolTip="{svc:T Flow.WonTip}">
+                                        <TextBlock Text="{Binding BlueWonText}" Foreground="{StaticResource BlueBrush}" FontWeight="SemiBold"
+                                                   MaxWidth="170" TextTrimming="CharacterEllipsis"/>
+                                    </Button>
+                                    <Button Style="{StaticResource GhostButton}" Padding="10,0" MinHeight="24"
+                                            Command="{Binding FinishRedCommand}" ToolTip="{svc:T Flow.WonTip}">
+                                        <TextBlock Text="{Binding RedWonText}" Foreground="{StaticResource RedBrush}" FontWeight="SemiBold"
+                                                   MaxWidth="170" TextTrimming="CharacterEllipsis"/>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
                             <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Control.DraftTimer}" VerticalAlignment="Center"/>
                         </DockPanel>
 
@@ -417,22 +518,17 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
+                            <!-- START on its own row; the clock reset moved to the far end of the
+                                 row below, away from it. They sat side by side, and a reset
+                                 mid-draft throws the phase back to the start on air. -->
                             <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="2*"/>
-                                        <ColumnDefinition Width="6"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Button Style="{StaticResource PrimaryButton}" Content="{svc:T Control.Start}" Command="{Binding StartCommand}" MinHeight="32"/>
-                                    <Button Grid.Column="2" Style="{StaticResource DangerButton}" Content="{svc:T Control.ResetDraft}"
-                                            Command="{Binding ResetDraftCommand}" MinHeight="32"/>
-                                </Grid>
+                                <Button Style="{StaticResource PrimaryButton}" Content="{svc:T Control.Start}" Command="{Binding StartCommand}" MinHeight="32"/>
                                 <UniformGrid Columns="4" Margin="0,6,0,0" TextElement.FontSize="11">
                                     <Button Content="{svc:T Control.Prev}" Command="{Binding PrevCommand}" Margin="0,0,6,0" MinHeight="30" Padding="2,0"/>
-                                    <Button Content="{svc:T Control.Pause}" Command="{Binding PauseCommand}" Margin="0,0,6,0" MinHeight="30" Padding="2,0"/>
-                                    <Button Content="{svc:T Control.Resume}" Command="{Binding ResumeCommand}" Margin="0,0,6,0" MinHeight="30" Padding="2,0"/>
-                                    <Button Content="{svc:T Control.Next}" Command="{Binding NextCommand}" MinHeight="30" Padding="2,0"/>
+                                    <Button Content="{Binding PauseResumeText}" Command="{Binding TogglePauseCommand}" Margin="0,0,6,0" MinHeight="30" Padding="2,0"/>
+                                    <Button Content="{svc:T Control.Next}" Command="{Binding NextCommand}" Margin="0,0,6,0" MinHeight="30" Padding="2,0"/>
+                                    <Button Style="{StaticResource DangerButton}" Content="{svc:T Control.ResetDraft}"
+                                            Command="{Binding ResetDraftCommand}" MinHeight="30" Padding="2,0"/>
                                 </UniformGrid>
                             </StackPanel>
                         </Grid>
@@ -440,7 +536,17 @@
                 </Border>
 
                 <!-- ========== The two sides ========== -->
-                <Grid Margin="0,10,0,0">
+                <DockPanel Margin="0,10,0,0" LastChildFill="False">
+                    <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Padding="10,0"
+                            Command="{Binding ToggleSetupCommand}" ToolTip="{svc:T Flow.TeamSetupTip}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{svc:T Flow.TeamSetup}" VerticalAlignment="Center"/>
+                            <TextBlock Style="{StaticResource Icon}" Text="{Binding ShowSetup, Converter={StaticResource FoldGlyph}}"
+                                       FontSize="10" Margin="8,1,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </DockPanel>
+                <Grid Margin="0,4,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="10"/>
@@ -451,14 +557,18 @@
                 </Grid>
 
                 <!-- ========== Sound ========== -->
-                <Border Style="{StaticResource Card}" Padding="14,10" Margin="0,10,0,0">
+                <Border Style="{StaticResource Card}" Padding="14,8" Margin="0,10,0,0">
                     <StackPanel>
-                        <DockPanel Margin="0,0,0,6">
-                            <TextBlock DockPanel.Dock="Right" Text="{svc:T Control.SoundNote}" FontSize="11"
-                                       Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Command="{Binding ToggleSoundCommand}"
+                                    Content="{Binding ShowSound, Converter={StaticResource FoldGlyph}}"/>
+                            <TextBlock DockPanel.Dock="Right" Text="{svc:T Control.SoundNote}" FontSize="11" Margin="0,0,10,0"
+                                       Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"
+                                       Visibility="{Binding ShowSound, Converter={StaticResource BoolToVis}}"/>
                             <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Control.Sound}" VerticalAlignment="Center"/>
                         </DockPanel>
-                        <ItemsControl ItemsSource="{Binding SfxRows}" Focusable="False">
+                        <ItemsControl ItemsSource="{Binding SfxRows}" Focusable="False" Margin="0,6,0,0"
+                                      Visibility="{Binding ShowSound, Converter={StaticResource BoolToVis}}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Height="34">
