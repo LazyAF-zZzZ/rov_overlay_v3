@@ -22,8 +22,9 @@ Next: whatever the people using it ask for. 3.0.5 through **3.0.8** are publishe
 reach them on their own. 3.0.8 carries the flow and UI work: one-press GAME OVER with SERIES
 OVER and Put on air (`POST /api/live-match/finish`), a Control Panel whose team setup and sound
 fold away, and a Home that shows what is on air and what is ready to play
-(`GET /api/ready-matches`). It was smoke-tested for real before packing. No notice has been
-pushed for it.
+(`GET /api/ready-matches`). It was smoke-tested for real before packing. Its notice
+(`update-3-0-8`, for 3.0.7 and older, expires 2026-10-15) replaced the 3.0.6 one in
+`notices.json` on 2026-09-14.
 
 ---
 
