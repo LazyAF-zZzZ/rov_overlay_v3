@@ -36,7 +36,7 @@ board, which all go through `orientationOf`, credit the right team exactly as th
 for a manual Switch Teams. Quick matches: `stepRound` swaps the two team objects on every step,
 and `restoreRound` places a filed draft by team name. Tested in `tests/side-swap.test.ts`.
 
-**On `main`, not yet released: full team statistics** (user's request, 2026-09-15). The team
+**3.0.13: full team statistics** (user's request, 2026-09-15; smoke-tested before packing). The team
 page has Profile / Statistics tabs; Statistics shows series and games records with win rates,
 the last five series, side records, heroes picked (games, pick rate, win rate), bans made,
 bans against, record vs each opponent and each player's hero pool, all filterable to one
