@@ -1,32 +1,32 @@
 [
   {
-    "id": "update-3-0-12",
+    "id": "update-3-0-13",
     "level": "info",
     "title": {
-      "th": "อัปเดต 3.0.12 พร้อมแล้ว",
-      "en": "Update 3.0.12 is ready"
+      "th": "อัปเดต 3.0.13 พร้อมแล้ว",
+      "en": "Update 3.0.13 is ready"
     },
     "body": {
-      "th": "มีปุ่ม −1 ข้างคะแนนแล้ว กด +1 ผิดก็ถอนได้ในปุ่มเดียว แต้มถูกหัก ผู้ชนะของเกมถูกล้าง และเกมนั้นกลับขึ้นกระดานพร้อมดราฟต์และฝั่งเดิม คะแนนเป็น 0 กดไม่ได้ และแก้บั๊กที่สถิติยังนับผลของคู่ที่ถูกล้างไปแล้วในสาย อัปเดตนี้ไม่ติดตั้งเอง: เมื่อโหลดเสร็จจะมีหน้าต่างถาม หรือกดเลขเวอร์ชันที่แถบด้านบน แล้วกด อัปเดตเลย ตอนที่ไม่ได้ออกอากาศ",
-      "en": "There is now a −1 beside each score: a mistaken +1 is taken back in one press, clearing that game's winner and putting the game back on the board with its draft and sides. It is greyed out at 0. Also fixed: statistics went on counting a bracket match that had been reset. This update does not install by itself: once it has downloaded a window asks, or press the version number in the title bar, then Update now, when you are not on air."
+      "th": "หน้าของแต่ละทีมมีแท็บ สถิติ แล้ว: ผลซีรีส์และเกม อัตราชนะ ผลตอนเล่นฝั่งน้ำเงินและฝั่งแดง ฮีโร่ที่เลือกและแบน สถิติกับคู่แข่งแต่ละทีม และฮีโร่ของผู้เล่นแต่ละคน ดูรวมทุกทัวร์นาเมนต์หรือเลือกทีละรายการได้ สถิติฝั่งและฮีโร่ของผู้เล่นนับตั้งแต่เวอร์ชันนี้ อัปเดตนี้ไม่ติดตั้งเอง: เมื่อโหลดเสร็จจะมีหน้าต่างถาม หรือกดเลขเวอร์ชันที่แถบด้านบน แล้วกด อัปเดตเลย ตอนที่ไม่ได้ออกอากาศ",
+      "en": "Every team page now has a Statistics tab: series and game records, win rates, the record on blue and on red side, heroes picked and banned, the record against each opponent, and each player's hero pool, for all tournaments or just one. Side records and player hero pools count from this version on. This update does not install by itself: once it has downloaded a window asks, or press the version number in the title bar, then Update now, when you are not on air."
     },
-    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.12",
+    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.13",
     "minVersion": "3.0.9",
-    "maxVersion": "3.0.11",
+    "maxVersion": "3.0.12",
     "expires": "2026-10-15T00:00:00Z"
   },
   {
-    "id": "update-3-0-12-older",
+    "id": "update-3-0-13-older",
     "level": "info",
     "title": {
-      "th": "อัปเดต 3.0.12 พร้อมแล้ว",
-      "en": "Update 3.0.12 is ready"
+      "th": "อัปเดต 3.0.13 พร้อมแล้ว",
+      "en": "Update 3.0.13 is ready"
     },
     "body": {
-      "th": "สองทีมสลับฝั่งกันเองทุกเกม จบเกมด้วยปุ่ม +1 และถอนได้ด้วยปุ่ม −1 ข้างคะแนน โปรแกรมประกาศผู้ชนะซีรีส์จากคะแนนให้เอง และแก้บั๊กที่สถิติยังนับผลของคู่ที่ถูกล้างไปแล้ว แอปจะโหลดอัปเดตให้เองแล้วติดตั้งตอนคุณปิดโปรแกรม หลังจากนี้ อัปเดตครั้งต่อไปจะไม่ติดตั้งเองอีก ต้องกด อัปเดตเลย ก่อน",
-      "en": "The teams now swap sides every game, a game ends with +1 beside the winning team's score and is taken back with −1, and the app declares the series winner from the score. Also fixed: statistics went on counting a bracket match that had been reset. The app downloads this update on its own and puts it in when you close it. From then on, updates no longer install by themselves: you press Update now."
+      "th": "หน้าของแต่ละทีมมีแท็บ สถิติ ครบทุกอย่างของทีม สองทีมสลับฝั่งกันเองทุกเกม จบเกมด้วยปุ่ม +1 และถอนได้ด้วยปุ่ม −1 ข้างคะแนน โปรแกรมประกาศผู้ชนะซีรีส์จากคะแนนให้เอง แอปจะโหลดอัปเดตให้เองแล้วติดตั้งตอนคุณปิดโปรแกรม หลังจากนี้ อัปเดตครั้งต่อไปจะไม่ติดตั้งเองอีก ต้องกด อัปเดตเลย ก่อน",
+      "en": "Every team page now has a Statistics tab with the team's full record. The teams swap sides every game, a game ends with +1 beside the winning team's score and is taken back with −1, and the app declares the series winner from the score. The app downloads this update on its own and puts it in when you close it. From then on, updates no longer install by themselves: you press Update now."
     },
-    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.12",
+    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.13",
     "maxVersion": "3.0.8",
     "expires": "2026-10-15T00:00:00Z"
   }
