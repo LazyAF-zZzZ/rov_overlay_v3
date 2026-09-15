@@ -31,6 +31,9 @@ public sealed record FinishGameReply(bool Ok, LiveInfo Live, int Round, bool Ser
     SideScores? Score, ReadyMatchInfo? NextMatch);
 public sealed record SideScores(int Blue, int Red);
 
+// A game taken back with -1. Reopened: that point had ended the series, which is open again.
+public sealed record UndoGameReply(bool Ok, LiveInfo Live, int Round, bool Reopened);
+
 // One side of a recorded draft: who played, what they picked and banned, and whether
 // they won that game. Names are the frozen snapshot, not today's registry.
 public sealed record DraftSide(string? TeamId, string Name, List<string?>? Picks, List<string?>? Bans, bool Won);

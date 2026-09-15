@@ -199,3 +199,41 @@ test('scoring a standalone match touches no tournament at all', () => {
 
   assert.strictEqual(must(matches.get(match.id)).scoreA, 0, 'the match record is left alone');
 });
+
+// พิสูจน์ด้วยสายสี่ทีมก่อนแก้: แก้ผลรอบรองจน ALPHA หลุดจากรอบชิง สายขึ้นว่ารอบชิงยังไม่แข่ง
+// แต่เกมในรอบชิงยังค้าง winner = blue สถิติจึงยังนับ "ฮีโร่ของ ALPHA ชนะ 1 จาก 1"
+// และหัวต่อหัวกับประวัติพิคแบนยังโชว์ ALPHA เป็นผู้ชนะของคู่ที่สายบอกว่าไม่เคยเกิดขึ้น
+test('correcting an earlier series also clears the game winners of the later match it resets', () => {
+  const { sanitizeState } = require('../server/domain/match') as typeof import('../server/domain/match');
+  const { heroesData } = require('../server/domain/heroes') as typeof import('../server/domain/heroes');
+  const { teams, tournaments, matches, games, analytics } = getStores();
+  cup += 1;
+  const t = must(tournaments.create({ name: `Reset ${cup}`, format: 'single_elim', bestOf: 1 }).tournament);
+  ['A', 'B', 'C', 'D'].forEach((n, i) => tournaments.addTeam(t.id, must(teams.create({ name: `${n}${cup}` }).team).id, i));
+  must(matches.generate(t.id).matches);
+
+  const semis = matches.list(t.id).filter((m) => m.bracket === 'main' && m.round === 1 && !m.isBye).sort((a, b) => a.slot - b.slot);
+  must(recordSeriesResult(must(semis[0]).id, 1, 0).match);
+  must(recordSeriesResult(must(semis[1]).id, 1, 0).match);
+
+  // รอบชิงเล่นจริง ดราฟต์ครบและล็อก แล้วบันทึกผล
+  const final = must(matches.list(t.id).find((m) => m.bracket === 'main' && m.round === 2));
+  const game = must(games.forMatch(final.id).find((g) => g.gameNo === 1));
+  const H = heroesData.heroes;
+  games.captureDraft(game.id, sanitizeState({
+    teamBlue: { name: game.blueName, logo: { v: 0, ext: '', src: game.blueTeamId }, picks: H.slice(0, 5), bans: H.slice(10, 14) },
+    teamRed: { name: game.redName, logo: { v: 0, ext: '', src: game.redTeamId }, picks: H.slice(5, 10), bans: H.slice(14, 18) }
+  }));
+  must(recordSeriesResult(final.id, 1, 0).match);
+  assert.strictEqual(analytics.read({ tournamentId: t.id }).decidedGames, 1, 'the final counts before the correction');
+
+  // คนคุมงานพบว่ากรอกผลรอบรองคู่แรกกลับด้าน
+  must(recordSeriesResult(must(semis[0]).id, 0, 1).match);
+
+  assert.strictEqual(must(games.get(game.id)).winner, null, 'the reset final no longer claims a winner');
+  const after = analytics.read({ tournamentId: t.id });
+  assert.strictEqual(after.decidedGames, 0, 'so win rates stop counting it');
+  assert.strictEqual(after.games, 1, 'but the draft that was really played still counts');
+  assert.strictEqual(must(after.counts.find((c) => c.hero === H[0])).picked, 1, 'its picks still count');
+  assert.strictEqual(must(after.counts.find((c) => c.hero === H[0])).decided, 0);
+});

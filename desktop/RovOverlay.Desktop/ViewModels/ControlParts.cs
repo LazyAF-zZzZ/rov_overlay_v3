@@ -290,7 +290,17 @@ public sealed class SideViewModel : ObservableObject
         ClearLogoCommand = new AsyncRelayCommand(ClearLogoAsync);
         // Busy while the server works, so a quick double press cannot count two games.
         AddPointCommand = new AsyncRelayCommand(() => owner.FinishGameAsync(IsBlue ? "blue" : "red"));
+        RemovePointCommand = new AsyncRelayCommand(() => owner.UndoGameAsync(IsBlue ? "blue" : "red"));
     }
+
+    // -1: take back the last game this side won.
+    public ICommand RemovePointCommand { get; }
+    public string RemovePointName => Loc.F("Flow.RemovePointName", ControlViewModel.SideName(this));
+
+    // Greyed out at 0, from the score the server last sent rather than the text box: a
+    // half-typed number must not make the button pressable. The server refuses at 0 as well.
+    private int _serverScore;
+    public bool CanRemovePoint => _serverScore > 0;
 
     public ICommand AddPointCommand { get; }
 
@@ -315,6 +325,7 @@ public sealed class SideViewModel : ObservableObject
         {
             if (!Set(ref _name, value ?? "")) return;
             OnPropertyChanged(nameof(AddPointName));
+            OnPropertyChanged(nameof(RemovePointName));
             _nameSave.Run(() => Owner.Emit("updateTeamName", new { team = Key, name = Name }));
             FlashSaved();
         }
@@ -418,7 +429,14 @@ public sealed class SideViewModel : ObservableObject
             _name = side.Name;
             OnPropertyChanged(nameof(Name));
             OnPropertyChanged(nameof(AddPointName));
+            OnPropertyChanged(nameof(RemovePointName));
         }
+        if (side.Score != _serverScore)
+        {
+            _serverScore = side.Score;
+            OnPropertyChanged(nameof(CanRemovePoint));
+        }
+
         var score = side.Score.ToString();
         if (!isEditing(this) && score != _scoreText)
         {

@@ -270,6 +270,39 @@ public sealed class ControlViewModel : ObservableObject
         }
     }
 
+    // The -1 beside a team's score: take back the last game, the exact undo of +1.
+    //
+    // The server lowers the score through the same path as typing in the score box, so a
+    // series that point had ended is reopened and its winner pulled back out of the next
+    // bracket match, and it puts that game back on the board with its draft and sides. It
+    // only ever undoes the most recent game: taking back an older one would renumber the
+    // games, and the next draft would be written over a game that was really played.
+    internal async Task UndoGameAsync(string side)
+    {
+        var name = SideName(side == "blue" ? Blue : Red);
+
+        UndoGameReply reply;
+        try
+        {
+            reply = await Services.Api.PostAsync<UndoGameReply>("/api/live-match/undo", new { side });
+        }
+        catch (ApiException error)
+        {
+            Toasts.Error(error.Code switch
+            {
+                "no-points" => Loc.T("Flow.Err.NoPoints"),
+                "not-last" => Loc.T("Flow.Err.NotLast"),
+                "not-recorded" => Loc.T("Flow.Err.NotRecorded"),
+                _ => error.Message
+            });
+            return;
+        }
+
+        // A reopened series is not over any more, and neither is anything else on this board.
+        ClearSeriesOver();
+        Toasts.Info(Loc.F(reply.Reopened ? "Flow.SeriesReopened" : "Flow.GameUndone", name, reply.Round));
+    }
+
     // The next match goes on air from here, so the end of a series does not mean a trip to
     // the bracket and back.
     private async Task PutNextOnAirAsync()

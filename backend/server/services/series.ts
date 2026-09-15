@@ -77,7 +77,10 @@ export function recordSeriesResult(
   const result = matches.setResult(matchId, scoreA, scoreB);
   if (result.error !== undefined) return result;
 
-  if (syncGameWinners(before, result.match)) {
+  const winnersMoved = syncGameWinners(before, result.match);
+  // ผู้ชนะซีรีส์เปลี่ยนตัว = คู่ถัดไปที่เคยมีผลอาจถูกล้าง รวมผู้ชนะรายเกมของมันด้วย
+  // (ดู wipeResult ใน store/matches.ts) หน้าสถิติกับประวัติพิคแบนต้องรู้
+  if (winnersMoved || before.winnerId !== result.match.winnerId) {
     notifyData({ topic: 'games', tournamentId: result.match.tournamentId });
   }
   // กรอกคะแนนจากในสาย ก็ต้องเห็นบนจอทันทีเหมือนกัน

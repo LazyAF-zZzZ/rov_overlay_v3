@@ -9,7 +9,7 @@
 // ไม่ต้องรอให้ใครกดเซฟ และไม่มีขั้นตอน "ปิดงาน" ให้ลืม
 
 import { deepClone } from '../lib/json';
-import { defaultState, sanitizeState, sanitizeTeam, isTeamKey, TEAM_KEYS } from '../domain/match';
+import { defaultState, sanitizeState, sanitizeTeam, isTeamKey, isDisplaySwapped, TEAM_KEYS } from '../domain/match';
 import type { GameState } from '../domain/match';
 import { carryOverSettings } from '../domain/settings';
 import { getState, setState, emitState, subscribe, clearUndo } from '../store/live-state';
@@ -503,6 +503,99 @@ function finishQuickGame(key: 'teamBlue' | 'teamRed'): FinishGameOutcome {
       seriesWinner: null, score: scoreOnScreen(), nextMatch: null
     }
   };
+}
+
+// ---- ถอนเกม (-1) ----
+
+export type UndoGameCode = 'no-points' | 'not-last' | 'not-found' | 'not-recorded';
+
+export interface UndoGameResult {
+  live: LiveInfo;
+  round: number;
+  // แต้มที่ถอนเคยปิดซีรีส์ ตอนนี้ซีรีส์กลับมาแข่งต่อ และผู้ชนะถูกถอนออกจากคู่ถัดไปแล้ว
+  reopened: boolean;
+}
+
+export type UndoGameOutcome =
+  | { result: UndoGameResult; error?: undefined; code?: undefined }
+  | { error: string; code: UndoGameCode; result?: undefined };
+
+// ปุ่ม -1 ข้างคะแนน: ถอนเกมล่าสุดที่ฝั่งนี้ชนะ เป็นการย้อน +1 ตรงตัว
+//
+// ไม่ได้คิดกติกาใหม่: หักแต้มผ่าน pushOverlayScoreToMatch เหมือนพิมพ์ในช่องคะแนน
+// ผู้ชนะรายเกมจึงถูกล้าง และถ้าซีรีส์เคยจบ ผู้ชนะจะถูกถอนออกจากคู่ถัดไปด้วยโค้ดเดิมของสาย
+// แล้วเอาเกมนั้นกลับขึ้นจอด้วย goLive ซึ่งคืนดราฟต์และฝั่งของเกมนั้นให้ครบ
+//
+// ถอนได้เฉพาะเกมล่าสุดเท่านั้น ถ้าอีกทีมชนะเกมล่าสุด ต้องปฏิเสธ
+// ถอนเกมที่เก่ากว่าแปลว่าเลขเกมเลื่อน เกมถัดไปจะได้เลขของเกมที่เล่นไปแล้ว
+// แล้วดราฟต์ใหม่จะเขียนทับเกมนั้น (ดู airingGameNo = คะแนนรวม + 1)
+//
+// คะแนน 0 ปฏิเสธที่นี่ด้วย ไม่ใช่แค่ปิดปุ่มบนหน้าแอป หน้าแอปอาจยังถือคะแนนเก่าอยู่
+export function undoGame(side: GameWinner): UndoGameOutcome {
+  const key = side === 'blue' ? 'teamBlue' : 'teamRed';
+  const pointer = isDatabaseOpen() ? getStores().liveMatch.get() : { matchId: null, gameId: null };
+
+  if (!pointer.matchId) return undoQuickGame(key);
+
+  const { matches, games } = getStores();
+  const match = matches.get(pointer.matchId);
+  if (!match) return { error: 'Match not found', code: 'not-found' };
+
+  // ฝั่งบนจอ -> ทีมของแมตช์: น้ำเงินคือทีม A เว้นแต่จอกำลังสลับฝั่งอยู่
+  const state = getState();
+  const current = pointer.gameId ? games.get(pointer.gameId) : null;
+  const swapped = current ? isDisplaySwapped(state, current) : false;
+  const isTeamA = (key === 'teamBlue') !== swapped;
+
+  if ((isTeamA ? match.scoreA : match.scoreB) <= 0) {
+    return { error: 'This team has no point to take back', code: 'no-points' };
+  }
+
+  const played = match.scoreA + match.scoreB;
+  const last = games.forMatch(match.id).find((g) => g.gameNo === played);
+  // สำเนาแช่แข็งนับฝั่งแบบทีม A = น้ำเงินเสมอ ผู้ชนะ 'blue' จึงคือทีม A
+  // ไม่รู้ผู้ชนะ (กรอกคะแนนสองฝั่งพร้อมกัน ระบบไม่เดา) ก็ไม่มีอะไรให้ค้าน ปล่อยให้ถอนได้
+  if (last?.winner && (last.winner === 'blue') !== isTeamA) {
+    return { error: 'The other team won the last game. Take that point back first', code: 'not-last' };
+  }
+
+  const reopened = seriesWinner(match.bestOf, match.scoreA, match.scoreB) !== null;
+  const before = state[key].score;
+  state[key].score = clampNumber(before - 1, 0, MAX_SCORE);
+  emitState();
+  pushOverlayScoreToMatch();
+
+  // ต้องหายไปหนึ่งเกมพอดี ไม่งั้นจอกับสายคะแนนไม่ตรงกัน ถอยคะแนนบนจอกลับ
+  const after = matches.get(match.id) ?? match;
+  if (after.scoreA + after.scoreB !== played - 1) {
+    getState()[key].score = before;
+    emitState();
+    return { error: 'The point could not be taken back for this match', code: 'not-recorded' };
+  }
+
+  // เอาเกมที่เพิ่งถอนผลกลับขึ้นจอ ซีรีส์ที่เคยจบไม่ได้เดินรอบไป จึงยังอยู่ที่เกมนั้นอยู่แล้ว
+  if (getState().round !== played) {
+    const back = goLive(match.id, played);
+    if (back.error !== undefined) return { error: back.error, code: 'not-recorded' };
+  }
+
+  return { result: { live: describeLive(), round: getState().round, reopened } };
+}
+
+// แมตช์เดี่ยว: หักแต้มแล้วถอยกลับหนึ่งรอบ กระจกของ finishQuickGame
+// หักก่อนถอย เพราะการสลับฝั่งย้ายทั้งก้อนของทีม แต้มจึงต้องออกจากทีมที่ถูกกดก่อนย้าย
+function undoQuickGame(key: 'teamBlue' | 'teamRed'): UndoGameOutcome {
+  const state = getState();
+  if (state[key].score <= 0) {
+    return { error: 'This team has no point to take back', code: 'no-points' };
+  }
+  state[key].score -= 1;
+  emitState();
+  if (state.round > FIRST_ROUND) {
+    const stepped = stepRound(-1);
+    if (stepped.error !== undefined) return { error: stepped.error, code: 'not-recorded' };
+  }
+  return { result: { live: emptyLive(), round: getState().round, reopened: false } };
 }
 
 // เอาทีมจากทะเบียนมาใส่ฝั่งหนึ่งของ overlay โดยไม่ต้องมีทัวร์นาเมนต์

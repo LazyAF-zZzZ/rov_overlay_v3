@@ -36,6 +36,23 @@ board, which all go through `orientationOf`, credit the right team exactly as th
 for a manual Switch Teams. Quick matches: `stepRound` swaps the two team objects on every step,
 and `restoreRound` places a filed draft by team name. Tested in `tests/side-swap.test.ts`.
 
+**On `main`, not yet released (2026-09-15):**
+
+- **-1 beside each score** (`POST /api/live-match/undo`, `undoGame`): the exact undo of +1.
+  Lowers the score through `pushOverlayScoreToMatch`, so the game's winner is cleared and a
+  series that point had ended is reopened with its winner pulled back out of the next match,
+  then `goLive`s that game back with its draft and sides. **Refuses unless it is the most
+  recent game** (`not-last`), because undoing an older game renumbers the games and the next
+  draft would overwrite a game that was played; refuses at 0 (`no-points`), and the button
+  is disabled at 0 from the server's score, not the text box.
+- **Fixed: a correction left stale game winners in later matches.** Reproduced first: correct a
+  semifinal after the final was played, and the bracket reset the final to 0-0 while its game
+  kept `winner = blue`, so hero win rates, the team view, Head to head and Pick / ban history
+  all still credited the team that had been removed. `wipeResult` in `store/matches.ts` now
+  clears the winners of the games of every match it resets (drafts kept, so pick/ban rates
+  still count what was played), and `recordSeriesResult` announces `games` whenever the series
+  winner changes so Analytics refreshes.
+
 **Notices for 3.0.11** (2026-09-15, both expire 2026-10-15) replaced the 3.0.8 one, and are
 **split by version because the install step differs**: `update-3-0-11` (3.0.9–3.0.10) says to
 press Update now, since those builds never install by themselves; `update-3-0-11-older`

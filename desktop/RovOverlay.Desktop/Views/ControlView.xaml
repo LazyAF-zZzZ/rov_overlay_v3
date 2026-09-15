@@ -43,6 +43,13 @@
                     <DockPanel Margin="14,10,12,10">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="{svc:T Control.Score}" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <!-- -1: take back the last game this side won. Greyed out and
+                                 unpressable at 0; the tooltip still explains it when disabled. -->
+                            <Button Content="{svc:T Flow.RemovePoint}" Margin="0,0,6,0"
+                                    MinWidth="40" Height="34" FontSize="14" FontWeight="Bold" Padding="8,0"
+                                    Command="{Binding RemovePointCommand}" IsEnabled="{Binding CanRemovePoint}"
+                                    ToolTip="{svc:T Flow.RemovePointTip}" ToolTipService.ShowOnDisabled="True"
+                                    AutomationProperties.Name="{Binding RemovePointName}"/>
                             <!-- Typing here corrects the score and never moves the board. -->
                             <TextBox Text="{Binding ScoreText, UpdateSourceTrigger=PropertyChanged}" Width="54" MaxLength="2"
                                      FontSize="18" FontWeight="Bold" HorizontalContentAlignment="Center"/>

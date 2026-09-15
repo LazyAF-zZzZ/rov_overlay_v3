@@ -11,7 +11,7 @@ import express, { Router } from 'express';
 import { getStores } from '../store/index';
 import { FORMATS, BEST_OF_OPTIONS, STATUSES, MAX_TEAMS } from '../domain/tournament';
 import { requireControl } from './auth';
-import { goLive, clearLive, describeLive, notifyAnalytics, finishGame, readyMatches } from '../services/live-match';
+import { goLive, clearLive, describeLive, notifyAnalytics, finishGame, readyMatches, undoGame } from '../services/live-match';
 import { toHeroStats, summarise, rankHeroes, isRankMode } from '../domain/analytics';
 import { notifyData } from '../services/sync';
 import { recordSeriesResult } from '../services/series';
@@ -436,6 +436,21 @@ export function tournamentRoutes(): Router {
       return;
     }
     const outcome = finishGame(raw);
+    if (outcome.error !== undefined) {
+      res.status(outcome.code === 'not-found' ? 404 : 400).json({ error: outcome.error, code: outcome.code });
+      return;
+    }
+    res.json({ ok: true, ...outcome.result });
+  });
+
+  // ถอนเกมล่าสุดของฝั่งนี้ (-1) ย้อน +1 ตรงตัว ดู undoGame
+  router.post('/api/live-match/undo', requireControl, (req, res) => {
+    const raw = ((req.body || {}) as { side?: unknown }).side;
+    if (raw !== 'blue' && raw !== 'red') {
+      res.status(400).json({ error: 'Side must be blue or red', code: 'bad-side' });
+      return;
+    }
+    const outcome = undoGame(raw);
     if (outcome.error !== undefined) {
       res.status(outcome.code === 'not-found' ? 404 : 400).json({ error: outcome.error, code: outcome.code });
       return;

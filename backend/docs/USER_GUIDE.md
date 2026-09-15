@@ -90,7 +90,10 @@ For a single match that is not part of a tournament.
 8. **When a game ends, press `+1` beside the winning team's score.** One press gives that side
    the point, records who won the game, keeps the draft with that game and puts the next game
    on the board. When a team reaches the wins it needs (2 in a Bo3, 3 in a Bo5), the app
-   declares the series for them. Pressed the wrong side? `<` on ROUND brings the game back, and
+   declares the series for them. Pressed it by mistake? Press `−1` beside that team's score: it takes the point back,
+   clears that game's winner, reopens the series if that point had ended it, and puts the game back
+   on the board with its draft and sides. It only undoes the most recent game, and it is greyed out
+   when the score is 0. By hand, `<` on ROUND brings the game back, and
    the score box takes the point off. Typing in the score box only corrects the number; it
    never moves the board
 
@@ -136,7 +139,9 @@ Bottom buttons: **UNDO** (last change), **SWITCH TEAMS** (swap sides), **CLEAR P
 8. **จบเกมแล้ว กด `+1` ข้างคะแนนของทีมที่ชนะ** กดครั้งเดียว โปรแกรมจะให้แต้มฝั่งนั้น
    บันทึกว่าใครชนะเกมนี้ เก็บดราฟต์ไว้กับเกมนี้ และขึ้นเกมถัดไปบนกระดานให้เลย
    เมื่อทีมไหนชนะครบตามที่ต้องการ (Bo3 = 2 เกม, Bo5 = 3 เกม) โปรแกรมจะประกาศว่าทีมนั้นชนะซีรีส์ให้เอง
-   กดผิดฝั่ง? กด `<` ที่ ROUND เพื่อพาเกมกลับมา แล้วแก้แต้มในช่องคะแนน
+   กดผิด? กด `−1` ข้างคะแนนของทีมนั้น โปรแกรมจะถอนแต้ม ล้างผู้ชนะของเกมนั้น เปิดซีรีส์กลับมาถ้าแต้มนั้นเคยปิดซีรีส์
+   และเอาเกมนั้นกลับขึ้นกระดานพร้อมดราฟต์และฝั่งเดิม ถอนได้เฉพาะเกมล่าสุด และกดไม่ได้เมื่อคะแนนเป็น 0
+   ถ้าจะแก้เอง กด `<` ที่ ROUND เพื่อพาเกมกลับมา แล้วแก้แต้มในช่องคะแนน
    การพิมพ์ในช่องคะแนนแค่แก้ตัวเลข ไม่เลื่อนกระดาน
 
 **ส่วนตั้งค่าทีมจะพับเก็บเองเมื่อเริ่มดราฟต์** ชื่อทีม โลโก้ ชื่อผู้เล่น และเลน ตั้งเสร็จไปแล้วตอนนั้น ช่องพิคจึงได้ที่เต็ม

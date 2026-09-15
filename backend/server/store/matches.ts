@@ -220,6 +220,17 @@ export function createMatchStore(
       && !row.winner_id && row.status === 'pending';
     if (untouched) return false;
     q.setResult.run(0, 0, null, 'pending', row.id);
+
+    // ผู้ชนะรายเกมของคู่นี้ต้องหายไปด้วย ไม่ใช่แค่คะแนนของแมตช์
+    //
+    // เดิมล้างแค่แถว matches ส่วนแถว games ยังค้าง winner ไว้ พิสูจน์แล้วด้วยสายสี่ทีม:
+    // แก้ผลรอบรองจน ALPHA หลุดจากรอบชิง สายขึ้นว่ารอบชิงยังไม่แข่ง แต่สถิติยังนับ
+    // "airi ของ ALPHA ชนะ 1 จาก 1" และหัวต่อหัวกับประวัติพิคแบนยังโชว์ ALPHA เป็นผู้ชนะ
+    // เก็บดราฟต์ไว้ตามเดิม มันถูกเล่นจริงบนจอ อัตราพิค/แบนจึงยังนับถูก
+    // แต่ผลแพ้ชนะที่สายไม่ยอมรับแล้วต้องไม่ไหลเข้าอัตราชนะ
+    games.forMatch(row.id).forEach((game) => {
+      if (game.winner) games.setWinner(game.id, null);
+    });
     return true;
   }
 
