@@ -22,6 +22,18 @@ const ENTER_MS = 520;
 const SAFETY_MS = 700;
 const STAGGER_MS = 110;
 
+// ขนาดตัวอักษรของแถว หาค่าที่ใหญ่ที่สุดที่ยังพอดีจอ ไม่ใช่ย่อทั้งกระดาน
+//
+// เดิม fitToStage ย่อทั้งกล่องด้วย transform ความกว้างหดตามไปด้วย ตาราง 32 ทีม
+// ของรายการแพ้คัดออกจึงเหลือเป็นแถบแคบกลางจอ ตัวหนังสือเล็กจนอ่านบนสตรีมไม่ออก
+// ตอนนี้ปรับขนาดตัวอักษรก่อน ความกว้างคงเต็มจอ transform เหลือไว้เป็นทางสุดท้าย
+const MAX_FONT = 34;
+const MIN_FONT = 16;
+
+// กลุ่มเดียวที่ยาวเกินนี้ แบ่งเป็นสองตารางซ้ายขวา (ลำดับต่อกัน)
+// 16 แถวต่อข้างยังได้ตัวอักษรราว 30px บนผืน 1080 ส่วน 32 แถวแถวเดียวได้แค่ครึ่งหนึ่ง
+const SPLIT_ROWS = 12;
+
 let settleTimer = null;
 
 const through = window.RovOverlay.intParam(params, 'through', 0, 0, 8);
@@ -68,21 +80,9 @@ function cell(text, cls) {
     return td;
 }
 
-function groupCard(group, index) {
-    const card = document.createElement('div');
-    card.className = 'st-group';
-    card.style.setProperty('--i', String(index));
-
-    const name = document.createElement('div');
-    name.className = 'st-group-name';
-    name.textContent = `Group ${group.bracket}`;
-    if (group.remaining > 0) {
-        const left = document.createElement('span');
-        left.className = 'st-group-note';
-        left.textContent = group.remaining === 1 ? '1 match left' : `${group.remaining} matches left`;
-        name.appendChild(left);
-    }
-
+// ตารางหนึ่งชุด start = ตำแหน่งของแถวแรกในกลุ่ม ตารางครึ่งหลังของกลุ่มที่ถูกแบ่ง
+// จึงยังขีดเส้นผ่านเข้ารอบตามตำแหน่งจริงในกลุ่ม ไม่ใช่นับใหม่จาก 0
+function standingsTable(rows, start) {
     const table = document.createElement('table');
     table.className = 'st-table';
 
@@ -94,7 +94,8 @@ function groupCard(group, index) {
     });
     table.appendChild(head);
 
-    group.rows.forEach((row, position) => {
+    rows.forEach((row, offset) => {
+        const position = start + offset;
         const tr = document.createElement('tr');
         tr.className = 'st-row';
         // เส้นตัดขีดตามตำแหน่งจริงในตาราง ไม่ใช่ตาม rank
@@ -112,7 +113,36 @@ function groupCard(group, index) {
         table.appendChild(tr);
     });
 
-    card.append(name, table);
+    return table;
+}
+
+function groupCard(group, index, split) {
+    const card = document.createElement('div');
+    card.className = 'st-group';
+    card.style.setProperty('--i', String(index));
+
+    const name = document.createElement('div');
+    name.className = 'st-group-name';
+    // รายการที่ไม่มีรอบแบ่งกลุ่ม (แพ้คัดออก พบกันหมด) ได้กลุ่มเดียวชื่อ main
+    // เคยขึ้นจอว่า "GROUP MAIN" ซึ่งอ่านเหมือนชื่อกลุ่มจริง
+    name.textContent = group.bracket && group.bracket !== 'main' ? `Group ${group.bracket}` : 'All teams';
+    if (group.remaining > 0) {
+        const left = document.createElement('span');
+        left.className = 'st-group-note';
+        left.textContent = group.remaining === 1 ? '1 match left' : `${group.remaining} matches left`;
+        name.appendChild(left);
+    }
+
+    const body = document.createElement('div');
+    body.className = split > 1 ? 'st-split' : 'st-body';
+    const perColumn = Math.ceil(group.rows.length / split);
+    for (let column = 0; column < split; column += 1) {
+        const start = column * perColumn;
+        const rows = group.rows.slice(start, start + perColumn);
+        if (rows.length > 0) body.appendChild(standingsTable(rows, start));
+    }
+
+    card.append(name, body);
     card.addEventListener('animationend', () => card.classList.add('settled'), { once: true });
     return card;
 }
@@ -127,14 +157,37 @@ function settleSoon(count) {
     }, total);
 }
 
-// ย่อลงถ้ากลุ่มเยอะจนล้นผืน 1080
-// เหตุผลและกับดักเหมือน overlay-prev.js: ย่ออย่างเดียว ไม่ขยายความกว้างชดเชย
+// ตัวอักษรใหญ่ที่สุดที่ยังพอดีผืน 1080 แล้วค่อยย่อทั้งกระดานถ้าเล็กสุดแล้วยังล้น
+// เหตุผลและกับดักของการย่อเหมือน overlay-prev.js: ย่ออย่างเดียว ไม่ขยายความกว้างชดเชย
 function fitToStage() {
     const groups = document.getElementById('groups');
     groups.style.transform = '';
 
     const cards = groups.children;
     if (cards.length === 0) return;
+
+    const available = groups.getBoundingClientRect().height;
+    for (let size = MAX_FONT; size >= MIN_FONT; size -= 1) {
+        groups.style.setProperty('--st-font', `${size}px`);
+        if (boardHeight(cards) <= available) return;
+    }
+
+    shrinkToFit(groups, cards, available);
+}
+
+// ความสูงของกระดาน วัดจากหัวการ์ดใบบนสุดถึงท้ายใบล่างสุด
+function boardHeight(cards) {
+    let lowest = -Infinity;
+    let highest = Infinity;
+    [...cards].forEach((card) => {
+        const box = card.getBoundingClientRect();
+        lowest = Math.max(lowest, box.bottom);
+        highest = Math.min(highest, box.top);
+    });
+    return lowest - highest;
+}
+
+function shrinkToFit(groups, cards, available) {
 
     // วัดจากขอบบนของการ์ดใบแรก ไม่ใช่จากขอบบนของกล่อง
     //
@@ -145,15 +198,7 @@ function fitToStage() {
     // การ์ดเลื่อนลงเท่ากันทุกใบ วัดหัวถึงท้ายของการ์ดด้วยกันเองระยะเลื่อนจึงหักกันหมด
     // (บทเรียนเดียวกับ fitToStage ใน overlay-prev.js กับ overlay-teams.js
     //  ซึ่งแก้เรื่องนี้ไปแล้ว หน้านี้ยังค้างอยู่ที่เวอร์ชันเก่า)
-    let lowest = -Infinity;
-    let highest = Infinity;
-    [...cards].forEach((card) => {
-        const box = card.getBoundingClientRect();
-        lowest = Math.max(lowest, box.bottom);
-        highest = Math.min(highest, box.top);
-    });
-    const needed = lowest - highest;
-    const available = groups.getBoundingClientRect().height;
+    const needed = boardHeight(cards);
     if (needed <= 0 || available <= 0 || needed <= available) return;
 
     const scale = available / needed;
@@ -180,7 +225,8 @@ function render(tournament, groups) {
 
     box.style.setProperty('--st-cols', String(columnsFor(groups.length)));
     box.style.setProperty('--st-stagger', `${STAGGER_MS}ms`);
-    groups.forEach((group, index) => box.appendChild(groupCard(group, index)));
+    const split = groups.length === 1 && groups[0].rows.length > SPLIT_ROWS ? 2 : 1;
+    groups.forEach((group, index) => box.appendChild(groupCard(group, index, split)));
 
     window.RovOverlay.note(groups.length === 0 ? 'This tournament has no group stage.' : '');
     fitToStage();

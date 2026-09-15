@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <title>ROV Team Card Overlay</title>
+    <!-- กราฟิกออกอากาศ ห้ามลิงก์ธีมของหน้าคนคุมงาน และห้ามโหลดตัวแปลภาษา -->
+    <link rel="stylesheet" href="/css/fonts.css">
+    <!-- แผ่นของกราฟิกหัวต่อหัวให้แผง ฟอนต์ สี อนิเมชันเข้า และการขยาย 1440p
+         การ์ดทีมจึงเป็นครอบครัวเดียวกับ Head to head และ Team picks & bans
+         แผ่นของตัวเองมีแค่สิ่งที่การ์ดนี้มีคนเดียว -->
+    <link rel="stylesheet" href="/css/overlay-matchup.css">
+    <link rel="stylesheet" href="/css/overlay-team-card.css">
+</head>
+<body>
+    <div class="mu-stage tc-stage" id="stage">
+        <div class="tc-head">
+            <div class="tc-logo" id="logo"></div>
+            <div class="tc-id">
+                <div class="tc-side" id="sideLabel"></div>
+                <div class="tc-name" id="name"></div>
+                <div class="mu-sub" id="subtitle"></div>
+            </div>
+        </div>
+
+        <div class="tc-tiles" id="tiles"></div>
+        <div class="tc-cols" id="cols"></div>
+        <div class="mu-note" id="note" hidden></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- overlay-team-card.js ประกาศ socket ไว้ ต้องมาก่อน overlay-size.js ที่อ่านตัวนั้น -->
+    <script src="/js/lib/hero-art.js"></script>
+    <script src="/js/lib/overlay-common.js"></script>
+    <script src="/js/overlay-team-card.js"></script>
+    <script src="/js/overlay-size.js"></script>
+</body>
+</html>

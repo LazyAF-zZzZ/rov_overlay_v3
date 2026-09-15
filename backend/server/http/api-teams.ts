@@ -8,8 +8,9 @@
 
 import fs from 'fs';
 import express, { Router } from 'express';
-import { LOGO_DIR, LOGO_MAX_BYTES, teamLogoFilePath, removeTeamLogoFiles } from '../domain/media';
+import { LOGO_DIR, LOGO_MAX_BYTES, teamLogoFilePath, removeTeamLogoFiles, isSafeMediaId } from '../domain/media';
 import { getStores } from '../store/index';
+import { getState } from '../store/live-state';
 import { requireControl } from './auth';
 import { validateUpload, rawImage } from './upload';
 import { notifyData } from '../services/sync';
@@ -90,6 +91,66 @@ export function teamRoutes(): Router {
     const raw = (req.query as { tournamentId?: unknown }).tournamentId;
     const tournamentId = typeof raw === 'string' && raw ? raw : null;
     res.json({ stats: teamStats.forTeam(req.params.id, tournamentId) });
+  });
+
+  // การ์ดทีมสำหรับขึ้นจอ (/overlay-team-card) อ่านอย่างเดียว ไม่ต้องมีโทเคน กราฟิกไม่ได้ถือโทเคน
+  //
+  // ?side=blue|red  ทีมที่อยู่ฝั่งนั้นของคู่ที่ออกอากาศ "ตอนนี้" (ค่าเริ่มต้น blue)
+  //                 อ่านจาก logo.src ของ state ซึ่ง goLive และ loadTeamIntoSide ใส่ id ทีมไว้
+  //                 ทีมสลับฝั่งทุกเกม การ์ดฝั่งน้ำเงินจึงต้องตามฝั่ง ไม่ใช่ตามทีม A
+  // ?team=<id>      ระบุทีมเอง ไม่ตามฝั่ง
+  // ?tournament=    <id> = รายการนั้น, all = ทุกรายการ, ไม่ใส่ = รายการของคู่ที่ออกอากาศ
+  //                 (ไม่มีคู่ออกอากาศ = ทุกรายการ) คนพากย์ก่อนเริ่มคู่อยากได้ "ในรายการนี้" ก่อน
+  //
+  // ตัวเลขทั้งหมดมาจาก teamStats.forTeam ตัวเดียวกับแท็บสถิติในหน้าทีม จอกับแอพจึงตรงกันเสมอ
+  router.get('/api/team-card', (req, res) => {
+    const { teams, teamStats, tournaments, liveMatch, matches } = getStores();
+    const query = req.query as { team?: unknown; side?: unknown; tournament?: unknown };
+    const side = query.side === 'red' ? 'red' : 'blue';
+
+    // พิมพ์ ?team= มาแต่ใช้ไม่ได้ ต้องบอกว่าไม่เจอ ห้ามตกไปตามฝั่งเงียบๆ
+    // ไม่งั้นการ์ดจะขึ้นทีมอื่นที่คนตั้ง URL ไม่ได้ขอ แล้วดูเหมือนถูกต้อง
+    const askedTeam = typeof query.team === 'string' ? query.team : '';
+    let teamId = askedTeam;
+    if (askedTeam && !isSafeMediaId(askedTeam)) teamId = '';
+    if (!askedTeam) {
+      const src = getState()[side === 'red' ? 'teamRed' : 'teamBlue'].logo?.src;
+      teamId = typeof src === 'string' && isSafeMediaId(src) ? src : '';
+    }
+
+    const team = teamId ? teams.get(teamId) : null;
+    if (!team) {
+      res.status(404).json({
+        error: askedTeam
+          ? 'Team not found'
+          // ทีมที่พิมพ์ชื่อเองบนหน้า Control ไม่มี id ในทะเบียน จึงไม่มีสถิติให้แสดง
+          : `The ${side} side is not a team from the registry`
+      });
+      return;
+    }
+
+    let tournamentId: string | null = null;
+    if (query.tournament === 'all') {
+      tournamentId = null;
+    } else if (typeof query.tournament === 'string' && query.tournament) {
+      if (!isSafeMediaId(query.tournament) || !tournaments.get(query.tournament)) {
+        res.status(404).json({ error: 'Tournament not found' });
+        return;
+      }
+      tournamentId = query.tournament;
+    } else {
+      const pointer = liveMatch.get();
+      const live = pointer.matchId ? matches.get(pointer.matchId) : null;
+      tournamentId = live ? live.tournamentId : null;
+    }
+    const tournament = tournamentId ? tournaments.get(tournamentId) : null;
+
+    res.json({
+      team: { id: team.id, name: team.name, tag: team.tag, logo: team.logo },
+      side: askedTeam ? null : side,
+      tournament: tournament ? { id: tournament.id, name: tournament.name } : null,
+      stats: teamStats.forTeam(team.id, tournament ? tournament.id : null)
+    });
   });
 
   router.put('/api/teams/:id', requireControl, (req, res) => {

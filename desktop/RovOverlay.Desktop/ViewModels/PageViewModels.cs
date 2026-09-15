@@ -21,6 +21,10 @@ public sealed class ObsSourceRow : ObservableObject
         ("Standings", "/overlay-standings", null, false, true),
         ("Head to head", "/overlay-matchup", null, false, false),
         ("Team picks & bans", "/overlay-team-drafts", null, false, false),
+        // One card per side. It follows whichever team is on that side now, so when the
+        // teams swap after a game the two cards swap with them.
+        ("Team card, blue side", "/overlay-team-card?side=blue", null, false, false),
+        ("Team card, red side", "/overlay-team-card?side=red", null, false, false),
         ("Team list", "/overlay-teams", null, false, true),
         ("Stats board", "/overlay-analytics", null, false, true)
     ];

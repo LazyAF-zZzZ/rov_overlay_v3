@@ -44,7 +44,7 @@ $uploadDirs = @('team-logos', 'skins')
 # would hand users a second way to drive the app that nobody maintains.
 #
 # The overlays OBS loads are NOT here and must never be: overlay, overlay-1440, result,
-# overlay-prev, overlay-standings, overlay-matchup, overlay-team-drafts, overlay-teams,
+# overlay-prev, overlay-standings, overlay-matchup, overlay-team-drafts, overlay-team-card, overlay-teams,
 # overlay-analytics.
 #
 # Two more pages stay on purpose, because nothing replaced them:

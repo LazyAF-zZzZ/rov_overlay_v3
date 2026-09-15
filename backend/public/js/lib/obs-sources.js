@@ -42,6 +42,10 @@
     // หน้าตาเหมือนหัวต่อหัว แต่นับทุกเกมของแต่ละทีมในรายการ ไม่ใช่เฉพาะเกมที่เจอกันเอง
     // ไม่ต้องแนบ id ด้วยเหตุผลเดียวกัน: ไม่ระบุมา มันตามคู่ที่ออกอากาศเอง
     { name: 'Team picks & bans', path: '/overlay-team-drafts', size: 'matches overlay size' },
+    // การ์ดทีม หนึ่งใบต่อหนึ่งฝั่ง ตามทีมที่อยู่ฝั่งนั้นตอนนี้ (ทีมสลับฝั่งทุกเกม การ์ดก็สลับตาม)
+    // ?side= อยู่ในรายการ ไม่ใช่ให้คนเติมเอง เหตุผลเดียวกับ ?sfx=1
+    { name: 'Team card, blue side', path: '/overlay-team-card', size: 'matches overlay size', query: ['side=blue'] },
+    { name: 'Team card, red side', path: '/overlay-team-card', size: 'matches overlay size', query: ['side=red'] },
     // รายชื่อทีมของทัวร์นาเมนต์นี้ ต้องแนบ id ไปกับ URL ด้วย
     // ไม่งั้น overlay จะเดาเอาจากแมตช์ที่ออกอากาศ ซึ่งไม่ใช่สิ่งที่คนก๊อป URL
     // จากหน้าทัวร์นาเมนต์ตั้งใจ ส่วนหน้า Control ไม่มี id ให้แนบ การเดาจาก

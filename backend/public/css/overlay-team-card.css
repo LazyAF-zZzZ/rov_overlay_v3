@@ -1,0 +1,121 @@
+/* การ์ดทีม: สถิติ ฮีโร่ และผู้เล่นของทีมเดียว
+ *
+ * แผง ฟอนต์ สี อนิเมชันเข้า (muIn) และการขยาย 1440p มาจาก overlay-matchup.css
+ * ไฟล์นี้มีแค่สิ่งที่การ์ดนี้มีคนเดียว
+ *
+ * ห้ามลิงก์ธีมของหน้าคนคุมงาน นี่คือสิ่งที่คนดูเห็น */
+
+.tc-stage { --tc-accent: var(--ov-accent); gap: 24px; }
+.tc-stage[data-side="blue"] { --tc-accent: var(--ov-blue); }
+.tc-stage[data-side="red"] { --tc-accent: var(--ov-red); }
+.tc-stage[data-empty="true"] .tc-logo { visibility: hidden; }
+
+/* หัว: โลโก้ ฝั่ง ชื่อทีม รายการ */
+.tc-head {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    opacity: 0;
+    transform: translateY(-24px);
+    animation: muIn 480ms cubic-bezier(0.16,0.84,0.32,1) forwards;
+}
+.tc-logo {
+    width: 128px;
+    height: 128px;
+    flex: 0 0 128px;
+    border-radius: 18px;
+    background: rgba(9, 11, 16, 0.72);
+    border: 3px solid var(--tc-accent);
+    box-shadow: 0 10px 34px rgba(0,0,0,0.5);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--ov-text);
+}
+.tc-logo img { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+.tc-id { min-width: 0; }
+.tc-side { font-size: 16px; font-weight: 700; letter-spacing: 6px; text-transform: uppercase; color: var(--tc-accent); min-height: 20px; }
+.tc-name {
+    font-size: 68px;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ov-text);
+    text-shadow: 0 4px 22px rgba(0,0,0,0.85);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tc-id .mu-sub { margin-top: 4px; }
+
+/* แถวผลงาน: ห้าช่อง */
+.tc-tiles { flex: 0 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; }
+.tc-tile {
+    background: rgba(9, 11, 16, 0.72);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-top: 3px solid var(--tc-accent);
+    border-radius: 14px;
+    padding: 18px 22px;
+    box-shadow: 0 10px 34px rgba(0,0,0,0.5);
+    opacity: 0;
+    transform: translateY(22px);
+    animation: muIn 520ms cubic-bezier(0.16,0.84,0.32,1) 120ms forwards;
+}
+.tc-tile:nth-child(2) { animation-delay: 170ms; }
+.tc-tile:nth-child(3) { animation-delay: 220ms; }
+.tc-tile:nth-child(4) { animation-delay: 270ms; }
+.tc-tile:nth-child(5) { animation-delay: 320ms; }
+/* ช่องฝั่งน้ำเงิน / แดง ใช้สีของฝั่งเสมอ ไม่ใช่สีประจำการ์ด สีน้ำเงินแดงแปลว่าฝั่งเท่านั้น */
+.tc-tile.blue { border-top-color: var(--ov-blue); }
+.tc-tile.red { border-top-color: var(--ov-red); }
+.tc-tile-label { font-size: 13px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--ov-silver); }
+.tc-tile-value { margin-top: 8px; font-size: 52px; font-weight: 800; line-height: 1; color: var(--ov-text); white-space: nowrap; }
+.tc-tile-detail { margin-top: 8px; font-size: 17px; font-weight: 600; letter-spacing: 1px; color: var(--ov-accent); }
+.tc-tile-detail.none { color: rgba(255,255,255,0.35); }
+.tc-form { margin-top: 12px; display: flex; gap: 8px; }
+.tc-chip { width: 42px; height: 42px; border-radius: 8px; display: grid; place-items: center; font-size: 20px; font-weight: 800; color: #0b0d12; background: var(--ov-accent); }
+.tc-chip.loss { background: rgba(255,255,255,0.14); color: var(--ov-silver); }
+
+/* สองการ์ด: ฮีโร่ของทีม และผู้เล่น */
+.tc-cols { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.tc-card { border-top: 3px solid var(--tc-accent); animation-delay: 380ms; }
+.tc-card + .tc-card { animation-delay: 440ms; }
+.tc-card .mu-label:first-child { margin-top: 0; }
+
+/* ป้าย x5 ยึดกรอบรูป ไม่ใช่ช่องทั้งช่อง ช่องของการ์ดนี้มีอัตราชนะอยู่ใต้รูป */
+.tc-stage .mu-art { position: relative; }
+
+.tc-rate { margin-top: 6px; text-align: center; font-size: 16px; font-weight: 700; color: var(--ov-accent); }
+.tc-rate.low { color: var(--ov-silver); }
+.tc-rate.none { color: rgba(255,255,255,0.3); }
+
+.tc-player {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 9px 0;
+    border-top: 1px solid rgba(255,255,255,0.07);
+}
+.tc-card .mu-label + .tc-player { border-top: 0; }
+.tc-player-who { min-width: 0; }
+.tc-player-name { font-size: 24px; font-weight: 700; color: var(--ov-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tc-player-games { font-size: 13px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--ov-silver); }
+.tc-player-heroes { display: flex; gap: 8px; }
+.tc-player-heroes .mu-hero { width: 62px; }
+.tc-player-heroes .mu-art { width: 62px; height: 62px; border-radius: 8px; }
+.tc-player-heroes .mu-count { font-size: 13px; }
+
+/* บังคับสถานะสุดท้าย OBS หยุด browser source ที่ไม่ได้ออกอากาศ
+   .mu-side ของการ์ดสองใบถูกบังคับไว้ใน overlay-matchup.css แล้ว */
+.mu-stage.settled .tc-head,
+.mu-stage.settled .tc-tile {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+}

@@ -121,7 +121,7 @@ html[lang="th"] .gtable td,html[lang="th"] .gtable th{line-height:1.8;}
           <li>Leave <b>Shutdown source when not visible</b> unticked, so the overlay keeps running and keeps its sound.</li>
           <li>Add <b>Result</b> the same way if you want the winner screen.</li>
           <li>The list also offers <b>Standings</b>, <b>Team list</b>, <b>Stats board</b>,
-          <b>Head to head</b> and <b>Team picks &amp; bans</b>. Tick
+          <b>Head to head</b>, <b>Team picks &amp; bans</b> and the two <b>Team card</b> sources. Tick
           <b>Refresh browser when scene becomes active</b> on those, so they animate in
           and show current numbers every time you cut to them.</li>
           <li><b>Previous picks &amp; bans</b> shows the drafts of the earlier games of the
@@ -140,7 +140,7 @@ html[lang="th"] .gtable td,html[lang="th"] .gtable th{line-height:1.8;}
           <li>อย่าติ๊ก <b>Shutdown source when not visible</b> เพื่อให้ overlay ทำงานค้างไว้และเสียงไม่หาย</li>
           <li>ถ้าอยากได้หน้าประกาศผู้ชนะ ให้เพิ่ม <b>Result</b> ด้วยวิธีเดียวกัน</li>
           <li>ในรายการยังมี <b>Standings</b>, <b>Team list</b>, <b>Stats board</b>,
-          <b>Head to head</b> และ <b>Team picks &amp; bans</b> ให้ด้วย พวกนี้ให้ติ๊ก
+          <b>Head to head</b>, <b>Team picks &amp; bans</b> และ <b>Team card</b> ทั้งสองอัน ให้ด้วย พวกนี้ให้ติ๊ก
           <b>Refresh browser when scene becomes active</b> จะได้เล่นอนิเมชันใหม่และได้ตัวเลขล่าสุด
           ทุกครั้งที่ตัดเข้าซีน</li>
           <li><b>Previous picks &amp; bans</b> คือดราฟต์ของเกมก่อนหน้าในซีรีส์ พิคกับแบนอยู่ใน
@@ -754,6 +754,41 @@ html[lang="th"] .gtable td,html[lang="th"] .gtable th{line-height:1.8;}
         <p>เหมาะกับรอบแรก หรือคู่ไหนก็ตามที่ยังไม่เคยเจอกันมาก่อน เพราะ Head to head
         จะว่างเปล่า แต่กระดานนี้ยังมีข้อมูลขึ้น ตัวเลขตรงกลางคือจำนวนเกมที่แต่ละทีม
         ลงเล่นในรายการนี้ มีบรรทัดกำกับไว้ข้างล่างแล้ว ไม่ใช่สกอร์</p>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title" data-lang="en">Team card on stream</div>
+      <div class="section-title" data-lang="th" hidden>การ์ดทีมบนจอ</div>
+    </div>
+    <div class="panel"><div class="panel-body guide-body">
+      <div data-lang="en">
+        <p>Add <b>Team card, blue side</b> and <b>Team card, red side</b> as Browser sources.
+        Each shows one team: its series and game records with win rates, its record on each
+        side, its last five series, the heroes it picks most with the win rate for each, the
+        heroes opponents ban against it, and each player's favourite heroes.</p>
+        <p>The cards follow the match on air: the blue card always shows whichever team is on
+        blue right now, so when the teams swap sides after a game the two cards swap with them.
+        While a tournament match is on air they count that tournament; otherwise every tournament.</p>
+        <p>To pin one team, use <code>?team=&lt;id&gt;</code> instead of <code>?side=</code>, and add
+        <code>&amp;tournament=all</code> to count every tournament. Side records and player heroes
+        only count drafts made on version 3.0.13 or later. A team typed in by hand on the Control
+        Panel, rather than picked from the registry, has no card.</p>
+      </div>
+      <div data-lang="th" hidden>
+        <p>เพิ่ม <b>Team card, blue side</b> และ <b>Team card, red side</b> เป็น Browser source
+        แต่ละอันแสดงทีมเดียว: ผลซีรีส์และเกมพร้อมอัตราชนะ ผลตอนเล่นแต่ละฝั่ง ผลซีรีส์ 5 คู่ล่าสุด
+        ฮีโร่ที่หยิบบ่อยที่สุดพร้อมอัตราชนะของแต่ละตัว ฮีโร่ที่คู่แข่งแบนใส่
+        และฮีโร่ที่ผู้เล่นแต่ละคนใช้บ่อย</p>
+        <p>การ์ดตามคู่ที่ออกอากาศ: การ์ดฝั่งน้ำเงินจะแสดงทีมที่อยู่ฝั่งน้ำเงินตอนนี้เสมอ
+        พอทีมสลับฝั่งหลังจบเกม การ์ดสองอันก็สลับตาม ระหว่างที่คู่ในทัวร์นาเมนต์ออกอากาศ
+        จะนับเฉพาะรายการนั้น ถ้าไม่มีคู่ออกอากาศ จะนับทุกรายการ</p>
+        <p>ถ้าจะล็อกไว้ทีมเดียว ให้ใช้ <code>?team=&lt;id&gt;</code> แทน <code>?side=</code>
+        และเติม <code>&amp;tournament=all</code> ถ้าจะนับทุกรายการ สถิติฝั่งและฮีโร่ของผู้เล่น
+        นับจากดราฟต์ตั้งแต่เวอร์ชัน 3.0.13 ทีมที่พิมพ์ชื่อเองบนหน้าคุมงานโดยไม่ได้เลือกจากทะเบียนทีม
+        จะไม่มีการ์ด</p>
       </div>
     </div></div>
   </div>

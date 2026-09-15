@@ -11,7 +11,7 @@ import express, { Router } from 'express';
 import { getStores } from '../store/index';
 import { FORMATS, BEST_OF_OPTIONS, STATUSES, MAX_TEAMS } from '../domain/tournament';
 import { requireControl } from './auth';
-import { goLive, clearLive, describeLive, notifyAnalytics, finishGame, readyMatches, undoGame } from '../services/live-match';
+import { goLive, clearLive, describeLive, notifyAnalytics, finishGame, readyMatches, undoGame, liveTeamsOnScreen } from '../services/live-match';
 import { toHeroStats, summarise, rankHeroes, isRankMode } from '../domain/analytics';
 import { notifyData } from '../services/sync';
 import { recordSeriesResult } from '../services/series';
@@ -291,7 +291,7 @@ export function tournamentRoutes(): Router {
   // ไม่มี store ใหม่: analytics.read() รับ scope แบบ { tournamentId, teamId } อยู่แล้ว
   // และ rankHeroes เป็นตัวจัดอันดับตัวเดียวกับที่กระดานสถิติใช้ ผลจึงเรียงเหมือนกัน
   router.get('/api/team-drafts', (req, res) => {
-    const { analytics, teams, games, matches, liveMatch, tournaments } = getStores();
+    const { analytics, teams, games, tournaments } = getStores();
     const query = req.query as { a?: unknown; b?: unknown; tournament?: unknown; top?: unknown };
 
     let teamAId = typeof query.a === 'string' && isSafeMediaId(query.a) ? query.a : '';
@@ -309,10 +309,10 @@ export function tournamentRoutes(): Router {
     }
 
     // ไม่ระบุมา = ตามคู่ที่กำลังออกอากาศ URL เดียวจึงใช้ได้ทั้งงาน
+    // a คือทีมที่อยู่ฝั่งน้ำเงินบนจอตอนนี้ ไม่ใช่ทีม A ของสาย (ดู liveTeamsOnScreen)
     if (!teamAId || !teamBId || !tournamentId) {
-      const pointer = liveMatch.get();
-      const live = pointer.matchId ? matches.get(pointer.matchId) : null;
-      if (!live || !live.teamAId || !live.teamBId) {
+      const live = liveTeamsOnScreen();
+      if (!live) {
         // ข้อความต้องบอกสิ่งที่ขาดจริงๆ ไม่ใช่ประโยคเดียวใช้ทุกกรณี
         //
         // ระบุสองทีมมาแล้วแต่ไม่ได้ระบุรายการ คือกรณีที่เกิดจริงและ
@@ -325,8 +325,8 @@ export function tournamentRoutes(): Router {
         });
         return;
       }
-      if (!teamAId) teamAId = live.teamAId;
-      if (!teamBId) teamBId = live.teamBId;
+      if (!teamAId) teamAId = live.blueId;
+      if (!teamBId) teamBId = live.redId;
       if (!tournamentId) tournamentId = live.tournamentId;
     }
 
@@ -380,7 +380,7 @@ export function tournamentRoutes(): Router {
   // โดยไม่ต้องแก้ browser source ใน OBS ทุกครั้งที่เปลี่ยนคู่
   // (หลักเดียวกับ ?tournament= ของ /overlay-teams)
   router.get('/api/matchup', (req, res) => {
-    const { matchup, matches, liveMatch } = getStores();
+    const { matchup } = getStores();
 
     const asked = {
       a: typeof req.query.a === 'string' ? req.query.a : '',
@@ -390,15 +390,15 @@ export function tournamentRoutes(): Router {
     let teamAId = isSafeMediaId(asked.a) ? asked.a : '';
     let teamBId = isSafeMediaId(asked.b) ? asked.b : '';
 
+    // a คือทีมที่อยู่ฝั่งน้ำเงินบนจอตอนนี้ กราฟิกระบาย a เป็นน้ำเงิน (ดู liveTeamsOnScreen)
     if (!teamAId || !teamBId) {
-      const pointer = liveMatch.get();
-      const live = pointer.matchId ? matches.get(pointer.matchId) : null;
-      if (!live || !live.teamAId || !live.teamBId) {
+      const live = liveTeamsOnScreen();
+      if (!live) {
         res.status(404).json({ error: 'No match is on air, and no teams were named' });
         return;
       }
-      teamAId = live.teamAId;
-      teamBId = live.teamBId;
+      teamAId = live.blueId;
+      teamBId = live.redId;
     }
 
     if (teamAId === teamBId) {

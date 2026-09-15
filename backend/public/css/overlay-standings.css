@@ -43,6 +43,8 @@ body[data-size="1440"] .st-stage { transform: scale(calc(4 / 3)); transform-orig
 
 /* กลุ่มวางเรียงเป็นคอลัมน์ จำนวนคอลัมน์มาจาก --st-cols ที่ JS ตั้งตามจำนวนกลุ่ม */
 .st-groups {
+    /* ขนาดตัวอักษรของแถว JS หาค่าที่ใหญ่ที่สุดที่ยังพอดีจอแล้วตั้งทับ (ดู fitToStage) */
+    --st-font: 20px;
     flex: 1;
     min-height: 0;
     display: grid;
@@ -67,24 +69,30 @@ body[data-size="1440"] .st-stage { transform: scale(calc(4 / 3)); transform-orig
 @keyframes stGroupIn { to { opacity: 1; transform: translateY(0); } }
 
 .st-group-name {
-    font-size: 15px;
+    font-size: max(15px, calc(var(--st-font) * 0.7));
     font-weight: 700;
     letter-spacing: 5px;
     text-transform: uppercase;
     color: var(--ov-accent);
     margin-bottom: 10px;
 }
-.st-group-note { font-size: 12px; font-weight: 500; letter-spacing: 2px; color: var(--ov-silver); margin-left: 10px; }
+.st-group-note { font-size: max(12px, calc(var(--st-font) * 0.55)); font-weight: 500; letter-spacing: 2px; color: var(--ov-silver); margin-left: 10px; }
+
+/* กลุ่มเดียวที่ยาว แบ่งเป็นสองตารางซ้ายขวา (ดู SPLIT_ROWS ใน overlay-standings.js) */
+.st-split { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
 
 table.st-table { width: 100%; border-collapse: collapse; }
 .st-table th {
-    font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-    color: var(--ov-silver); text-align: right; padding: 0 6px 8px;
+    font-size: max(12px, calc(var(--st-font) * 0.6)); font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--ov-silver); text-align: right; padding: 0 6px calc(var(--st-font) * 0.4);
 }
 .st-table th.st-name-col, .st-table th.st-rank-col { text-align: left; }
-.st-table td { padding: 7px 6px; font-size: 20px; font-weight: 600; color: var(--ov-text); text-align: right; border-top: 1px solid rgba(255,255,255,0.07); }
-.st-table td.st-rank { text-align: left; width: 44px; color: var(--ov-silver); font-weight: 700; }
-.st-table td.st-name { text-align: left; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.st-table td { padding: calc(var(--st-font) * 0.34) 6px; font-size: var(--st-font); font-weight: 600; color: var(--ov-text); text-align: right; border-top: 1px solid rgba(255,255,255,0.07); }
+/* คอลัมน์ตัวเลขกว้างเท่ากันทุกตาราง ตารางซ้ายขวาของกลุ่มที่ถูกแบ่งจึงตรงแนวกัน */
+.st-table td:not(.st-name):not(.st-rank) { width: calc(var(--st-font) * 2.6); }
+.st-table td.st-rank { text-align: left; width: calc(var(--st-font) * 2.2); color: var(--ov-silver); font-weight: 700; }
+/* max-width: 0 + width: 100% = คอลัมน์ชื่อกินที่ที่เหลือทั้งหมด แล้วตัด … เมื่อชื่อยาวเกิน */
+.st-table td.st-name { text-align: left; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; max-width: 0; }
 .st-table td.st-points { color: var(--ov-accent); font-weight: 800; }
 
 /* ทีมที่ได้ไปต่อ ทำให้เห็นทันทีว่าเส้นตัดอยู่ตรงไหน */
@@ -96,7 +104,7 @@ table.st-table { width: 100%; border-collapse: collapse; }
     content: '=';
     margin-left: 4px;
     color: var(--ov-silver);
-    font-size: 15px;
+    font-size: calc(var(--st-font) * 0.75);
 }
 
 .st-note { flex: 0 0 auto; font-size: 17px; font-weight: 500; letter-spacing: 2px; color: rgba(255,255,255,0.4); }

@@ -125,6 +125,27 @@ export function describeLive(): LiveInfo {
   };
 }
 
+// คู่ที่ออกอากาศ เรียงตามฝั่งบนจอ ไม่ใช่ตามทีม A / B ของสาย
+//
+// กราฟิกที่ตามคู่ออกอากาศ (หัวต่อหัว, ตัวที่แต่ละทีมหยิบและแบน) ระบายสีน้ำเงิน / แดง
+// เคยเอาทีม A เป็นน้ำเงินเสมอ พอทีมสลับฝั่งทุกเกม (3.0.11) หรือกด Switch Teams
+// เกมคู่ทั้งหมดขึ้นสีกลับกับ overlay หลัก บนออกอากาศ ทีมเดียวกันเป็นน้ำเงินจอหนึ่ง แดงอีกจอหนึ่ง
+// ใช้ isDisplaySwapped ตัวเดียวกับที่บันทึกดราฟต์ใช้ จอกับสถิติจึงนับฝั่งตรงกัน
+export function liveTeamsOnScreen(): { blueId: string; redId: string; tournamentId: string } | null {
+  const { liveMatch, matches, games } = getStores();
+  const pointer = liveMatch.get();
+  const match = pointer.matchId ? matches.get(pointer.matchId) : null;
+  if (!match || !match.teamAId || !match.teamBId) return null;
+
+  const game = pointer.gameId ? games.get(pointer.gameId) : null;
+  const swapped = game ? isDisplaySwapped(getState(), game) : false;
+  return {
+    blueId: swapped ? match.teamBId : match.teamAId,
+    redId: swapped ? match.teamAId : match.teamBId,
+    tournamentId: match.tournamentId
+  };
+}
+
 // เอาแมตช์ขึ้นจอ
 //
 // wantedGameNo มีไว้ให้ปุ่มเดินรอบเท่านั้น ไม่ส่งมา = เกมถัดไปตามคะแนนซีรีส์

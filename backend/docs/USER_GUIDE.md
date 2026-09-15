@@ -41,8 +41,8 @@ The pages you will use are on the top bar: **HOME · TEAMS · ANALYTICS · CONTR
 4. Tick **Control audio via OBS** so viewers can hear the sound effects
 5. Leave **Shutdown source when not visible** unticked, so the overlay keeps running
 6. Do the same for *Result* if you want the winner screen
-7. *Standings*, *Team list*, *Stats board*, *Head to head* and *Team picks & bans* are
-   copied the same way. Tick
+7. *Standings*, *Team list*, *Stats board*, *Head to head*, *Team picks & bans* and the two
+   *Team card* sources are copied the same way. Tick
    **Refresh browser when scene becomes active** on all of these, so they animate in and
    show current numbers every time you cut to them
 8. *Previous picks & bans* shows the drafts of the earlier games of the series, picks and
@@ -58,7 +58,7 @@ If the COPY button does nothing, click the URL text once — it selects itself �
 4. ติ๊ก **Control audio via OBS** เพื่อให้คนดูได้ยินเสียงเอฟเฟกต์
 5. อย่าติ๊ก **Shutdown source when not visible** เพื่อให้ overlay ทำงานค้างไว้
 6. ถ้าอยากได้หน้าประกาศผู้ชนะ ให้เพิ่ม *Result* ด้วยวิธีเดียวกัน
-7. *Standings*, *Team list*, *Stats board*, *Head to head* และ *Team picks & bans*
+7. *Standings*, *Team list*, *Stats board*, *Head to head*, *Team picks & bans* และ *Team card* ทั้งสองอัน
    ก๊อปด้วยวิธีเดียวกัน พวกนี้ให้ติ๊ก
    **Refresh browser when scene becomes active** ด้วย จะได้เล่นอนิเมชันใหม่และได้ตัวเลขล่าสุดทุกครั้งที่ตัดเข้าซีน
 8. *Previous picks & bans* คือดราฟต์ของเกมก่อนหน้าในซีรีส์ พิคกับแบนอยู่ในกระดานเดียวกัน
@@ -504,6 +504,39 @@ each team has played in the event, and the line under it says so; it is not a sc
 เหมาะกับรอบแรก หรือคู่ไหนก็ตามที่ยังไม่เคยเจอกันมาก่อน เพราะ Head to head จะว่างเปล่า
 แต่กระดานนี้ยังมีข้อมูลขึ้น ตัวเลขตรงกลางคือจำนวนเกมที่แต่ละทีมลงเล่นในรายการนี้
 มีบรรทัดกำกับไว้ข้างล่างแล้ว ไม่ใช่สกอร์
+
+---
+
+## Team card on stream / การ์ดทีมบนจอ
+
+**EN**
+
+Add **Team card, blue side** and **Team card, red side** as Browser sources. Each shows one
+team: its series and game records with win rates, its record on each side, its last five
+series, the heroes it picks most with the win rate for each, the heroes opponents ban
+against it, and each player's favourite heroes.
+
+The cards follow the match on air: the blue card always shows whichever team is on blue right
+now, so when the teams swap sides after a game the two cards swap with them. While a
+tournament match is on air they count that tournament; otherwise every tournament.
+
+To pin one team, use `?team=<id>` instead of `?side=`, and add `&tournament=all` to count every
+tournament. Side records and player heroes only count drafts made on version 3.0.13 or later.
+A team typed in by hand on the Control Panel, rather than picked from the registry, has no card.
+
+**TH**
+
+เพิ่ม **Team card, blue side** และ **Team card, red side** เป็น Browser source แต่ละอันแสดง
+ทีมเดียว: ผลซีรีส์และเกมพร้อมอัตราชนะ ผลตอนเล่นแต่ละฝั่ง ผลซีรีส์ 5 คู่ล่าสุด ฮีโร่ที่หยิบ
+บ่อยที่สุดพร้อมอัตราชนะของแต่ละตัว ฮีโร่ที่คู่แข่งแบนใส่ และฮีโร่ที่ผู้เล่นแต่ละคนใช้บ่อย
+
+การ์ดตามคู่ที่ออกอากาศ: การ์ดฝั่งน้ำเงินจะแสดงทีมที่อยู่ฝั่งน้ำเงินตอนนี้เสมอ พอทีมสลับฝั่ง
+หลังจบเกม การ์ดสองอันก็สลับตาม ระหว่างที่คู่ในทัวร์นาเมนต์ออกอากาศ จะนับเฉพาะรายการนั้น
+ถ้าไม่มีคู่ออกอากาศ จะนับทุกรายการ
+
+ถ้าจะล็อกไว้ทีมเดียว ให้ใช้ `?team=<id>` แทน `?side=` และเติม `&tournament=all` ถ้าจะนับทุกรายการ
+สถิติฝั่งและฮีโร่ของผู้เล่นนับจากดราฟต์ตั้งแต่เวอร์ชัน 3.0.13 ทีมที่พิมพ์ชื่อเองบนหน้าคุมงาน
+โดยไม่ได้เลือกจากทะเบียนทีม จะไม่มีการ์ด
 
 ---
 

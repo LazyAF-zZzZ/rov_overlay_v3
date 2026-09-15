@@ -36,6 +36,33 @@ board, which all go through `orientationOf`, credit the right team exactly as th
 for a manual Switch Teams. Quick matches: `stepRound` swaps the two team objects on every step,
 and `restoreRound` places a filed draft by team name. Tested in `tests/side-swap.test.ts`.
 
+**3.1.1: team card graphic** (user's request, 2026-09-15).
+`/overlay-team-card` shows one team for the break before a match: logo and name, five tiles
+(series, games, on blue, on red, last five series), most picked heroes with win rates, heroes
+banned against them, and each player's favourite heroes. Data is `GET /api/team-card`, which
+wraps `teamStats.forTeam`, the same numbers as the team page's Statistics tab. **It follows a
+side, not a team** (`?side=blue|red`, read from `state.team*.logo.src`, the registry id that
+`goLive` and `loadTeamIntoSide` put there), because teams swap sides every game; the page reloads
+when the id on its side changes in `stateUpdate`, never on every state push. `?team=<id>` pins a
+team; `?tournament=<id>|all`, default the on-air match's tournament. A typed-in side or an unusable
+`?team=` is a 404 and the page clears the old card rather than leaving it under the message. It
+reuses `overlay-matchup.css` for panels, entrance and 1440p scaling, plus `overlay-team-card.css`.
+Two OBS list rows (blue, red) in both lists. Tested in `tests/team-card.test.ts`.
+
+**3.1.1 also: two overlay fixes** (user's request, 2026-09-15, found by
+photographing every overlay against the 5 × 32 test data). **Head to head and Team picks & bans
+coloured the teams by bracket side, not screen side:** following the match on air they took team A
+as blue, so since sides swap every game (3.0.11) every even game, and any game after Switch Teams,
+had the colours backwards against the main overlay. `liveTeamsOnScreen()` in `live-match.ts` returns
+the on-air pair ordered by `isDisplaySwapped` (the same check draft capture uses) and both endpoints
+use it; a test asserts the team card, `/api/matchup` and `/api/team-drafts` agree with
+`state.teamBlue` in games 1 and 2. **Standings was unreadable for big tables:** `fitToStage` shrank
+the whole board with `transform`, so width shrank too and a 32-team knockout became a narrow strip.
+It now steps a `--st-font` variable down from 34px to the largest size that fits, and only then
+shrinks; a lone group of more than 12 rows splits into two side-by-side tables with ranks
+continuing; a format without groups is labelled "All teams", not "Group main". Checked in the
+Browser pane: 32 teams at 20px in two tables, four groups of four at 31px, neither transformed.
+
 **3.1.0: hotkeys on by default, with the score and the rounds** (user's request,
 2026-09-15). Six new `GLOBAL_HOTKEY_ACTIONS`: `bluePlus` / `redPlus` (Ctrl+Alt+1 / 2), `blueMinus`
 / `redMinus` (Ctrl+Alt+Q / W), `prevRound` / `nextRound` (Ctrl+Alt+A / S): **a 2×3 block under the
@@ -396,6 +423,12 @@ docs/v2/            v2's plan, guide and notes, for reference
 
 - **Do not run anything in `../rov_pickban_overlay`.** Its `npm start` rebuilds its
   `build/` and opens its `data/tournament.db`.
+- **The Browser pane's `preview_start` by name runs v2.** It reads `.claude/launch.json` from the
+  workspace root (the parent folder), whose only entry starts `rov_pickban_overlay`, not from
+  `rov_overlay_v3/.claude/`. On 2026-09-15 asking for a v3 preview entry started v2 on port 3000
+  instead; it was stopped within a minute (v2's `build/` rebuilt from unchanged source, only
+  `data/tournament.db-shm` touched, no data written). To look at an overlay, open the URL of a
+  server that is already running; never start one by name here.
 - **To UI Automation, a window with an Owner is not a top-level window.** The confirm
   dialog (`Owner` = the main window) is listed *underneath* the main window, not among the
   desktop's children. Searching the desktop's children for it finds nothing, which reads

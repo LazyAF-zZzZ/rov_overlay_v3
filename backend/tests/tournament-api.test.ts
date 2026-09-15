@@ -482,7 +482,8 @@ test('the graphics that draw heroes load the shared art helper first', async () 
     '/overlay-analytics': 'overlay-analytics.js',
     '/overlay-prev': 'overlay-prev.js',
     '/overlay-matchup': 'overlay-matchup.js',
-    '/overlay-team-drafts': 'overlay-team-drafts.js'
+    '/overlay-team-drafts': 'overlay-team-drafts.js',
+    '/overlay-team-card': 'overlay-team-card.js'
   };
 
   for (const [url, own] of Object.entries(pages)) {
@@ -540,6 +541,7 @@ test('the shared overlay helpers have exactly one home', async () => {
     '/overlay-prev': 'overlay-prev.js',
     '/overlay-standings': 'overlay-standings.js',
     '/overlay-team-drafts': 'overlay-team-drafts.js',
+    '/overlay-team-card': 'overlay-team-card.js',
     '/overlay-teams': 'overlay-teams.js'
   };
 

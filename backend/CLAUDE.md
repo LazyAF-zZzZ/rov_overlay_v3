@@ -74,8 +74,8 @@ theme is black, white and gold: gold marks *what is happening now* (current page
 action, focused field, the match on air) and nothing else, blue and red mean *team sides*
 (red also means destructive), and there is no green or purple to reach for. **Never link
 `theme.css` from a broadcast graphic** — `result` and every `/overlay*` route (there are
-nine: `overlay`, `overlay-1440`, `overlay-teams`, `overlay-analytics`, `overlay-standings`,
-`overlay-matchup`, `overlay-team-drafts`, `overlay-prev`, plus `result`). Those are graphics
+ten: `overlay`, `overlay-1440`, `overlay-teams`, `overlay-analytics`, `overlay-standings`,
+`overlay-matchup`, `overlay-team-drafts`, `overlay-team-card`, `overlay-prev`, plus `result`). Those are graphics
 the user themes from the Design page, and operator styling must not be able to change what
 viewers see mid-match. Do not maintain that list by hand when writing a check: the test in
 `tournament-api.test.ts` derives it from `PAGES` by prefix, precisely because a hand-written
