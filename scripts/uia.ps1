@@ -140,6 +140,22 @@ switch ($Action) {
         [RovShot]::Save([IntPtr]$dialog.Current.NativeWindowHandle, $Out)
         "captured dialog $Out"
     }
+    'click-checkbox' {
+        # Toggle the checkbox whose label is -Text. A CheckBox is not a Button, so it has
+        # no Invoke pattern: it is flipped through its Toggle pattern instead.
+        $element = Wait-For {
+            $main = Get-MainWindow
+            if (-not $main) { return $null }
+            $walker = [System.Windows.Automation.TreeWalker]::ControlViewWalker
+            $hit = Find-Named $main $Text
+            while ($null -ne $hit -and $hit.Current.ControlType -ne [System.Windows.Automation.ControlType]::CheckBox) {
+                $hit = $walker.GetParent($hit)
+            }
+            return $hit
+        } "a checkbox labelled '$Text'"
+        $element.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern).Toggle()
+        "toggled '$Text'"
+    }
     'has-text' {
         # Any element in the main window whose name (the text a TextBlock shows) contains -Text.
         $null = Wait-For {

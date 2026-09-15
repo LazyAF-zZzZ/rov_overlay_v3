@@ -25,7 +25,16 @@ buttons and their confirmation are gone (user's request). The winner is counted
 from the score: a **+1** beside each team's score ends the game for that side through the same
 `POST /api/live-match/finish`, which now also returns `seriesWinner` and `score`, and the
 SERIES OVER bar names the winner ("PSG Esports win the series 2–1"). Typing in the score box
-still only corrects the number. 3.0.8 carries the flow and UI work: one-press GAME OVER with SERIES
+still only corrects the number.
+
+**On `main`, not yet released: teams swap sides every game** (user's request, 2026-09-15),
+on by default, switchable beside ROUND (`state.swapSidesEachRound`, carried over like `sfx`;
+socket `setSwapSides`). Tournament games: `goLive` puts team B on blue for even game numbers
+and flips the restored draft and the series score to match. **The frozen game copy is not
+changed** - it still says team A = blue - so draft capture, score sync and the previous-rounds
+board, which all go through `orientationOf`, credit the right team exactly as they already did
+for a manual Switch Teams. Quick matches: `stepRound` swaps the two team objects on every step,
+and `restoreRound` places a filed draft by team name. Tested in `tests/side-swap.test.ts`. 3.0.8 carries the flow and UI work: one-press GAME OVER with SERIES
 OVER and Put on air (`POST /api/live-match/finish`), a Control Panel whose team setup and sound
 fold away, and a Home that shows what is on air and what is ready to play
 (`GET /api/ready-matches`). It was smoke-tested for real before packing. Its notice

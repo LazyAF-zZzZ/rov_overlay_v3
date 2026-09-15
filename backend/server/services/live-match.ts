@@ -21,7 +21,7 @@ import type { GameSlot } from '../store/games';
 import type { Match } from '../store/matches';
 import { seriesWinner, PLAYOFF_BRACKET } from '../domain/bracket';
 import { FIRST_ROUND, MAX_ROUND_NUMBER } from '../domain/rounds';
-import { boardToRound, clearBoard, fileRound, restoreRound, roundsBefore, takeRound } from './rounds';
+import { boardToRound, clearBoard, fileRound, restoreRound, roundsBefore, swapTeamSides, takeRound } from './rounds';
 import { pushOverlayScoreToMatch } from './series';
 import { clampNumber } from '../lib/sanitize';
 
@@ -49,9 +49,12 @@ export type LoadTeamResult =
 // ใส่ชื่อฮีโร่ดิบๆ ไม่ผ่าน sanitizeHero ตั้งใจ
 // ถ้าวันหลังมีการเปลี่ยนชื่อไฟล์ภาพฮีโร่ การกรองซ้ำจะทำให้ pick เก่ากลายเป็นว่าง
 // ปล่อยชื่อเดิมไว้แล้วภาพหาย ยังดีกว่าดราฟต์ที่เคยมีอยู่หายไปเงียบๆ
-function restoreDraft(state: GameState, slots: readonly GameSlot[]): void {
+//
+// swapped: จอแสดงทีม B เป็นน้ำเงิน ส่วนช่องที่บันทึกไว้ยังนับฝั่งตามสำเนาแช่แข็ง (ทีม A = น้ำเงิน)
+// ต้องพลิกกลับ ไม่งั้นดราฟต์ของทีมหนึ่งจะไปขึ้นใต้ชื่ออีกทีม
+function restoreDraft(state: GameState, slots: readonly GameSlot[], swapped = false): void {
   slots.forEach((slot) => {
-    const team = slot.side === 'blue' ? state.teamBlue : state.teamRed;
+    const team = (slot.side === 'blue') !== swapped ? state.teamBlue : state.teamRed;
     const list = slot.kind === 'pick' ? team.picks : team.bans;
     if (slot.idx >= 0 && slot.idx < list.length) list[slot.idx] = slot.hero;
   });
@@ -171,36 +174,47 @@ export function goLive(matchId: string, wantedGameNo?: number): GoLiveResult {
   // เปลี่ยนแมตช์ = เปลี่ยนข้อมูลแมตช์ ไม่ใช่ล้างการตั้งค่าเครื่องมือ
   stopDraftTimer();
   const previous = getState();
+
+  // สลับฝั่งทุกเกม: เกมคู่ให้ทีม B ขึ้นน้ำเงิน
+  //
+  // สลับแค่บนจอ ไม่แตะสำเนาแช่แข็งของเกม (ยังเป็นทีม A = น้ำเงินเสมอ)
+  // ทุกที่ที่แปลงระหว่างจอกับฐานถาม orientationOf อยู่แล้ว ตัวบันทึกดราฟต์ การซิงก์คะแนน
+  // และกระดานรอบก่อนหน้าจึงนับถูกทีมเองโดยไม่ต้องแก้ เหมือนตอนกดสลับฝั่งเอง
+  // คิดจากเลขเกม ไม่ใช่สลับทีละครั้ง เดินกลับไปเกมไหนก็ได้ฝั่งเดิมของเกมนั้นเสมอ
+  const swapSides = previous.swapSidesEachRound !== false && gameNo % 2 === 0;
+  const onBlue = swapSides ? red : blue;
+  const onRed = swapSides ? blue : red;
+
   const next = sanitizeState({
     ...deepClone(defaultState),
     teamBlue: {
       ...deepClone(defaultState.teamBlue),
-      name: blue.name,
+      name: onBlue.name,
       // โลโก้ของทีมในทะเบียนอยู่ไฟล์ <teamId>.<ext> ไม่ใช่ blue-team.<ext>
       // ต้องบอก src ไปด้วย ไม่งั้น overlay จะไปเปิดไฟล์ของช่องน้ำเงินที่ค้างอยู่
       // ซึ่งเป็นภาพของทีมอื่นที่เคยอัปโหลดไว้ ไม่ใช่ของทีมที่กำลังแข่ง
-      logo: { ...blue.logo, src: blue.id },
-      players: blue.players.map((p, i) => p.name || `Player ${i + 1}`),
-      positions: blue.players.map((p) => p.position)
+      logo: { ...onBlue.logo, src: onBlue.id },
+      players: onBlue.players.map((p, i) => p.name || `Player ${i + 1}`),
+      positions: onBlue.players.map((p) => p.position)
     },
     teamRed: {
       ...deepClone(defaultState.teamRed),
-      name: red.name,
-      logo: { ...red.logo, src: red.id },
-      players: red.players.map((p, i) => p.name || `Player ${i + 1}`),
-      positions: red.players.map((p) => p.position)
+      name: onRed.name,
+      logo: { ...onRed.logo, src: onRed.id },
+      players: onRed.players.map((p, i) => p.name || `Player ${i + 1}`),
+      positions: onRed.players.map((p) => p.position)
     },
     // คะแนนซีรีส์ ไม่ใช่คะแนนในเกม overlay จะได้โชว์สถานะซีรีส์ถูก
     matchInfo: {
-      title: `${blue.name} VS ${red.name} : GAME ${gameNo} [BO${match.bestOf}]`,
+      title: `${onBlue.name} VS ${onRed.name} : GAME ${gameNo} [BO${match.bestOf}]`,
       tournament: tournament?.name || ''
     },
     // รอบของแมตช์ในทัวร์นาเมนต์ไม่ใช่ตัวนับอิสระ มันคือเลขเกมของซีรีส์ตัวเดียวกัน
     // ที่คะแนนใช้อยู่ ใช้ค่าเดียวกันไปเลยจึงไม่มีทางหลุดจากกันได้
     round: gameNo
   });
-  next.teamBlue.score = match.scoreA;
-  next.teamRed.score = match.scoreB;
+  next.teamBlue.score = swapSides ? match.scoreB : match.scoreA;
+  next.teamRed.score = swapSides ? match.scoreA : match.scoreB;
 
   // ดราฟต์ของรอบก่อนหน้าอ่านจากฐาน ไม่ใช่จาก state ก้อนเดิม
   //
@@ -214,7 +228,7 @@ export function goLive(matchId: string, wantedGameNo?: number): GoLiveResult {
   // ห้ามข้ามขั้นตอนนี้เด็ดขาด: ตัวบันทึกเกาะอยู่กับ emitState
   // ถ้าเปิดแมตช์เดิมแล้วขึ้นจอเป็นดราฟต์ว่าง emit ครั้งถัดไปจะเขียนความว่าง
   // ทับดราฟต์ที่เก็บไว้ทันที = เปิดดูเฉยๆ แล้วข้อมูลหาย
-  restoreDraft(next, game.slots);
+  restoreDraft(next, game.slots, swapSides);
 
   setState(carryOverSettings(next, previous));
   syncSecondsFromState();
@@ -286,6 +300,10 @@ export function stepRound(delta: number): StepRoundResult {
   // เก็บกระดานที่กำลังจะออกจากจอไว้ก่อนเสมอ ไม่ว่าจะเดินหน้าหรือถอยหลัง
   // เดินเลยไปแล้วกดกลับมาคือการแก้ที่กดผิด ไม่ใช่การขอให้ลบงานที่เพิ่งทำ
   state.rounds = fileRound(state.rounds, boardToRound(state, current));
+
+  // สลับฝั่งทุกรอบ ทำหลังเก็บกระดานเสมอ รอบที่เก็บไว้จึงจำชื่อทีมตามฝั่งที่เล่นจริง
+  // เดินทีละหนึ่งรอบเท่านั้น การสลับทุกครั้งจึงเท่ากับคิดจากเลขรอบคี่คู่
+  if (state.swapSidesEachRound !== false) swapTeamSides(state);
 
   const saved = takeRound(state.rounds, target);
   if (saved) restoreRound(state, saved);

@@ -46,6 +46,22 @@ export function clearBoard(state: GameState): void {
   state.teamBlue.bans = Array.from({ length: BAN_COUNT }, () => null);
   state.teamRed.picks = Array.from({ length: PICK_COUNT }, () => null);
   state.teamRed.bans = Array.from({ length: BAN_COUNT }, () => null);
+  clearPending(state);
+}
+
+// ธง "เลือกแล้วแต่ยังไม่ยืนยัน" เป็นของดราฟต์ในรอบนั้น ไม่ใช่ของทีม
+// ตอนสลับฝั่งทั้งก้อน ธงติดไปกับทีม ถ้าไม่ล้าง ช่องในรอบใหม่จะขึ้นขาวดำทั้งที่ยืนยันไปแล้ว
+function clearPending(state: GameState): void {
+  state.teamBlue.picksPending = Array.from({ length: PICK_COUNT }, () => false);
+  state.teamRed.picksPending = Array.from({ length: PICK_COUNT }, () => false);
+}
+
+// สลับทีมทั้งสองฝั่งบนจอทั้งก้อน: ชื่อ คะแนน โลโก้ ผู้เล่น ตำแหน่ง
+// ใช้กับแมตช์เดี่ยวตอนเดินรอบ (แมตช์ทัวร์นาเมนต์สลับใน goLive จากเลขเกม)
+export function swapTeamSides(state: GameState): void {
+  const blue = state.teamBlue;
+  state.teamBlue = state.teamRed;
+  state.teamRed = blue;
 }
 
 function emptySide(name: string): RoundSide {
@@ -110,11 +126,21 @@ export function fileRound(rounds: RoundRecord[], record: RoundRecord): RoundReco
 }
 
 // รอบที่เก็บไว้ตัวหนึ่ง กลับขึ้นกระดาน
+//
+// วางดราฟต์ตามชื่อทีม ไม่ใช่ตามฝั่งที่เก็บไว้ ถ้าตอนนี้ทั้งสองทีมอยู่สลับฝั่งกับตอนเก็บ
+// (กดสลับฝั่งเอง หรือเปิด-ปิดการสลับฝั่งทุกเกมระหว่างทาง) ดราฟต์ต้องตามทีมของมันไป
 export function restoreRound(state: GameState, record: RoundRecord): void {
-  state.teamBlue.picks = [...record.blue.picks];
-  state.teamBlue.bans = [...record.blue.bans];
-  state.teamRed.picks = [...record.red.picks];
-  state.teamRed.bans = [...record.red.bans];
+  const flip = record.blue.name !== record.red.name
+    && record.blue.name === state.teamRed.name
+    && record.red.name === state.teamBlue.name;
+  const blue = flip ? record.red : record.blue;
+  const red = flip ? record.blue : record.red;
+
+  state.teamBlue.picks = [...blue.picks];
+  state.teamBlue.bans = [...blue.bans];
+  state.teamRed.picks = [...red.picks];
+  state.teamRed.bans = [...red.bans];
+  clearPending(state);
 }
 
 export function takeRound(rounds: RoundRecord[], round: number): RoundRecord | null {

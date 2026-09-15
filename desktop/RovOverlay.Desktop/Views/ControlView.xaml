@@ -422,6 +422,9 @@
                                             Command="{Binding StepRoundCommand}" CommandParameter="1" ToolTip="{svc:T Control.NextRoundTip}"/>
                                     <TextBlock Text="{Binding RoundNote}" FontSize="10" Foreground="{StaticResource MutedBrush}"
                                                VerticalAlignment="Center" Margin="6,0,8,0"/>
+                                    <Rectangle Width="1" Margin="2,5,10,5" Fill="{StaticResource BorderBrush}"/>
+                                    <CheckBox Content="{svc:T Flow.SwapSides}" IsChecked="{Binding SwapSidesEachRound, Mode=TwoWay}"
+                                              ToolTip="{svc:T Flow.SwapSidesTip}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                 </StackPanel>
                             </Border>
 

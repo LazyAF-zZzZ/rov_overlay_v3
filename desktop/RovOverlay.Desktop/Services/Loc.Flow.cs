@@ -18,6 +18,8 @@ public sealed partial class Loc
         ["Flow.Err.SeriesOver"] = "This series is already over.",
         ["Flow.Err.RoundLimit"] = "There are no more rounds.",
         ["Flow.Err.NotRecorded"] = "The point could not be recorded for this match, so nothing was changed. Check the score boxes.",
+        ["Flow.SwapSides"] = "Swap sides each game",
+        ["Flow.SwapSidesTip"] = "When the round changes, the two teams swap sides: team A is blue in games 1, 3 and 5, and red in games 2 and 4. Each team keeps its own score and draft. Switch this off if the teams choose their own side.",
         ["Flow.TeamSetup"] = "Team setup",
         ["Flow.TeamSetupTip"] = "Names, logos, nicknames and lanes. Folds away by itself when the draft starts, so the picks have the room.",
 
@@ -45,6 +47,8 @@ public sealed partial class Loc
         ["Flow.Err.SeriesOver"] = "ซีรีส์นี้จบไปแล้ว",
         ["Flow.Err.RoundLimit"] = "ไม่มีรอบถัดไปแล้ว",
         ["Flow.Err.NotRecorded"] = "บันทึกแต้มลงแมตช์นี้ไม่สำเร็จ จึงไม่มีอะไรเปลี่ยน ลองดูช่องคะแนนอีกครั้ง",
+        ["Flow.SwapSides"] = "สลับฝั่งทุกเกม",
+        ["Flow.SwapSidesTip"] = "เมื่อเปลี่ยนรอบ สองทีมจะสลับฝั่งกันเอง ทีม A อยู่ฝั่งน้ำเงินในเกมที่ 1, 3, 5 และฝั่งแดงในเกมที่ 2, 4 แต้มและดราฟต์ของแต่ละทีมตามทีมไปด้วย ปิดไว้ถ้าให้ทีมเลือกฝั่งเอง",
         ["Flow.TeamSetup"] = "ตั้งค่าทีม",
         ["Flow.TeamSetupTip"] = "ชื่อทีม โลโก้ ชื่อผู้เล่น และเลน พับเก็บเองเมื่อเริ่มดราฟต์ ช่องพิคจะได้มีที่",
 

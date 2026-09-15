@@ -47,6 +47,9 @@ function setupMatch(bestOf = 5) {
   tournaments.addTeam(tournament.id, blue.id, 0);
   tournaments.addTeam(tournament.id, red.id, 1);
   const drawn = must(matches.generate(tournament.id).matches);
+  // ไฟล์นี้เฝ้าการเดินรอบกับการเก็บดราฟต์ ไม่ใช่การสลับฝั่งทุกเกม (อยู่ใน side-swap.test.ts)
+  // ปิดไว้ ฝั่งจะได้ไม่ขยับระหว่างรอบ และข้อที่ทดสอบอยู่อ่านตรงไปตรงมา
+  liveState.getState().swapSidesEachRound = false;
   return { tournament, blue, red, match: must(drawn[0]) };
 }
 
@@ -142,7 +145,8 @@ function quickMatch() {
   getStores().liveMatch.clear();
   liveState.setState(sanitizeState({
     teamBlue: { name: 'ALPHA' },
-    teamRed: { name: 'BRAVO' }
+    teamRed: { name: 'BRAVO' },
+    swapSidesEachRound: false      // ดูเหตุผลใน setupMatch
   }));
 }
 

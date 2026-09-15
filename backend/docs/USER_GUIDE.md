@@ -104,6 +104,12 @@ the next match that is ready to play and a **Put on air** button, so the
 next match goes on air without a trip to the bracket. **HOME** shows the same thing from the
 other side: what is on air now, and the matches ready to play, with the tournament on air first.
 
+**The teams swap sides every game.** When the round changes, the two teams trade places: the
+team drawn first is blue in games 1, 3 and 5 and red in games 2 and 4. Names, logos, players,
+score and each team's draft all move with the team, and the recorded drafts and statistics
+stay with the right team. Going back a round puts that game's sides back. If the teams choose
+their own side, untick **Swap sides each game** beside ROUND.
+
 **ROUND**, at the right of the draft panel, is which game of the series you are on. `+1`
 moves it on for you; `>` does the same without touching the score: the draft on the board is
 filed away as that round and the board starts clean.
@@ -139,6 +145,10 @@ Bottom buttons: **UNDO** (last change), **SWITCH TEAMS** (swap sides), **CLEAR P
 ในทัวร์นาเมนต์ เมื่อบันทึกเกมที่ตัดสินซีรีส์ แผงจะขึ้นว่า **ซีรีส์จบแล้ว** พร้อมบอกว่าใครชนะและสกอร์ (เช่น *PSG Esports ชนะซีรีส์ 2–1*) คู่ถัดไปที่พร้อมเล่นและปุ่ม **ขึ้นจอ**
 เอาคู่ถัดไปขึ้นจอได้เลยโดยไม่ต้องกลับไปที่สายการแข่ง **หน้าแรก** ก็แสดงเรื่องเดียวกันจากอีกฝั่ง
 คือคู่ที่กำลังออกอากาศ และคู่ที่พร้อมเล่น โดยรายการที่กำลังออกอากาศขึ้นก่อน
+
+**สองทีมสลับฝั่งกันทุกเกม** เมื่อเปลี่ยนรอบ ทีมจะสลับที่กันเอง ทีมที่ถูกจับสายเป็นทีมแรกอยู่ฝั่งน้ำเงินในเกมที่ 1, 3, 5
+และฝั่งแดงในเกมที่ 2, 4 ชื่อ โลโก้ ผู้เล่น คะแนน และดราฟต์ของแต่ละทีมย้ายตามทีมไป ดราฟต์ที่บันทึกไว้และสถิติยังเป็นของทีมที่ถูกต้อง
+ย้อนรอบกลับ ฝั่งของเกมนั้นก็กลับมาด้วย ถ้าให้ทีมเลือกฝั่งเอง ให้เอาติ๊ก **สลับฝั่งทุกเกม** ข้าง ROUND ออก
 
 **ROUND** ที่มุมขวาของแผงดราฟต์ คือเกมที่เท่าไหร่ของซีรีส์ ปุ่ม `+1` เดินรอบให้เอง ส่วน `>` ทำแบบเดียวกันแต่ไม่แตะคะแนน ดราฟต์ที่อยู่บนกระดานจะถูกเก็บเป็นรอบนั้น
 แล้วกระดานเริ่มใหม่ กด `<` เพื่อถอยกลับ ดราฟต์ของรอบก่อนจะกลับขึ้นมา กดผิดจึงไม่เสียอะไร รอบที่เก็บไว้เหล่านี้คือสิ่งที่ซอร์ส

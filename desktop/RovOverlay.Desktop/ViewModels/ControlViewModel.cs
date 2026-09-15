@@ -190,6 +190,18 @@ public sealed class ControlViewModel : ObservableObject
     public bool CanPrevRound => (_state?.Round ?? 1) > 1;
     public string? RoundNote => _state is { RoundsOnBoard: > 0 } s ? Loc.F("Control.RoundsOnBoard", s.RoundsOnBoard) : null;
 
+    // Teams swap sides every game. The server does the swapping when the round changes;
+    // this only switches it on or off, and the setting rides along in the overlay state.
+    public bool SwapSidesEachRound
+    {
+        get => _state?.SwapSides != false;
+        set
+        {
+            if (value == SwapSidesEachRound) return;
+            Emit("setSwapSides", new { enabled = value });
+        }
+    }
+
     // ---- game over --------------------------------------------------------
 
     public bool SeriesOver { get => _seriesOver; private set => Set(ref _seriesOver, value); }
@@ -488,7 +500,7 @@ public sealed class ControlViewModel : ObservableObject
                  {
                      nameof(PhaseLabel), nameof(TimerText), nameof(IsUrgent), nameof(PhaseIndexText), nameof(IsRunning),
                      nameof(PauseResumeText), nameof(StatusText), nameof(RoundText), nameof(CanPrevRound), nameof(RoundNote),
-                     nameof(Is1080), nameof(Is1440), nameof(BannerOn)
+                     nameof(SwapSidesEachRound), nameof(Is1080), nameof(Is1440), nameof(BannerOn)
                  })
             OnPropertyChanged(name);
 

@@ -341,6 +341,14 @@ export function registerHandlers(socket: Socket): void {
     emitState();
   });
 
+  // สลับฝั่งทุกเกม เปิด/ปิด ผู้ใช้ขอให้สลับเอง แต่รายการที่ให้ทีมเลือกฝั่งต้องปิดได้
+  // ไม่ส่งค่ามา = สลับสถานะ เหมือน setOverlayVisible
+  controlEvent(socket, 'setSwapSides', ({ enabled }) => {
+    const state = getState();
+    state.swapSidesEachRound = typeof enabled === 'boolean' ? enabled : !state.swapSidesEachRound;
+    emitState();
+  });
+
   controlEvent(socket, 'updateMatchInfo', (data) => {
     const state = getState();
     state.matchInfo = {

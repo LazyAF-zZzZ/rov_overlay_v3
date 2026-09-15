@@ -73,13 +73,16 @@ test('finishing a game records the point and the winner, keeps the draft, and pu
   assert.strictEqual(out.result.round, 2);
   assert.strictEqual(out.result.seriesOver, false);
   assert.strictEqual(out.result.seriesWinner, null, 'one game of a Bo3 decides nothing');
-  assert.deepStrictEqual(out.result.score, { blue: 1, red: 0 });
+  // คะแนนตามจอหลังเดินรอบแล้ว เกมที่ 2 สลับฝั่ง แต้มของทีม A จึงอยู่ฝั่งแดง
+  assert.deepStrictEqual(out.result.score, { blue: 0, red: 1 });
   assert.strictEqual(out.result.nextMatch, null);
   assert.strictEqual(out.result.live.gameNo, 2, 'game 2 is on air');
 
   const now = liveState.getState();
-  assert.ok(!now.teamBlue.picks[0], 'the board is clean for game 2');
-  assert.strictEqual(now.teamBlue.score, 1, 'and the series score is on screen');
+  assert.ok(!now.teamBlue.picks[0] && !now.teamRed.picks[0], 'the board is clean for game 2');
+  // เกมที่ 2 สลับฝั่ง: ทีม A ที่เพิ่งได้แต้มย้ายไปฝั่งแดง และแต้มของมันต้องไปด้วย
+  assert.strictEqual(now.teamRed.logo.src, first.teamAId, 'team A moved to red for game 2');
+  assert.strictEqual(now.teamRed.score, 1, 'and its series point went with it');
 });
 
 test('a game whose result was already typed in is not counted a second time', () => {
@@ -100,12 +103,13 @@ test('the deciding game ends the series: no game 3, and the other semifinal is o
   live.goLive(first.id);
 
   must(live.finishGame('blue').result);
-  const out = live.finishGame('blue');
+  // เกมที่ 2 สลับฝั่ง ทีม A อยู่แดงแล้ว ชนะอีกเกมจึงเป็นแต้มของฝั่งแดง
+  const out = live.finishGame('red');
   assert.ok(out.result, out.error ?? 'second finish failed');
 
   assert.strictEqual(out.result.seriesOver, true);
-  assert.strictEqual(out.result.seriesWinner, liveState.getState().teamBlue.name, 'the side that scored the last point wins the series');
-  assert.deepStrictEqual(out.result.score, { blue: 2, red: 0 });
+  assert.strictEqual(out.result.seriesWinner, liveState.getState().teamRed.name, 'the side that scored the last point wins the series');
+  assert.deepStrictEqual(out.result.score, { blue: 0, red: 2 });
   assert.strictEqual(out.result.round, 2, 'still showing the last game played');
   assert.strictEqual(getStores().games.forMatch(first.id).length, 2, 'no empty game 3 row');
   assert.strictEqual(must(getStores().matches.get(first.id)).status, 'complete');
@@ -136,7 +140,11 @@ test('a quick match adds the point and files the draft as a previous round', () 
   const state = liveState.getState();
   state.round = 1;
   state.rounds = [];
+  state.teamBlue.name = 'ALPHA';
+  state.teamRed.name = 'BRAVO';
+  state.teamBlue.score = 0;
   state.teamRed.score = 0;
+  state.swapSidesEachRound = true;
   state.teamRed.bans[0] = must(HERO_B);
   liveState.emitState();
 
@@ -144,7 +152,8 @@ test('a quick match adds the point and files the draft as a previous round', () 
   assert.ok(out.result, out.error ?? 'quick finish failed');
 
   const now = liveState.getState();
-  assert.strictEqual(now.teamRed.score, 1);
+  assert.strictEqual(now.teamBlue.name, 'BRAVO', 'the next round swaps sides');
+  assert.strictEqual(now.teamBlue.score, 1, 'and BRAVO carries the point it just won');
   assert.strictEqual(now.round, 2);
   assert.strictEqual(now.rounds.length, 1, 'the draft was filed as round 1');
   assert.ok(!now.teamRed.bans[0], 'and the board is clean');

@@ -89,6 +89,11 @@ export interface GameState {
   round: number;
   // ดราฟต์ของรอบที่ผ่านมาแล้ว เรียงจากรอบน้อยไปมาก ไม่รวมรอบปัจจุบัน
   rounds: RoundRecord[];
+  // สลับฝั่งทุกเกม: เกมคี่ทีม A อยู่น้ำเงิน เกมคู่ทีม B อยู่น้ำเงิน (ผู้ใช้ขอมา 2026-09-15)
+  //
+  // เป็นการตั้งค่าเครื่องมือ ไม่ใช่ข้อมูลของแมตช์ จึงอยู่ใน CARRIED_OVER_KEYS
+  // ปิดได้สำหรับรายการที่ให้ทีมเลือกฝั่งเอง
+  swapSidesEachRound: boolean;
 }
 
 export interface SlotOwner {
@@ -151,7 +156,8 @@ export const defaultState: GameState = {
     tournament: 'ROV Tournament'
   },
   round: FIRST_ROUND,
-  rounds: []
+  rounds: [],
+  swapSidesEachRound: true
 };
 
 export function isTeamKey(team: unknown): team is TeamKey {
@@ -308,6 +314,8 @@ export function sanitizeState(state: unknown): GameState {
       tournament: sanitizeText(matchInfo.tournament, 50) || defaultState.matchInfo.tournament
     },
     round: sanitizeRoundNumber(source.round ?? FIRST_ROUND),
-    rounds: sanitizeRounds(source.rounds)
+    rounds: sanitizeRounds(source.rounds),
+    // เปิดไว้ถ้าไม่ได้บอกว่าปิด ไฟล์ state รุ่นเก่าที่ไม่มีคีย์นี้จึงได้ค่าเริ่มต้นเอง
+    swapSidesEachRound: source.swapSidesEachRound !== false
   });
 }

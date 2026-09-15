@@ -25,6 +25,8 @@ public sealed class ControlState
     public bool OverlayVisible { get; private init; } = true;
     public int Round { get; private init; } = 1;
     public int RoundsOnBoard { get; private init; }
+    // Teams swap sides every game. On unless the state says otherwise.
+    public bool SwapSides { get; private init; } = true;
     public IReadOnlyDictionary<string, double> Sfx { get; private init; } = new Dictionary<string, double>();
     public IReadOnlyDictionary<string, HotkeyBinding> Hotkeys { get; private init; } = new Dictionary<string, HotkeyBinding>();
 
@@ -51,6 +53,7 @@ public sealed class ControlState
             OverlayVisible = J.Bool(node["overlayVisible"]) != false,
             Round = round,
             RoundsOnBoard = rounds?.Count(r => J.Int(r?["round"], 0) is var n && n > 0 && n < round) ?? 0,
+            SwapSides = J.Bool(node["swapSidesEachRound"]) != false,
             Sfx = ReadLevels(node["sfx"]),
             Hotkeys = ReadHotkeys(node["hotkeys"])
         };
