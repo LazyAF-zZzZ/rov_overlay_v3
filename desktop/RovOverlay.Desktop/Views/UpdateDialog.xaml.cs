@@ -10,7 +10,9 @@ namespace RovOverlay.Desktop.Views;
 //
 // Asking is the point. Putting an update in takes the app down and back up, which means
 // the overlays leave the air for a few seconds; doing that unannounced to someone who is
-// mid-draft would be indefensible. Later is a real answer: it goes in at the next close.
+// mid-draft would be indefensible. Later is a real answer, and a permanent one until the
+// operator changes their mind: nothing installs on close or on start any more, and the
+// version number in the title bar brings this dialog back.
 public partial class UpdateDialog : Window
 {
     public UpdateDialog(string version, string? notes)

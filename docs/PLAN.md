@@ -166,9 +166,14 @@ at the same time on it.
   feed would need every user to hold a token. `pack.ps1 -Publish` uploads; without that
   switch nothing reaches anyone.
 - Checked on start and every six hours, downloaded in the background. The operator is
-  told it is ready and **the app never restarts itself**:
-  `WaitExitThenApplyUpdates(restart: false)` puts it in when they close the app. Someone
-  may be live on air.
+  told it is ready and **nothing is installed until they press "Update now"** (the popup,
+  or the version number in the title bar). Until 3.0.8 it also went in by itself when the
+  app closed; **the user asked for that to be removed on 2026-09-15**. Two switches carry
+  it: `ApplyOnExit` is gone, and `VelopackApp.Build().SetAutoApplyOnStartup(false)` in
+  `Program.cs`, because Velopack otherwise applies a downloaded update on the next start by
+  default - removing only the on-close install would have moved it to startup.
+  Copies at 3.0.8 or older still install on close, including when the release that removes
+  it reaches them.
 - Channels `stable` and `beta`, chosen in Settings and read fresh on every check.
 - Only an installed copy can update. A portable copy, or a build from the repo, says so
   in Settings instead of pretending to check.

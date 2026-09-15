@@ -7,10 +7,14 @@ namespace RovOverlay.Desktop.Services;
 
 // Auto-update, sitting in front of Velopack.
 //
-// One rule shapes this whole file: the operator may be live on air. So the app never
-// restarts itself, never steals focus and never opens a window of its own. A new
+// One rule shapes this whole file: the operator decides when an update goes in. A new
 // version is found and downloaded quietly, the operator is told it is ready, and it is
-// applied when they close the app anyway, on their own terms.
+// installed only when they press "Update now" - never when the app closes, never when it
+// starts, never on its own. The app never restarts itself, never steals focus and never
+// opens a window of its own mid-broadcast.
+//
+// Installing on close used to happen too. The user asked for it to be removed, and
+// Velopack's own install-on-start is switched off in Program.cs for the same reason.
 //
 // Only an installed copy can update itself. A portable copy, or a developer running
 // from the repo, has no install for Velopack to replace; that is not an error, and the
@@ -174,7 +178,7 @@ public sealed class UpdateService : ObservableObject, IDisposable
         }
     }
 
-    // The operator asked for it now rather than at the next close.
+    // The only way an update goes in: the operator pressed "Update now".
     //
     // Velopack is told to wait for this process to end and then start the new one, and the
     // app is closed the ordinary way: OnExit still runs, so the backend is asked to stop
@@ -190,23 +194,6 @@ public sealed class UpdateService : ObservableObject, IDisposable
         catch (Exception e)
         {
             Toast(e.Message, true);
-        }
-    }
-
-    // Called once, as the app is closing. Velopack waits for this process to go, swaps
-    // the install folder and stops. restart: false on purpose: a window reappearing
-    // after someone deliberately closed the app is alarming, and they may have closed it
-    // to shut the machine down.
-    public void ApplyOnExit()
-    {
-        if (_applying is null || _ready is null) return;
-        try
-        {
-            _applying.WaitExitThenApplyUpdates(_ready.TargetFullRelease, silent: true, restart: false);
-        }
-        catch
-        {
-            // The update stays downloaded and applies on a later close.
         }
     }
 

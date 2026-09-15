@@ -17,7 +17,10 @@ public static class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        VelopackApp.Build().Run();
+        // No update is ever installed without the operator pressing "Update now". Velopack
+        // applies a downloaded update on the next start by default, which is exactly the
+        // "it updated by itself" behaviour the user asked to remove - so it is switched off.
+        VelopackApp.Build().SetAutoApplyOnStartup(false).Run();
 
         var app = new App();
         app.InitializeComponent();

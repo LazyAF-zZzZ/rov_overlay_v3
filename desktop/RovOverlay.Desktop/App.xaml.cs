@@ -110,9 +110,9 @@ public partial class App : Application
         // the UI thread is how shutdowns hang.
         if (_services is not null)
         {
-            // If a new version was downloaded, this is the moment it goes in: the
-            // operator has closed the app themselves, so nothing is interrupted.
-            _services.Updates.ApplyOnExit();
+            // A downloaded update is deliberately NOT installed here. It used to be, and the
+            // user asked for that to stop: an update goes in only when the operator presses
+            // "Update now" (see UpdateService.ApplyNow).
             _ = _services.Socket?.DisposeAsync().AsTask();
             _services.Backend.Dispose();
         }
