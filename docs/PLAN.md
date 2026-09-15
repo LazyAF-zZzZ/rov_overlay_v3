@@ -20,8 +20,8 @@ session with no conversation history should be able to continue from here and
 
 Next: whatever the people using it ask for. 3.0.5 through **3.0.9** are published. New
 versions reach people on their own, but from 3.0.9 they are only *installed* when the
-operator presses Update now (§5). **On `main`, not yet released:** GAME OVER's two "won"
-buttons and their confirmation are gone (user's request, 2026-09-15). The winner is counted
+operator presses Update now (§5). **3.0.10** (2026-09-15): GAME OVER's two "won"
+buttons and their confirmation are gone (user's request). The winner is counted
 from the score: a **+1** beside each team's score ends the game for that side through the same
 `POST /api/live-match/finish`, which now also returns `seriesWinner` and `score`, and the
 SERIES OVER bar names the winner ("PSG Esports win the series 2–1"). Typing in the score box
