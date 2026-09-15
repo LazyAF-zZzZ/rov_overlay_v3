@@ -36,7 +36,7 @@ board, which all go through `orientationOf`, credit the right team exactly as th
 for a manual Switch Teams. Quick matches: `stepRound` swaps the two team objects on every step,
 and `restoreRound` places a filed draft by team name. Tested in `tests/side-swap.test.ts`.
 
-**On `main`, not yet released (2026-09-15):**
+**3.0.12 (2026-09-15; clicked through for real, including -1 disabled at 0):**
 
 - **-1 beside each score** (`POST /api/live-match/undo`, `undoGame`): the exact undo of +1.
   Lowers the score through `pushOverlayScoreToMatch`, so the game's winner is cleared and a
@@ -52,6 +52,10 @@ and `restoreRound` places a filed draft by team name. Tested in `tests/side-swap
   clears the winners of the games of every match it resets (drafts kept, so pick/ban rates
   still count what was played), and `recordSeriesResult` announces `games` whenever the series
   winner changes so Analytics refreshes.
+
+**Notices for 3.0.12** (2026-09-15, both expire 2026-10-15) replaced the 3.0.11 pair with the
+same split: `update-3-0-12` (3.0.9–3.0.11, press Update now) and `update-3-0-12-older`
+(3.0.8 and older, goes in on close).
 
 **Notices for 3.0.11** (2026-09-15, both expire 2026-10-15) replaced the 3.0.8 one, and are
 **split by version because the install step differs**: `update-3-0-11` (3.0.9–3.0.10) says to

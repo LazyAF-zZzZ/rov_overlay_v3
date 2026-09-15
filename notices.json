@@ -1,32 +1,32 @@
 [
   {
-    "id": "update-3-0-11",
+    "id": "update-3-0-12",
     "level": "info",
     "title": {
-      "th": "อัปเดต 3.0.11 พร้อมแล้ว",
-      "en": "Update 3.0.11 is ready"
+      "th": "อัปเดต 3.0.12 พร้อมแล้ว",
+      "en": "Update 3.0.12 is ready"
     },
     "body": {
-      "th": "สองทีมสลับฝั่งกันเองทุกเกม แต้ม ดราฟต์ และสถิติยังตามทีมเดิม (ปิดได้ที่ติ๊ก สลับฝั่งทุกเกม ข้าง ROUND) และจบเกมด้วยปุ่ม +1 ข้างคะแนนของทีมที่ชนะ โปรแกรมประกาศผู้ชนะซีรีส์จากคะแนนให้เอง อัปเดตนี้ไม่ติดตั้งเอง: เมื่อโหลดเสร็จจะมีหน้าต่างถาม หรือกดเลขเวอร์ชันที่แถบด้านบน แล้วกด อัปเดตเลย ตอนที่ไม่ได้ออกอากาศ",
-      "en": "The teams now swap sides every game, and each team keeps its own score, draft and statistics (untick Swap sides each game beside ROUND to turn it off). A game ends with the +1 beside the winning team's score, and the app declares the series winner from the score. This update does not install by itself: once it has downloaded a window asks, or press the version number in the title bar, then Update now, when you are not on air."
+      "th": "มีปุ่ม −1 ข้างคะแนนแล้ว กด +1 ผิดก็ถอนได้ในปุ่มเดียว แต้มถูกหัก ผู้ชนะของเกมถูกล้าง และเกมนั้นกลับขึ้นกระดานพร้อมดราฟต์และฝั่งเดิม คะแนนเป็น 0 กดไม่ได้ และแก้บั๊กที่สถิติยังนับผลของคู่ที่ถูกล้างไปแล้วในสาย อัปเดตนี้ไม่ติดตั้งเอง: เมื่อโหลดเสร็จจะมีหน้าต่างถาม หรือกดเลขเวอร์ชันที่แถบด้านบน แล้วกด อัปเดตเลย ตอนที่ไม่ได้ออกอากาศ",
+      "en": "There is now a −1 beside each score: a mistaken +1 is taken back in one press, clearing that game's winner and putting the game back on the board with its draft and sides. It is greyed out at 0. Also fixed: statistics went on counting a bracket match that had been reset. This update does not install by itself: once it has downloaded a window asks, or press the version number in the title bar, then Update now, when you are not on air."
     },
-    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.11",
+    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.12",
     "minVersion": "3.0.9",
-    "maxVersion": "3.0.10",
+    "maxVersion": "3.0.11",
     "expires": "2026-10-15T00:00:00Z"
   },
   {
-    "id": "update-3-0-11-older",
+    "id": "update-3-0-12-older",
     "level": "info",
     "title": {
-      "th": "อัปเดต 3.0.11 พร้อมแล้ว",
-      "en": "Update 3.0.11 is ready"
+      "th": "อัปเดต 3.0.12 พร้อมแล้ว",
+      "en": "Update 3.0.12 is ready"
     },
     "body": {
-      "th": "สองทีมสลับฝั่งกันเองทุกเกม แต้ม ดราฟต์ และสถิติยังตามทีมเดิม จบเกมด้วยปุ่ม +1 ข้างคะแนนของทีมที่ชนะ หน้าคุมงานพับส่วนตั้งค่าทีมเก็บเองตอนเริ่มดราฟต์ และหน้าแรกบอกว่ากำลังออกอากาศคู่ไหน แอปจะโหลดอัปเดตให้เองแล้วติดตั้งตอนคุณปิดโปรแกรม หลังจากนี้ อัปเดตครั้งต่อไปจะไม่ติดตั้งเองอีก ต้องกด อัปเดตเลย ก่อน",
-      "en": "The teams now swap sides every game, and each team keeps its own score, draft and statistics. A game ends with the +1 beside the winning team's score, team setup folds away when the draft starts, and Home shows what is on air. The app downloads this update on its own and puts it in when you close it. From then on, updates no longer install by themselves: you press Update now."
+      "th": "สองทีมสลับฝั่งกันเองทุกเกม จบเกมด้วยปุ่ม +1 และถอนได้ด้วยปุ่ม −1 ข้างคะแนน โปรแกรมประกาศผู้ชนะซีรีส์จากคะแนนให้เอง และแก้บั๊กที่สถิติยังนับผลของคู่ที่ถูกล้างไปแล้ว แอปจะโหลดอัปเดตให้เองแล้วติดตั้งตอนคุณปิดโปรแกรม หลังจากนี้ อัปเดตครั้งต่อไปจะไม่ติดตั้งเองอีก ต้องกด อัปเดตเลย ก่อน",
+      "en": "The teams now swap sides every game, a game ends with +1 beside the winning team's score and is taken back with −1, and the app declares the series winner from the score. Also fixed: statistics went on counting a bracket match that had been reset. The app downloads this update on its own and puts it in when you close it. From then on, updates no longer install by themselves: you press Update now."
     },
-    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.11",
+    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.12",
     "maxVersion": "3.0.8",
     "expires": "2026-10-15T00:00:00Z"
   }
