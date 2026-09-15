@@ -32,6 +32,10 @@ public sealed class AppServices : IAsyncDisposable
     public event Action<DataChange>? DataChanged;
     public event Action<bool>? ConnectionChanged;
 
+    // A system-wide key the server has acted on. Lives here rather than on the hotkey host
+    // because screens are created before Connect() makes the host.
+    public event Action<HotkeyFiredEventArgs>? HotkeyFired;
+
     public void Connect()
     {
         if (Socket is not null) return;
@@ -70,6 +74,7 @@ public sealed class AppServices : IAsyncDisposable
         // System-wide hotkeys live for as long as the app does, not just while the
         // Hotkeys screen is open.
         Hotkeys = new GlobalHotkeyHost(Api);
+        Hotkeys.Fired += e => HotkeyFired?.Invoke(e);
         Hotkeys.Start();
 
         // Neither of these needs the backend or the network to be there. They start here

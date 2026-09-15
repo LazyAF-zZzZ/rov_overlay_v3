@@ -115,8 +115,9 @@ fields, because a field can blur itself on Esc before the shared listener runs. 
 with a parent mark their back link `data-esc-back`; it is the fallback when there is
 no in-app history to return to.
 
-**System-wide hotkeys are the Electron main process's job, and they are off until asked
-for.** `state.globalHotkeys` holds `{ enabled, bindings }` and rides `CARRIED_OVER_KEYS`;
+**System-wide hotkeys are the Electron main process's job, and (in v2) they were off until asked
+for.** In v3 the desktop app registers them, and since 3.1.0 they are **on by default** and shown
+simply as "Hotkeys" (user's request, see `../docs/PLAN.md`). `state.globalHotkeys` holds `{ enabled, bindings }` and rides `CARRIED_OVER_KEYS`;
 `electron-main.js` polls `GET /api/global-hotkeys` every two seconds and registers what it
 finds with `globalShortcut`, and a press comes back in as `POST /api/global-hotkeys/fire`.
 Three rules hold it together. **A binding without a modifier is refused** — `toAccelerator()`

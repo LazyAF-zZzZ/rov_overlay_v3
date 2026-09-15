@@ -36,6 +36,41 @@ board, which all go through `orientationOf`, credit the right team exactly as th
 for a manual Switch Teams. Quick matches: `stepRound` swaps the two team objects on every step,
 and `restoreRound` places a filed draft by team name. Tested in `tests/side-swap.test.ts`.
 
+**3.1.0: hotkeys on by default, with the score and the rounds** (user's request,
+2026-09-15). Six new `GLOBAL_HOTKEY_ACTIONS`: `bluePlus` / `redPlus` (Ctrl+Alt+1 / 2), `blueMinus`
+/ `redMinus` (Ctrl+Alt+Q / W), `prevRound` / `nextRound` (Ctrl+Alt+A / S): **a 2×3 block under the
+left hand holding Ctrl+Alt**, blue left and red right like the screen. The first layout
+(Ctrl+Alt+Shift+digits, Ctrl+Alt+PageUp / PageDown) was rejected by the user: too far apart to
+press with one hand while the other stays on the mouse in OBS. The user then asked for **every**
+system-wide key to follow it, so the draft keys moved too: `prevPhase` / `nextPhase` Ctrl+Alt+E / R,
+`pauseResume` Ctrl+Alt+D, `toggleBanner` Ctrl+Alt+F, `undo` stays Ctrl+Alt+Z. The old H / Space /
+arrows needed two hands, and Ctrl+Alt+Space was already held by another program on the user's
+machine. **`globalHotkeys.layout` (now 2)** moves saved bindings still equal to the layout-1 defaults
+to the new ones exactly once; keys someone chose stay, and the stamp stops a later deliberate
+Ctrl+Alt+H from being moved again. Keep new defaults inside the block.
+**Trap found by pressing the keys for real:** with the app in focus, a system-wide Ctrl+Alt key
+also toggled the banner through the Control Panel's local "tap Alt" shortcut. `RegisterHotKey`
+swallows the letter's key press but not the modifier releases, so the panel saw Alt go down and up
+and counted a tap; Ctrl+Alt+F flipped the banner twice and looked dead. `ControlView` now arms a
+tap only when no other modifier is held, and any ordinary key release cancels it.
+The score and round keys call `finishGame`,
+`undoGame` and `stepRound`, the same functions as the buttons, and **blue/red is the side on
+screen when pressed**, like the buttons (so after a +1 and a side swap, the winner's -1 is the
+other colour; the Hotkeys page and the guide say so). `POST /api/global-hotkeys/fire` now returns
+`{ ok, changed, code?, error?, finish?, undo? }`, always 200 for a refusal. **The finish/undo
+result has to reach the Control Panel**: its SERIES OVER bar and "Put on air" next match are built
+from the +1 reply, so a series ended from OBS would otherwise be recorded with no bar. The
+desktop host raises `AppServices.HotkeyFired`; `ControlViewModel` shows it through the same
+`ShowFinished` as its button and sets `Handled`; anything unhandled (refusals, rounds) is toasted
+by the host through `GameFlowText`, which both now share. `FinishGameResult` / `UndoGameResult`
+gained `teamName`, read before the sides swap, because the host has no name in hand. Hotkeys
+recording learned PageUp/PageDown, Home/End, Insert/Delete, F1–F24 and the numpad. System-wide
+keys are now **on by default and called just "Hotkeys"** (user's request): first section of the
+Hotkeys page, with the Control Panel's own keys below. Saved settings from before layout 2 are
+switched on as they migrate (off was the default then, so an off from those versions says nothing);
+once stamped, switching them off sticks. This reverses v2's "off until asked for" rule, and
+`backend/CLAUDE.md` says so. Tested in `tests/global-hotkeys.test.ts`.
+
 **3.0.13: full team statistics** (user's request, 2026-09-15; smoke-tested before packing). The team
 page has Profile / Statistics tabs; Statistics shows series and games records with win rates,
 the last five series, side records, heroes picked (games, pick rate, win rate), bans made,
@@ -340,7 +375,8 @@ docs/v2/            v2's plan, guide and notes, for reference
   flow so far, and on its first run it found a real bug there (the match title field
   frozen after Put on air). The flows above are the next thing to point it at.
 - **The Control Panel's shortcuts only work while the app has focus.** System-wide
-  hotkeys are M5 (Win32 `RegisterHotKey`), as v2 had through Electron.
+  hotkeys (Win32 `RegisterHotKey`) cover the draft, and since the score-keys work also +1 / -1
+  and the rounds, and since 3.1.0 they are on by default under the name "Hotkeys".
 - **Sound effects still need an overlay page open to be heard on air** (§8, unchanged by
   M3). The Control Panel's TEST button plays locally only.
 - **Standings ignore the "teams through" box until it is a valid 1-8**; an invalid value

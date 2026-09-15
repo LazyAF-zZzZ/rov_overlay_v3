@@ -60,7 +60,7 @@ export function hotkeyRoutes(): Router {
       return;
     }
 
-    res.json({ ok: true, changed: runGlobalHotkey(body.action) });
+    res.json({ ok: true, ...runGlobalHotkey(body.action) });
   });
 
   return router;

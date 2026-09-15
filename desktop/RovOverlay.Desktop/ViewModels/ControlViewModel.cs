@@ -70,6 +70,7 @@ public sealed class ControlViewModel : ObservableObject
 
         services.StateUpdated += OnState;
         services.DataChanged += OnDataChanged;
+        services.HotkeyFired += OnHotkeyFired;
         Loc.Instance.Changed += OnLanguageChanged;
 
         _ = LoadAsync();
@@ -239,34 +240,44 @@ public sealed class ControlViewModel : ObservableObject
         }
         catch (ApiException error)
         {
-            Toasts.Error(error.Code switch
-            {
-                "game-decided" => Loc.T("Flow.Err.GameDecided"),
-                "series-over" => Loc.T("Flow.Err.SeriesOver"),
-                "round-limit" => Loc.T("Flow.Err.RoundLimit"),
-                "not-recorded" => Loc.T("Flow.Err.NotRecorded"),
-                _ => error.Message
-            });
+            Toasts.Error(GameFlowText.FinishError(error.Code, error.Message));
             return;
         }
 
+        ShowFinished(reply, name);
+    }
+
+    private void ShowFinished(FinishGameReply reply, string name)
+    {
+        var text = GameFlowText.Finished(reply, name);
         if (reply.SeriesOver)
         {
-            var score = reply.Score ?? new SideScores(0, 0);
-            var high = Math.Max(score.Blue, score.Red);
-            var low = Math.Min(score.Blue, score.Red);
-            SeriesResultText = Loc.F("Flow.SeriesWon", reply.SeriesWinner ?? name, high, low);
-
+            SeriesResultText = text;
             _seriesMatchId = reply.Live.MatchId;
             _nextMatch = reply.NextMatch;
             SeriesOver = true;
             OnPropertyChanged(nameof(HasNextMatch));
             OnPropertyChanged(nameof(NextMatchText));
-            Toasts.Info(SeriesResultText);
         }
-        else
+        Toasts.Info(text);
+    }
+
+    // +1 and -1 pressed as system-wide keys from OBS. Same result as the buttons, so the
+    // same bar: without this, the point that ends a series is recorded but the panel has
+    // no SERIES OVER and no next match to put on air. Refusals are left to the hotkey host.
+    private void OnHotkeyFired(HotkeyFiredEventArgs e)
+    {
+        switch (e.Action)
         {
-            Toasts.Info(Loc.F("Flow.NextGame", name, reply.Round));
+            case "bluePlus" or "redPlus" when e.Reply.Finish is { } finish:
+                ShowFinished(finish, SideName(e.Action == "bluePlus" ? Blue : Red));
+                e.Handled = true;
+                break;
+            case "blueMinus" or "redMinus" when e.Reply.Undo is { } undo:
+                ClearSeriesOver();
+                Toasts.Info(GameFlowText.Undone(undo, SideName(e.Action == "blueMinus" ? Blue : Red)));
+                e.Handled = true;
+                break;
         }
     }
 
@@ -288,19 +299,13 @@ public sealed class ControlViewModel : ObservableObject
         }
         catch (ApiException error)
         {
-            Toasts.Error(error.Code switch
-            {
-                "no-points" => Loc.T("Flow.Err.NoPoints"),
-                "not-last" => Loc.T("Flow.Err.NotLast"),
-                "not-recorded" => Loc.T("Flow.Err.NotRecorded"),
-                _ => error.Message
-            });
+            Toasts.Error(GameFlowText.UndoError(error.Code, error.Message));
             return;
         }
 
         // A reopened series is not over any more, and neither is anything else on this board.
         ClearSeriesOver();
-        Toasts.Info(Loc.F(reply.Reopened ? "Flow.SeriesReopened" : "Flow.GameUndone", name, reply.Round));
+        Toasts.Info(GameFlowText.Undone(reply, name));
     }
 
     // The next match goes on air from here, so the end of a series does not mean a trip to

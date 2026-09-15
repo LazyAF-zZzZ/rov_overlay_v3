@@ -117,7 +117,7 @@ public sealed class HotkeyRow : ObservableObject
 // Electron.
 public sealed class HotkeysViewModel : ObservableObject, IClosablePage
 {
-    private static readonly (string Action, string Label, string? Note)[] Actions =
+    private static readonly (string Action, string Label, string? Note)[] LocalActions =
     [
         ("toggleBanner", "Hotkeys.ToggleBanner", "Hotkeys.ToggleBannerNote"),
         ("pauseResume", "Hotkeys.PauseResume", null),
@@ -126,15 +126,39 @@ public sealed class HotkeysViewModel : ObservableObject, IClosablePage
         ("undo", "Hotkeys.Undo", null)
     ];
 
+    // System-wide adds the score and the rounds: the end of a game is exactly when the
+    // operator is in OBS rather than here. The Control Panel's own keys stay without them,
+    // because a bare key there would hand out a point on a stray keystroke.
+    private static readonly (string Action, string Label, string? Note)[] GlobalActions =
+    [
+        ("toggleBanner", "Hotkeys.ToggleBanner", null),
+        ("pauseResume", "Hotkeys.PauseResume", null),
+        ("prevPhase", "Hotkeys.PrevPhase", null),
+        ("nextPhase", "Hotkeys.NextPhase", null),
+        ("undo", "Hotkeys.Undo", null),
+        ("bluePlus", "Hotkeys.BluePlus", "Hotkeys.BluePlusNote"),
+        ("redPlus", "Hotkeys.RedPlus", "Hotkeys.RedPlusNote"),
+        ("blueMinus", "Hotkeys.BlueMinus", "Hotkeys.BlueMinusNote"),
+        ("redMinus", "Hotkeys.RedMinus", "Hotkeys.RedMinusNote"),
+        ("prevRound", "Hotkeys.PrevRound", "Hotkeys.RoundNote"),
+        ("nextRound", "Hotkeys.NextRound", "Hotkeys.RoundNote")
+    ];
+
     // Same defaults as the server's GLOBAL_HOTKEY_DEFAULTS, so "Default" here and a
     // reset there agree about what original means.
     private static readonly Dictionary<string, HotkeyBinding> GlobalDefaults = new()
     {
-        ["toggleBanner"] = new("KeyH", true, false, true, false),
-        ["pauseResume"] = new("Space", true, false, true, false),
-        ["prevPhase"] = new("ArrowLeft", true, false, true, false),
-        ["nextPhase"] = new("ArrowRight", true, false, true, false),
-        ["undo"] = new("KeyZ", true, false, true, false)
+        ["toggleBanner"] = new("KeyF", true, false, true, false),
+        ["pauseResume"] = new("KeyD", true, false, true, false),
+        ["prevPhase"] = new("KeyE", true, false, true, false),
+        ["nextPhase"] = new("KeyR", true, false, true, false),
+        ["undo"] = new("KeyZ", true, false, true, false),
+        ["bluePlus"] = new("Digit1", true, false, true, false),
+        ["redPlus"] = new("Digit2", true, false, true, false),
+        ["blueMinus"] = new("KeyQ", true, false, true, false),
+        ["redMinus"] = new("KeyW", true, false, true, false),
+        ["prevRound"] = new("KeyA", true, false, true, false),
+        ["nextRound"] = new("KeyS", true, false, true, false)
     };
 
     private readonly AppServices _s;
@@ -145,8 +169,8 @@ public sealed class HotkeysViewModel : ObservableObject, IClosablePage
     public HotkeysViewModel(AppServices services)
     {
         _s = services;
-        Local = Actions.Select(a => new HotkeyRow(this, a.Action, a.Label, a.Note, false)).ToList();
-        Global = Actions.Select(a => new HotkeyRow(this, a.Action, a.Label, null, true)).ToList();
+        Local = LocalActions.Select(a => new HotkeyRow(this, a.Action, a.Label, a.Note, false)).ToList();
+        Global = GlobalActions.Select(a => new HotkeyRow(this, a.Action, a.Label, a.Note, true)).ToList();
 
         ResetLocalCommand = new RelayCommand(() =>
         {

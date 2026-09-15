@@ -72,6 +72,9 @@ public sealed record HotkeyBinding(string Code, bool Ctrl, bool Shift, bool Alt,
         "ArrowRight" => "→",
         "ArrowUp" => "↑",
         "ArrowDown" => "↓",
+        "PageUp" => "PgUp",
+        "PageDown" => "PgDn",
+        _ when code.StartsWith("Numpad") => "Num " + code[6..],
         "Control" => "Ctrl",
         "Meta" => "Win",
         _ => code
@@ -108,6 +111,16 @@ public static class Hotkeys
             Key.OemCloseBrackets => "BracketRight",
             Key.OemBackslash or Key.OemPipe => "Backslash",
             Key.OemTilde => "Backquote",
+            // Keys a system-wide binding can use (the server's accelerator table has them);
+            // without these the default Ctrl+Alt+PageDown could not be recorded back.
+            Key.PageUp => "PageUp",
+            Key.PageDown => "PageDown",
+            Key.Home => "Home",
+            Key.End => "End",
+            Key.Insert => "Insert",
+            Key.Delete => "Delete",
+            >= Key.F1 and <= Key.F24 => "F" + (key - Key.F1 + 1),
+            >= Key.NumPad0 and <= Key.NumPad9 => "Numpad" + (key - Key.NumPad0),
             _ => null
         };
     }

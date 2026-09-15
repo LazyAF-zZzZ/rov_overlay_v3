@@ -24,7 +24,11 @@ const settings = require('../server/domain/settings') as typeof import('../serve
 const liveState = require('../server/store/live-state') as typeof import('../server/store/live-state');
 const draftEngine = require('../server/services/draft-engine') as typeof import('../server/services/draft-engine');
 
-const { toAccelerator, sanitizeGlobalHotkeys, GLOBAL_HOTKEY_DEFAULTS, CARRIED_OVER_KEYS } = settings;
+const live = require('../server/services/live-match') as typeof import('../server/services/live-match');
+const { getStores } = require('../server/store/index') as typeof import('../server/store/index');
+import { must } from './helpers';
+
+const { toAccelerator, sanitizeGlobalHotkeys, GLOBAL_HOTKEY_DEFAULTS, GLOBAL_HOTKEY_ACTIONS, CARRIED_OVER_KEYS } = settings;
 
 const app = createApp();
 let server: http.Server;
@@ -113,11 +117,15 @@ test('a binding that cannot be registered falls back to the default rather than 
   assert.strictEqual(cleaned.enabled, true);
 });
 
-test('it is off unless switched on, and junk never switches it on', () => {
-  assert.strictEqual(GLOBAL_HOTKEY_DEFAULTS.enabled, false, 'installing this app takes no keys');
-  assert.strictEqual(sanitizeGlobalHotkeys({}).enabled, false);
-  assert.strictEqual(sanitizeGlobalHotkeys({ enabled: 'yes' }).enabled, false);
-  assert.strictEqual(sanitizeGlobalHotkeys(null).enabled, false);
+// เปิดเป็นค่าเริ่มต้นตั้งแต่ 3.1.0 (ผู้ใช้ขอ) รวมถึงคนที่อัปเดตมาจากเวอร์ชันที่ค่าเริ่มต้นคือปิด
+// แต่หลังจากนั้น ปิดเองต้องปิดอยู่ และค่ามั่วๆ ต้องไม่นับเป็นเปิด
+test('hotkeys are on by default, including after an update, and switching them off sticks', () => {
+  const layout = settings.GLOBAL_HOTKEY_LAYOUT;
+  assert.strictEqual(GLOBAL_HOTKEY_DEFAULTS.enabled, true, 'a new install has them on');
+  assert.strictEqual(sanitizeGlobalHotkeys(null).enabled, true);
+  assert.strictEqual(sanitizeGlobalHotkeys({ enabled: false }).enabled, true, 'saved as off by an older version, where off was the default');
+  assert.strictEqual(sanitizeGlobalHotkeys({ layout, enabled: false }).enabled, false, 'switched off on this version stays off');
+  assert.strictEqual(sanitizeGlobalHotkeys({ layout, enabled: 'yes' }).enabled, false, 'junk never switches them on');
   assert.deepStrictEqual(sanitizeGlobalHotkeys(null).bindings, GLOBAL_HOTKEY_DEFAULTS.bindings);
 });
 
@@ -133,7 +141,7 @@ test('the setting survives a reset, the way theme and hotkeys do', () => {
 test('the app can ask what to register, and gets accelerators rather than raw bindings', async () => {
   const before = await request('GET', '/api/global-hotkeys');
   assert.strictEqual(before.status, 200);
-  assert.strictEqual(before.body.enabled, false);
+  assert.strictEqual(before.body.enabled, true, 'on from the start');
   // ปิดอยู่ก็ยังบอกได้ว่าถ้าเปิดจะจองอะไร ตัวจองเป็นคนตัดสินใจว่าจะจองหรือไม่
   assert.strictEqual(before.body.accelerators.undo, 'Control+Alt+Z');
 });
@@ -191,6 +199,130 @@ test('undo reports that nothing changed instead of failing when there is nothing
   assert.strictEqual(typeof reply.body.changed, 'boolean');
 });
 
+// ---- คะแนนกับรอบ (3.1.0) ----
+//
+// จังหวะที่ต้องกดคีย์ลัดมากที่สุดคือตอนเกมจบ ซึ่งคนคุมงานอยู่ที่ OBS
+// ต้องทำงานเหมือนปุ่มข้างคะแนนทุกอย่าง และส่งผลก้อนเดียวกันกลับไปให้หน้า Control ขึ้นแถบซีรีส์จบ
+
+test('every system-wide default can be registered, and no two actions share a key', () => {
+  const accelerators = GLOBAL_HOTKEY_ACTIONS.map((action) => toAccelerator(GLOBAL_HOTKEY_DEFAULTS.bindings[action]));
+  accelerators.forEach((accelerator, i) => {
+    assert.ok(accelerator, `${GLOBAL_HOTKEY_ACTIONS[i]} has a default Windows will accept`);
+  });
+  assert.strictEqual(new Set(accelerators).size, accelerators.length, 'one key, one action');
+});
+
+test('settings saved before the score keys existed get them at their defaults, and keep the rest', () => {
+  const old = sanitizeGlobalHotkeys({
+    enabled: true,
+    bindings: { undo: { code: 'KeyU', ctrl: true, shift: false, alt: true, meta: false } }
+  });
+  assert.strictEqual(old.enabled, true, 'the switch stays on');
+  assert.strictEqual(old.bindings.undo.code, 'KeyU', 'a key someone chose stays chosen');
+  assert.deepStrictEqual(old.bindings.bluePlus, GLOBAL_HOTKEY_DEFAULTS.bindings.bluePlus);
+  assert.deepStrictEqual(old.bindings.nextRound, GLOBAL_HOTKEY_DEFAULTS.bindings.nextRound);
+});
+
+test('keys still on the old two-handed defaults move to the new block once, chosen keys stay', () => {
+  const saved = sanitizeGlobalHotkeys({
+    enabled: true,
+    bindings: {
+      toggleBanner: { code: 'KeyH', ctrl: true, shift: false, alt: true, meta: false },   // old default
+      pauseResume: { code: 'KeyP', ctrl: true, shift: false, alt: true, meta: false },    // chosen
+      prevPhase: { code: 'ArrowLeft', ctrl: true, shift: false, alt: true, meta: false }  // old default
+    }
+  });
+  assert.strictEqual(saved.layout, settings.GLOBAL_HOTKEY_LAYOUT);
+  assert.deepStrictEqual(saved.bindings.toggleBanner, GLOBAL_HOTKEY_DEFAULTS.bindings.toggleBanner, 'moved to the block');
+  assert.deepStrictEqual(saved.bindings.prevPhase, GLOBAL_HOTKEY_DEFAULTS.bindings.prevPhase, 'moved to the block');
+  assert.strictEqual(saved.bindings.pauseResume.code, 'KeyP', 'a key someone chose is not touched');
+
+  // ตั้ง Ctrl+Alt+H กลับมาเองหลังย้ายแล้ว ต้องไม่โดนย้ายซ้ำ
+  const chosenAgain = sanitizeGlobalHotkeys({
+    ...saved,
+    bindings: { ...saved.bindings, toggleBanner: { code: 'KeyH', ctrl: true, shift: false, alt: true, meta: false } }
+  });
+  assert.strictEqual(chosenAgain.bindings.toggleBanner.code, 'KeyH', 'moved once, never again');
+});
+
+test('every default sits under the left hand holding Ctrl+Alt', () => {
+  const leftHand = new Set(['Digit1', 'Digit2', 'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyZ']);
+  GLOBAL_HOTKEY_ACTIONS.forEach((action) => {
+    const binding = GLOBAL_HOTKEY_DEFAULTS.bindings[action];
+    assert.ok(leftHand.has(binding.code), `${action} is ${binding.code}, outside the block`);
+    assert.deepStrictEqual([binding.ctrl, binding.alt, binding.shift, binding.meta], [true, true, false, false], `${action} is Ctrl+Alt only`);
+  });
+});
+
+test('the score and round keys play a quick match the way the buttons beside the score do', async () => {
+  live.clearLive();
+  const state = liveState.getState();
+  state.globalHotkeys = { ...state.globalHotkeys, enabled: true };
+  state.swapSidesEachRound = true;
+  state.round = 1;
+  state.teamBlue.name = 'Alpha';
+  state.teamBlue.score = 0;
+  state.teamRed.name = 'Bravo';
+  state.teamRed.score = 0;
+
+  const fire = (action: string) => request('POST', '/api/global-hotkeys/fire', { action });
+  const team = (name: string) => {
+    const s = liveState.getState();
+    return s.teamBlue.name === name ? s.teamBlue : s.teamRed;
+  };
+
+  const plus = await fire('bluePlus');
+  assert.strictEqual(plus.status, 200);
+  assert.strictEqual(plus.body.changed, true);
+  assert.strictEqual(plus.body.finish.teamName, 'Alpha', 'named before the sides swapped');
+  assert.strictEqual(liveState.getState().round, 2, 'the next game is on the board');
+  assert.strictEqual(team('Alpha').score, 1);
+  assert.strictEqual(liveState.getState().teamRed.name, 'Alpha', 'and the winner has moved to red');
+
+  const minus = await fire('redMinus');
+  assert.strictEqual(minus.body.changed, true);
+  assert.strictEqual(minus.body.undo.teamName, 'Alpha');
+  assert.strictEqual(team('Alpha').score, 0, 'the point is back off');
+  assert.strictEqual(liveState.getState().round, 1);
+
+  const nothing = await fire('blueMinus');
+  assert.strictEqual(nothing.status, 200, 'refused, but not an error for someone pressing a key in OBS');
+  assert.deepStrictEqual([nothing.body.changed, nothing.body.code], [false, 'no-points']);
+
+  assert.strictEqual((await fire('nextRound')).body.changed, true);
+  assert.strictEqual(liveState.getState().round, 2);
+  assert.strictEqual((await fire('prevRound')).body.changed, true);
+  assert.strictEqual(liveState.getState().round, 1);
+  const first = await fire('prevRound');
+  assert.deepStrictEqual([first.body.changed, first.body.code], [false, 'round-first']);
+});
+
+test('a +1 key that ends a series brings back what the Control Panel needs for SERIES OVER', async () => {
+  const { teams, tournaments, matches } = getStores();
+  const tournament = must(tournaments.create({ name: 'Hotkey Cup', format: 'single_elim', bestOf: 1 }).tournament);
+  ['North', 'South', 'East', 'West'].forEach((name, i) => {
+    tournaments.addTeam(tournament.id, must(teams.create({ name }).team).id, i);
+  });
+  const drawn = must(matches.generate(tournament.id).matches);
+  const first = must(drawn.filter((m) => m.bracket === 'main' && m.round === 1 && !m.isBye).sort((a, b) => a.slot - b.slot)[0]);
+  must(live.goLive(first.id).live);
+
+  const state = liveState.getState();
+  state.globalHotkeys = { ...state.globalHotkeys, enabled: true };
+  const blueName = state.teamBlue.name;
+
+  const won = await request('POST', '/api/global-hotkeys/fire', { action: 'bluePlus' });
+  assert.strictEqual(won.body.changed, true);
+  assert.strictEqual(won.body.finish.seriesOver, true, 'a Bo1 is over after one point');
+  assert.strictEqual(won.body.finish.seriesWinner, blueName);
+  assert.ok(won.body.finish.nextMatch, 'with the next match to put on air');
+  assert.strictEqual(must(matches.get(first.id)).winnerId, first.teamAId, 'and the bracket has the result');
+
+  const again = await request('POST', '/api/global-hotkeys/fire', { action: 'bluePlus' });
+  assert.deepStrictEqual([again.status, again.body.changed, again.body.code], [200, false, 'series-over']);
+  live.clearLive();
+});
+
 // ---- หน้าตั้งค่า ----
 
 test('the hotkeys page offers the system-wide panel and no longer says it is impossible', async () => {
@@ -231,6 +363,7 @@ test('resetting the system-wide bindings leaves the switch where it was', () => 
   const state = liveState.getState();
   state.globalHotkeys = {
     enabled: true,
+    layout: GLOBAL_HOTKEY_DEFAULTS.layout,
     bindings: {
       ...GLOBAL_HOTKEY_DEFAULTS.bindings,
       undo: { code: 'F9', ctrl: true, shift: true, alt: false, meta: false }

@@ -293,9 +293,46 @@ Change these on the **HOTKEYS** page. They only work while the app window is in 
 
 เปลี่ยนได้ที่หน้า **HOTKEYS** คีย์ลัดทำงานเฉพาะตอนที่หน้าต่างโปรแกรมอยู่ข้างหน้าเท่านั้น ไม่ทำงานตอนอยู่ใน OBS หรือในเกม
 
-If you need keys that keep working while you are in OBS or the game, switch on **System-wide hotkeys** on the same page. They are off until you do, and each one needs Ctrl, Alt, Shift or Win. This only works in the desktop app.
+### Hotkeys / คีย์ลัด
 
-ถ้าต้องการปุ่มที่กดได้ตอนอยู่ใน OBS หรือในเกม ให้เปิด **System-wide hotkeys** ที่หน้าเดียวกัน ค่าเริ่มต้นคือปิดไว้ และทุกปุ่มต้องมี Ctrl, Alt, Shift หรือ Win ประกอบ ใช้ได้เฉพาะในแอพเดสก์ท็อป
+**Hotkeys** work everywhere, even while you are in OBS or the game, and they are on from the start. They are at the top of the **HOTKEYS** page; untick **Switched on** there if another program needs these keys. Each one needs Ctrl, Alt, Shift or Win.
+
+**คีย์ลัด** ใช้ได้ทุกที่ แม้ตอนอยู่ใน OBS หรือในเกม และเปิดไว้ตั้งแต่แรก อยู่ด้านบนสุดของหน้า **HOTKEYS** ถ้าโปรแกรมอื่นต้องใช้ปุ่มเหล่านี้ ให้เอาเครื่องหมายที่ **เปิดใช้งาน** ออก ทุกปุ่มต้องมี Ctrl, Alt, Shift หรือ Win ประกอบ
+
+They cover the score and the rounds too, so a game can be ended without leaving OBS. They do exactly what the buttons beside the score and the round arrows do, and the Control Panel shows SERIES OVER the same way.
+
+ใช้กับคะแนนและรอบได้ด้วย จบเกมได้โดยไม่ต้องออกจาก OBS ทำงานเหมือนปุ่มข้างคะแนนและลูกศรรอบทุกอย่าง และหน้าคุมงานขึ้นแถบซีรีส์จบให้เหมือนกัน
+
+| Default key / ปุ่มเริ่มต้น | What it does | ทำอะไร |
+|---|---|---|
+| `Ctrl + Alt + 1` | +1 blue side: the team on blue won the game | +1 ฝั่งน้ำเงิน: ทีมฝั่งน้ำเงินชนะเกมนี้ |
+| `Ctrl + Alt + 2` | +1 red side | +1 ฝั่งแดง |
+| `Ctrl + Alt + Q` | −1 blue side | −1 ฝั่งน้ำเงิน |
+| `Ctrl + Alt + W` | −1 red side | −1 ฝั่งแดง |
+| `Ctrl + Alt + A` / `S` | Previous / next round | รอบก่อนหน้า / รอบถัดไป |
+| `Ctrl + Alt + E` / `R` | Previous / next draft phase | เฟสดราฟต์ก่อนหน้า / ถัดไป |
+| `Ctrl + Alt + D` | Pause / resume the draft timer | พัก / เดินนาฬิกาดราฟต์ต่อ |
+| `Ctrl + Alt + F` | Show / hide the banner | แสดง / ซ่อนแบนเนอร์ |
+| `Ctrl + Alt + Z` | Undo the last pick or ban | ย้อนพิคหรือแบนล่าสุด |
+
+Hold Ctrl + Alt with the left hand and every hotkey is in one block under your fingers, so the other hand stays on the mouse:
+
+กด Ctrl + Alt ค้างไว้ด้วยมือซ้าย คีย์ลัดทุกปุ่มจะอยู่เป็นบล็อกเดียวใต้นิ้ว มืออีกข้างอยู่ที่เมาส์ได้ตลอด
+
+```
+ 1  2         +1 blue / red
+ Q  W   E  R  −1 blue / red        previous / next draft phase
+ A  S   D  F  previous / next round   pause timer / show-hide banner
+ Z            undo pick or ban
+```
+
+Blue is on the left and red on the right, like the screen; back is on the left and forward on the right. After updating from an earlier version, hotkeys are switched on, and keys still on the old defaults (Ctrl + Alt + H, Space and the arrows) move to this layout by themselves; keys you chose yourself stay as they are.
+
+ซ้ายคือน้ำเงิน ขวาคือแดง เหมือนบนจอ และซ้ายคือถอยหลัง ขวาคือเดินหน้า หลังอัปเดตจากเวอร์ชันก่อน คีย์ลัดจะถูกเปิดให้ และปุ่มที่ยังเป็นค่าเริ่มต้นเดิม (Ctrl + Alt + H, Space และลูกศร) จะย้ายมาชุดนี้เอง ปุ่มที่ตั้งเองไว้จะไม่ถูกเปลี่ยน
+
+Blue and red mean the side on screen when you press. Teams swap sides after every game, so after a +1 the team that just won is on the other side: to take that point back, press −1 for the side they are on now.
+
+น้ำเงินกับแดงคือฝั่งบนจอตอนที่กด ทีมสลับฝั่งหลังจบทุกเกม หลังกด +1 ทีมที่เพิ่งชนะจึงย้ายไปอีกฝั่ง ถ้าจะถอนแต้มนั้น ให้กด −1 ของฝั่งที่ทีมนั้นอยู่ตอนนี้
 
 ---
 

@@ -120,15 +120,47 @@ public sealed class GlobalHotkeyHost : IDisposable
         return IntPtr.Zero;
     }
 
+    // Raised on the UI thread after the server has acted on a key. The Control Panel takes
+    // +1 and -1 (it shows SERIES OVER from them) and sets Handled; anything left over is
+    // reported here, because a key pressed from OBS has no button whose state shows it.
+    public event Action<HotkeyFiredEventArgs>? Fired;
+
     private async Task FireAsync(string action)
     {
+        GlobalHotkeyFireReply reply;
         try
         {
-            await _api.PostAsync<OkReply>("/api/global-hotkeys/fire", new { action });
+            reply = await _api.PostAsync<GlobalHotkeyFireReply>("/api/global-hotkeys/fire", new { action });
         }
         catch (Exception error)
         {
             Toasts.Error(error.Message);
+            return;
+        }
+
+        var args = new HotkeyFiredEventArgs(action, reply);
+        Fired?.Invoke(args);
+        if (!args.Handled) Report(args);
+    }
+
+    private static void Report(HotkeyFiredEventArgs e)
+    {
+        var reply = e.Reply;
+        var side = Loc.T(e.Action.StartsWith("blue") ? "Control.BlueTeam" : "Control.RedTeam");
+        switch (e.Action)
+        {
+            case "bluePlus" or "redPlus":
+                if (reply.Finish is { } finish) Toasts.Info(GameFlowText.Finished(finish, side));
+                else Toasts.Error(GameFlowText.FinishError(reply.Code, reply.Error ?? ""));
+                break;
+            case "blueMinus" or "redMinus":
+                if (reply.Undo is { } undo) Toasts.Info(GameFlowText.Undone(undo, side));
+                else Toasts.Error(GameFlowText.UndoError(reply.Code, reply.Error ?? ""));
+                break;
+            case "prevRound" or "nextRound":
+                // Success needs no words: the board itself changes.
+                if (!reply.Changed) Toasts.Error(GameFlowText.RoundError(reply.Code, reply.Error ?? ""));
+                break;
         }
     }
 
@@ -208,4 +240,11 @@ public sealed class GlobalHotkeyHost : IDisposable
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+}
+
+public sealed class HotkeyFiredEventArgs(string action, GlobalHotkeyFireReply reply)
+{
+    public string Action { get; } = action;
+    public GlobalHotkeyFireReply Reply { get; } = reply;
+    public bool Handled { get; set; }
 }

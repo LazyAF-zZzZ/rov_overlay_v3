@@ -64,28 +64,16 @@
         <StackPanel Margin="22,18,22,24" MaxWidth="1000" HorizontalAlignment="Left">
             <TextBlock Style="{StaticResource PageTitle}" Text="{svc:T Nav.Hotkeys}"/>
 
-            <!-- Control Panel keys -->
+            <!-- Hotkeys: the system-wide set, on by default and first on the page since 3.1.0.
+                 They are what an operator at OBS actually presses; the panel's own keys follow. -->
             <DockPanel Margin="0,20,0,8">
-                <Button DockPanel.Dock="Right" Style="{StaticResource DangerButton}" Content="{svc:T Hotkeys.ResetAll}"
-                        Command="{Binding ResetLocalCommand}"/>
-                <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Hotkeys.Local}" VerticalAlignment="Center"/>
-                <TextBlock Text="{svc:T Hotkeys.LocalNote}" FontSize="11" Foreground="{StaticResource MutedBrush}"
-                           VerticalAlignment="Center" Margin="12,0,0,0"/>
-            </DockPanel>
-            <Border Style="{StaticResource Card}" Padding="16,4,16,10">
-                <StackPanel>
-                    <ItemsControl ItemsSource="{Binding Local}" ItemTemplate="{StaticResource HotkeyRowTemplate}" Focusable="False"/>
-                    <TextBlock Style="{StaticResource MutedText}" Text="{svc:T Hotkeys.LocalHint}" FontSize="11.5" Margin="0,12,0,0"/>
-                </StackPanel>
-            </Border>
-
-            <!-- System-wide keys -->
-            <DockPanel Margin="0,22,0,8">
                 <Button DockPanel.Dock="Right" Style="{StaticResource DangerButton}" Content="{svc:T Hotkeys.ResetGlobal}"
                         Command="{Binding ResetGlobalCommand}"/>
                 <CheckBox DockPanel.Dock="Right" Content="{svc:T Hotkeys.GlobalEnabled}" IsChecked="{Binding GlobalEnabled}"
                           Margin="0,0,14,0"/>
                 <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Hotkeys.Global}" VerticalAlignment="Center"/>
+                <TextBlock Text="{svc:T Hotkeys.GlobalNote}" FontSize="11" Foreground="{StaticResource MutedBrush}"
+                           VerticalAlignment="Center" Margin="12,0,0,0"/>
             </DockPanel>
             <Border Style="{StaticResource Card}" Padding="16,4,16,10">
                 <StackPanel>
@@ -102,6 +90,21 @@
                         </ItemsControl.Style>
                     </ItemsControl>
                     <TextBlock Style="{StaticResource MutedText}" Text="{svc:T Hotkeys.GlobalHint}" FontSize="11.5" Margin="0,12,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Control Panel keys -->
+            <DockPanel Margin="0,22,0,8">
+                <Button DockPanel.Dock="Right" Style="{StaticResource DangerButton}" Content="{svc:T Hotkeys.ResetAll}"
+                        Command="{Binding ResetLocalCommand}"/>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Hotkeys.Local}" VerticalAlignment="Center"/>
+                <TextBlock Text="{svc:T Hotkeys.LocalNote}" FontSize="11" Foreground="{StaticResource MutedBrush}"
+                           VerticalAlignment="Center" Margin="12,0,0,0"/>
+            </DockPanel>
+            <Border Style="{StaticResource Card}" Padding="16,4,16,10">
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding Local}" ItemTemplate="{StaticResource HotkeyRowTemplate}" Focusable="False"/>
+                    <TextBlock Style="{StaticResource MutedText}" Text="{svc:T Hotkeys.LocalHint}" FontSize="11.5" Margin="0,12,0,0"/>
                 </StackPanel>
             </Border>
         </StackPanel>

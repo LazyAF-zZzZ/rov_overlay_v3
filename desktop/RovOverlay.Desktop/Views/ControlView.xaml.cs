@@ -74,11 +74,14 @@ public partial class ControlView : UserControl
     {
         if (_vm is null) return;
 
-        // Track a lone modifier for the "tap" shortcut; any other key cancels it.
+        // Track a lone modifier for the "tap" shortcut; any other key cancels it. A modifier
+        // pressed while another is held is a combination, not a tap: system-wide keys are
+        // Ctrl+Alt+something, and Windows swallows their letter but not the Alt, so releasing
+        // it here used to flip the banner as well whenever this window had focus.
         var modifier = Hotkeys.ModifierOf(e);
         if (modifier is not null)
         {
-            if (!e.IsRepeat) _armedModifier = modifier;
+            if (!e.IsRepeat) _armedModifier = OtherModifiersHeld(modifier) ? null : modifier;
             return;
         }
         _armedModifier = null;
@@ -117,14 +120,22 @@ public partial class ControlView : UserControl
     private void OnKeyUp(object sender, KeyEventArgs e)
     {
         if (_vm is null) return;
+
+        // Releasing an ordinary key means the modifier was part of a combination. The key
+        // press of a system-wide hotkey never arrives here, but its release can.
+        var modifier = Hotkeys.ModifierOf(e);
+        if (modifier is null)
+        {
+            _armedModifier = null;
+            return;
+        }
+
         var binding = _vm.Binding("toggleBanner");
         if (binding is null || !binding.IsModifierOnly) return;
-
-        var modifier = Hotkeys.ModifierOf(e);
-        if (modifier is null || modifier != binding.Code || _armedModifier != binding.Code) return;
+        if (modifier != binding.Code || _armedModifier != binding.Code) return;
 
         _armedModifier = null;
-        if (TypingHere()) return;
+        if (OtherModifiersHeld(modifier) || TypingHere()) return;
 
         // Handled, or Alt would open the window menu instead.
         e.Handled = true;
@@ -132,4 +143,13 @@ public partial class ControlView : UserControl
     }
 
     private void OnDeactivated(object? sender, EventArgs e) => _armedModifier = null;
+
+    private static bool OtherModifiersHeld(string modifier)
+    {
+        var held = Keyboard.Modifiers;
+        return (modifier != "Control" && held.HasFlag(ModifierKeys.Control))
+               || (modifier != "Alt" && held.HasFlag(ModifierKeys.Alt))
+               || (modifier != "Shift" && held.HasFlag(ModifierKeys.Shift))
+               || (modifier != "Meta" && held.HasFlag(ModifierKeys.Windows));
+    }
 }

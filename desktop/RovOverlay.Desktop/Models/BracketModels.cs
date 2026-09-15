@@ -26,13 +26,14 @@ public sealed record ReadyMatchInfo(string MatchId, string TournamentId, string 
 public sealed record ReadyMatchesReply(List<ReadyMatchInfo>? Matches);
 
 // A game finished from the Control Panel. NextMatch is set only when that game ended the
-// series, and is the next playable match in the same tournament.
+// series, and is the next playable match in the same tournament. TeamName is the team that
+// got the point, read before the sides swapped.
 public sealed record FinishGameReply(bool Ok, LiveInfo Live, int Round, bool SeriesOver, string? SeriesWinner,
-    SideScores? Score, ReadyMatchInfo? NextMatch);
+    SideScores? Score, ReadyMatchInfo? NextMatch, string? TeamName = null);
 public sealed record SideScores(int Blue, int Red);
 
 // A game taken back with -1. Reopened: that point had ended the series, which is open again.
-public sealed record UndoGameReply(bool Ok, LiveInfo Live, int Round, bool Reopened);
+public sealed record UndoGameReply(bool Ok, LiveInfo Live, int Round, bool Reopened, string? TeamName = null);
 
 // One side of a recorded draft: who played, what they picked and banned, and whether
 // they won that game. Names are the frozen snapshot, not today's registry.
@@ -82,3 +83,8 @@ public sealed record AnalyticsReply(AnalyticsScope Scope, AnalyticsSummary Summa
 // accelerators: action -> the string Windows is asked for ("Control+Alt+H").
 // held: what the desktop app reported it actually holds, or null before it has said.
 public sealed record GlobalHotkeysReply(bool Enabled, Dictionary<string, string>? Accelerators, List<string>? Held);
+
+// What a system-wide key did. Changed false is a refusal, not a failed request: Code says
+// why. Finish / Undo are the same results +1 and -1 on the Control Panel get back.
+public sealed record GlobalHotkeyFireReply(bool Ok, bool Changed, string? Code, string? Error,
+    FinishGameReply? Finish, UndoGameReply? Undo);

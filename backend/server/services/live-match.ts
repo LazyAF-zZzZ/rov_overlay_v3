@@ -401,6 +401,9 @@ export interface FinishGameResult {
   seriesWinner: string | null;
   // คะแนนตามฝั่งบนจอหลังบวกแต้มแล้ว
   score: { blue: number; red: number };
+  // ทีมที่ได้แต้มนี้ อ่านก่อนเดินรอบ เพราะพอสลับฝั่งแล้วฝั่งที่ถูกกดเป็นของอีกทีม
+  // คีย์ลัดระดับระบบต้องใช้ตัวนี้ขึ้นข้อความ มันไม่ได้ถือชื่อทีมไว้ก่อนกดเหมือนปุ่มบนหน้า Control
+  teamName: string;
   nextMatch: ReadyMatch | null;
 }
 
@@ -448,6 +451,7 @@ export function finishGame(winner: GameWinner): FinishGameOutcome {
   }
 
   const state = getState();
+  const teamName = state[key].name;
   const before = state[key].score;
   state[key].score = clampNumber(before + 1, 0, MAX_SCORE);
   emitState();
@@ -476,6 +480,7 @@ export function finishGame(winner: GameWinner): FinishGameOutcome {
       // แต้มสุดท้ายของซีรีส์มาจากฝั่งที่เพิ่งได้แต้มเสมอ ทีมนั้นจึงเป็นผู้ชนะซีรีส์
       seriesWinner: seriesOver ? getState()[key].name : null,
       score: scoreOnScreen(),
+      teamName,
       nextMatch: seriesOver
         ? readyMatches({ tournamentId: after.tournamentId, exceptMatchId: after.id, limit: 1 })[0] ?? null
         : null
@@ -493,6 +498,7 @@ function finishQuickGame(key: 'teamBlue' | 'teamRed'): FinishGameOutcome {
   if (state.round >= MAX_ROUND_NUMBER) {
     return { error: 'Round is already at the limit', code: 'round-limit' };
   }
+  const teamName = state[key].name;
   state[key].score = clampNumber(state[key].score + 1, 0, MAX_SCORE);
   emitState();
   const stepped = stepRound(1);
@@ -500,7 +506,7 @@ function finishQuickGame(key: 'teamBlue' | 'teamRed'): FinishGameOutcome {
   return {
     result: {
       live: emptyLive(), round: getState().round, seriesOver: false,
-      seriesWinner: null, score: scoreOnScreen(), nextMatch: null
+      seriesWinner: null, score: scoreOnScreen(), teamName, nextMatch: null
     }
   };
 }
@@ -514,6 +520,8 @@ export interface UndoGameResult {
   round: number;
   // แต้มที่ถอนเคยปิดซีรีส์ ตอนนี้ซีรีส์กลับมาแข่งต่อ และผู้ชนะถูกถอนออกจากคู่ถัดไปแล้ว
   reopened: boolean;
+  // ทีมที่ถูกถอนแต้ม อ่านก่อนเอาเกมกลับขึ้นจอ ด้วยเหตุผลเดียวกับ FinishGameResult.teamName
+  teamName: string;
 }
 
 export type UndoGameOutcome =
@@ -560,6 +568,7 @@ export function undoGame(side: GameWinner): UndoGameOutcome {
   }
 
   const reopened = seriesWinner(match.bestOf, match.scoreA, match.scoreB) !== null;
+  const teamName = state[key].name;
   const before = state[key].score;
   state[key].score = clampNumber(before - 1, 0, MAX_SCORE);
   emitState();
@@ -579,7 +588,7 @@ export function undoGame(side: GameWinner): UndoGameOutcome {
     if (back.error !== undefined) return { error: back.error, code: 'not-recorded' };
   }
 
-  return { result: { live: describeLive(), round: getState().round, reopened } };
+  return { result: { live: describeLive(), round: getState().round, reopened, teamName } };
 }
 
 // แมตช์เดี่ยว: หักแต้มแล้วถอยกลับหนึ่งรอบ กระจกของ finishQuickGame
@@ -589,13 +598,14 @@ function undoQuickGame(key: 'teamBlue' | 'teamRed'): UndoGameOutcome {
   if (state[key].score <= 0) {
     return { error: 'This team has no point to take back', code: 'no-points' };
   }
+  const teamName = state[key].name;
   state[key].score -= 1;
   emitState();
   if (state.round > FIRST_ROUND) {
     const stepped = stepRound(-1);
     if (stepped.error !== undefined) return { error: stepped.error, code: 'not-recorded' };
   }
-  return { result: { live: emptyLive(), round: getState().round, reopened: false } };
+  return { result: { live: emptyLive(), round: getState().round, reopened: false, teamName } };
 }
 
 // เอาทีมจากทะเบียนมาใส่ฝั่งหนึ่งของ overlay โดยไม่ต้องมีทัวร์นาเมนต์

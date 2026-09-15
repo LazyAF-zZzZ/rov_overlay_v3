@@ -197,11 +197,18 @@ export function carryOverSettings<T extends object>(
 // ตัวนี้ Electron ไปจองปุ่มกับระบบปฏิบัติการ (globalShortcut) จึงกดจากที่ไหนก็ได้
 //
 // การจองแบบนั้นคือการแย่งปุ่มมาจากทุกโปรแกรมในเครื่อง จึงมีกฎบังคับสองข้อ
-// 1. ปิดไว้เป็นค่าเริ่มต้น ไม่มีใครควรเสียปุ่มไปเพราะติดตั้งโปรแกรมนี้
+// 1. สมัย v2 ปิดไว้เป็นค่าเริ่มต้น ตั้งแต่ 3.1.0 เปิดเป็นค่าเริ่มต้นตามที่ผู้ใช้ขอ (ชื่อบนหน้าแอพคือ "คีย์ลัด")
+//    ทุกปุ่มจึงต้องอยู่ในบล็อก Ctrl+Alt และปุ่มที่โปรแกรมอื่นจองอยู่ต้องขึ้นสีแดงบนหน้า Hotkeys
 // 2. ต้องมี modifier อย่างน้อยหนึ่งตัวเสมอ จอง Space เดี่ยวๆ ไว้ทั้งระบบ
 //    แปลว่าทั้งเครื่องพิมพ์เว้นวรรคไม่ได้จนกว่าจะปิดแอพ ซึ่งคนกดจะไม่มีทางเดาถูกว่าเพราะอะไร
+//
+// ชุดคะแนนกับรอบ (+1 / -1 แต่ละฝั่ง, รอบก่อนหน้า / ถัดไป) เพิ่มใน 3.1.0 ตามที่ผู้ใช้ขอ:
+// จังหวะที่ต้องกดมากที่สุดคือตอนเกมจบ ซึ่งคนคุมงานกำลังอยู่ที่ OBS ไม่ใช่ที่หน้าต่างแอพ
+// "น้ำเงิน / แดง" คือฝั่งบนจอ ณ ตอนกด เหมือนปุ่มข้างคะแนน ไม่ใช่ทีม A / B
+// เพราะคนกดดูจากในเกมว่าฝั่งไหนชนะ และทีมสลับฝั่งกันทุกเกม
 export const GLOBAL_HOTKEY_ACTIONS = [
-  'toggleBanner', 'pauseResume', 'prevPhase', 'nextPhase', 'undo'
+  'toggleBanner', 'pauseResume', 'prevPhase', 'nextPhase', 'undo',
+  'bluePlus', 'redPlus', 'blueMinus', 'redMinus', 'prevRound', 'nextRound'
 ] as const;
 
 export type GlobalHotkeyAction = typeof GLOBAL_HOTKEY_ACTIONS[number];
@@ -209,18 +216,54 @@ export type GlobalHotkeyBindings = Record<GlobalHotkeyAction, HotkeyBinding>;
 
 export interface GlobalHotkeys {
   enabled: boolean;
+  // ชุดปุ่มเริ่มต้นที่ค่านี้ถูกบันทึกไว้ ใช้ย้ายปุ่มที่ยังเป็นค่าเริ่มต้นเก่าไปชุดใหม่ครั้งเดียว
+  // ต้องเก็บไว้ ไม่งั้นคนที่ตั้ง Ctrl+Alt+H กลับมาเองทีหลังจะโดนย้ายซ้ำทุกครั้งที่ state ถูก sanitize
+  layout: number;
   bindings: GlobalHotkeyBindings;
 }
 
+// ชุดที่ 2 (3.1.0): ทุกปุ่มเป็นบล็อกเดียวใต้มือซ้ายที่กด Ctrl+Alt ค้างไว้
+// ชุดที่ 1 มี H, Space และลูกศรซ้ายขวา ซึ่งต้องใช้สองมือ และ Ctrl+Alt+Space ถูกโปรแกรมอื่นจองบนเครื่องจริง
+export const GLOBAL_HOTKEY_LAYOUT = 2;
+
+const LAYOUT_1_BINDINGS: Partial<Record<GlobalHotkeyAction, HotkeyBinding>> = {
+  toggleBanner: { code: 'KeyH', ctrl: true, shift: false, alt: true, meta: false },
+  pauseResume: { code: 'Space', ctrl: true, shift: false, alt: true, meta: false },
+  prevPhase: { code: 'ArrowLeft', ctrl: true, shift: false, alt: true, meta: false },
+  nextPhase: { code: 'ArrowRight', ctrl: true, shift: false, alt: true, meta: false }
+};
+
+function sameBinding(a: HotkeyBinding, b: HotkeyBinding | undefined): boolean {
+  return !!b && a.code === b.code && a.ctrl === b.ctrl && a.shift === b.shift && a.alt === b.alt && a.meta === b.meta;
+}
+
 // Ctrl+Alt เป็นฐาน เพราะแทบไม่มีโปรแกรมไหนใช้ และ OBS เองก็ไม่ได้จองไว้
+// ทุกปุ่มอยู่ใต้มือซ้ายที่กด Ctrl+Alt ค้างไว้ มือขวาอยู่ที่เมาส์ใน OBS ต่อได้
+//
+//   1 2        +1 น้ำเงิน / แดง
+//   Q W  E R   -1 น้ำเงิน / แดง     เฟสดราฟต์ก่อน / ถัดไป
+//   A S  D F   รอบก่อน / ถัดไป      พัก-เดินนาฬิกา / ซ่อน-แสดงแบนเนอร์
+//   Z          ย้อนพิคหรือแบน
+//
+// ซ้ายคือน้ำเงิน ขวาคือแดง เหมือนบนจอ และซ้ายคือถอยหลัง ขวาคือเดินหน้า
+// ชุดคะแนนแรก (Shift+เลข และ PageUp / PageDown) ผู้ใช้บอกว่าปุ่มห่างกันเกินไป ต้องใช้สองมือ
+// แล้วขอให้ปุ่มระดับระบบทุกปุ่มเป็นแบบเดียวกัน ปุ่มใหม่ต้องอยู่ในบล็อกนี้
 export const GLOBAL_HOTKEY_DEFAULTS: GlobalHotkeys = {
-  enabled: false,
+  // เปิดเป็นค่าเริ่มต้นตั้งแต่ 3.1.0 ตามที่ผู้ใช้ขอ: นี่คือ "คีย์ลัด" หลักของแอพแล้ว ไม่ใช่ของเสริม
+  enabled: true,
+  layout: GLOBAL_HOTKEY_LAYOUT,
   bindings: {
-    toggleBanner: { code: 'KeyH', ctrl: true, shift: false, alt: true, meta: false },
-    pauseResume: { code: 'Space', ctrl: true, shift: false, alt: true, meta: false },
-    prevPhase: { code: 'ArrowLeft', ctrl: true, shift: false, alt: true, meta: false },
-    nextPhase: { code: 'ArrowRight', ctrl: true, shift: false, alt: true, meta: false },
-    undo: { code: 'KeyZ', ctrl: true, shift: false, alt: true, meta: false }
+    toggleBanner: { code: 'KeyF', ctrl: true, shift: false, alt: true, meta: false },
+    pauseResume: { code: 'KeyD', ctrl: true, shift: false, alt: true, meta: false },
+    prevPhase: { code: 'KeyE', ctrl: true, shift: false, alt: true, meta: false },
+    nextPhase: { code: 'KeyR', ctrl: true, shift: false, alt: true, meta: false },
+    undo: { code: 'KeyZ', ctrl: true, shift: false, alt: true, meta: false },
+    bluePlus: { code: 'Digit1', ctrl: true, shift: false, alt: true, meta: false },
+    redPlus: { code: 'Digit2', ctrl: true, shift: false, alt: true, meta: false },
+    blueMinus: { code: 'KeyQ', ctrl: true, shift: false, alt: true, meta: false },
+    redMinus: { code: 'KeyW', ctrl: true, shift: false, alt: true, meta: false },
+    prevRound: { code: 'KeyA', ctrl: true, shift: false, alt: true, meta: false },
+    nextRound: { code: 'KeyS', ctrl: true, shift: false, alt: true, meta: false }
   }
 };
 
@@ -277,14 +320,25 @@ export function sanitizeGlobalHotkeys(value: unknown): GlobalHotkeys {
     ? source.bindings
     : {}) as Record<string, unknown>;
 
+  // บันทึกมาจากชุดเก่า: ปุ่มที่ยังเป็นค่าเริ่มต้นของชุดเก่าย้ายไปชุดใหม่ ปุ่มที่คนตั้งเองไม่แตะ
+  // ทำครั้งเดียว เพราะผลลัพธ์ถูกประทับ layout ใหม่ไว้
+  const fromOldLayout = source.layout !== GLOBAL_HOTKEY_LAYOUT;
+
   const bindings = {} as GlobalHotkeyBindings;
   GLOBAL_HOTKEY_ACTIONS.forEach((action) => {
     const fallback = GLOBAL_HOTKEY_DEFAULTS.bindings[action];
     const binding = sanitizeHotkeyBinding(rawBindings[action], fallback);
+    if (fromOldLayout && sameBinding(binding, LAYOUT_1_BINDINGS[action])) {
+      bindings[action] = { ...fallback };
+      return;
+    }
     // ผ่านรูปแบบ code แล้วยังไม่พอ ต้องจองได้จริงด้วย ไม่งั้นเก็บค่าที่ใช้ไม่ได้ไว้เฉยๆ
     bindings[action] = toAccelerator(binding) ? binding : { ...fallback };
   });
 
-  return { enabled: source.enabled === true, bindings };
+  // มาจากก่อน 3.1.0 (หรือไฟล์เสีย): เปิดให้ เพราะตอนนั้นค่าเริ่มต้นคือปิด และแยกไม่ออกว่าใครปิดเอง
+  // หลังประทับ layout แล้ว ปิดเองคือปิด ค่าที่ไม่ใช่ true ไม่นับเป็นเปิด
+  const enabled = fromOldLayout ? true : source.enabled === true;
+  return { enabled, layout: GLOBAL_HOTKEY_LAYOUT, bindings };
 }
 
