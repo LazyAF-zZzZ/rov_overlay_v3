@@ -18,8 +18,9 @@ session with no conversation history should be able to continue from here and
 | Verified how | Every native screen rendered with seeded data (--snapshot, §3) in both languages; anything in its own window cannot be (§8), which is how 3.0.0 shipped unable to open one at all. 3.0.5 has been **installed from its own Setup and watched opening a real window**, serving its overlays and answering 410 on the pages the installer drops. The v2 import runs against a synthetic v2 install in the tests, with the v2 folder asserted byte-identical afterwards. The **game-over flow has been clicked through for real** (2026-09-14): `scripts/uia.ps1` pressed GAME OVER, the confirm dialog, the deciding game and Put on air in a live window against a throwaway backend, with the server's record checked after every press. The other clicking flows are still unverified (§8). |
 | Updates / notifications | **Built** (§5). Velopack 1.2.0 against GitHub Releases, applied when the app closes and never on its own; a notice feed with a bell in the title bar. |
 
-Next: whatever the people using it ask for. 3.0.5 through **3.0.8** are published; updates
-reach them on their own. 3.0.8 carries the flow and UI work: one-press GAME OVER with SERIES
+Next: whatever the people using it ask for. 3.0.5 through **3.0.9** are published. New
+versions reach people on their own, but from 3.0.9 they are only *installed* when the
+operator presses Update now (§5). 3.0.8 carries the flow and UI work: one-press GAME OVER with SERIES
 OVER and Put on air (`POST /api/live-match/finish`), a Control Panel whose team setup and sound
 fold away, and a Home that shows what is on air and what is ready to play
 (`GET /api/ready-matches`). It was smoke-tested for real before packing. Its notice
