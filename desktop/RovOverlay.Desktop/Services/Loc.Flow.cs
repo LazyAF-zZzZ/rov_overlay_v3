@@ -1,19 +1,16 @@
 namespace RovOverlay.Desktop.Services;
 
-// Ending a game in one press, the calmer Control Panel, and Home showing what is live.
+// Ending a game from the score, the calmer Control Panel, and Home showing what is live.
 public sealed partial class Loc
 {
     private static readonly Dictionary<string, string> FlowEn = new()
     {
-        ["Flow.GameOver"] = "GAME OVER",
-        ["Flow.Won"] = "{0} won",
-        ["Flow.WonTip"] = "Gives this side the point, records who won the game, keeps the draft with it and moves the board to the next game",
-        ["Flow.FinishTitle"] = "Game over",
-        ["Flow.FinishQ"] = "{0} won game {1}?",
-        ["Flow.FinishBody"] = "The point goes to {0}, this draft is saved with the game, and the board moves on to the next game. If it was the wrong side, the round arrow brings this game back.",
-        ["Flow.NextGame"] = "Game {0} is on the board",
+        ["Flow.AddPoint"] = "+1",
+        ["Flow.AddPointName"] = "+1 {0}",
+        ["Flow.AddPointTip"] = "This side won the game: gives it the point, records the winner, keeps the draft with that game and puts the next game on the board. A wrong press is fixed with the round arrow and the score box.",
+        ["Flow.NextGame"] = "{0} won the game · game {1} is on the board",
         ["Flow.SeriesOver"] = "SERIES OVER",
-        ["Flow.SeriesDone"] = "This series is finished. Its last game stays on the board.",
+        ["Flow.SeriesWon"] = "{0} win the series {1}–{2}",
         ["Flow.Next"] = "Next: {0} vs {1}",
         ["Flow.PutOnAir"] = "Put on air",
         ["Flow.NoNext"] = "No other match in this tournament is ready yet",
@@ -35,15 +32,12 @@ public sealed partial class Loc
 
     private static readonly Dictionary<string, string> FlowTh = new()
     {
-        ["Flow.GameOver"] = "จบเกม",
-        ["Flow.Won"] = "{0} ชนะ",
-        ["Flow.WonTip"] = "ให้แต้มฝั่งนี้ บันทึกว่าใครชนะเกมนี้ เก็บดราฟต์ไว้กับเกม แล้วเลื่อนกระดานไปเกมถัดไป",
-        ["Flow.FinishTitle"] = "จบเกม",
-        ["Flow.FinishQ"] = "{0} ชนะเกมที่ {1} ใช่ไหม",
-        ["Flow.FinishBody"] = "แต้มจะเป็นของ {0} ดราฟต์นี้ถูกเก็บไว้กับเกมนี้ แล้วกระดานจะเลื่อนไปเกมถัดไป ถ้ากดผิดฝั่ง ลูกศรรอบจะพาเกมนี้กลับมา",
-        ["Flow.NextGame"] = "เกมที่ {0} ขึ้นกระดานแล้ว",
+        ["Flow.AddPoint"] = "+1",
+        ["Flow.AddPointName"] = "+1 {0}",
+        ["Flow.AddPointTip"] = "ฝั่งนี้ชนะเกมนี้: ให้แต้ม บันทึกผู้ชนะ เก็บดราฟต์ไว้กับเกมนี้ แล้วขึ้นเกมถัดไปบนกระดาน กดผิดแก้ได้ด้วยลูกศรรอบกับช่องคะแนน",
+        ["Flow.NextGame"] = "{0} ชนะเกมนี้ · เกมที่ {1} ขึ้นกระดานแล้ว",
         ["Flow.SeriesOver"] = "ซีรีส์จบแล้ว",
-        ["Flow.SeriesDone"] = "ซีรีส์นี้จบแล้ว เกมสุดท้ายยังค้างอยู่บนกระดาน",
+        ["Flow.SeriesWon"] = "{0} ชนะซีรีส์ {1}–{2}",
         ["Flow.Next"] = "คู่ถัดไป: {0} พบ {1}",
         ["Flow.PutOnAir"] = "ขึ้นจอ",
         ["Flow.NoNext"] = "ยังไม่มีคู่อื่นในทัวร์นาเมนต์นี้ที่พร้อมเล่น",

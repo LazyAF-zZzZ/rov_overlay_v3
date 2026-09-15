@@ -43,8 +43,15 @@
                     <DockPanel Margin="14,10,12,10">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="{svc:T Control.Score}" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <!-- Typing here corrects the score and never moves the board. -->
                             <TextBox Text="{Binding ScoreText, UpdateSourceTrigger=PropertyChanged}" Width="54" MaxLength="2"
                                      FontSize="18" FontWeight="Bold" HorizontalContentAlignment="Center"/>
+                            <!-- +1: this side won the game. The winner is counted from the score,
+                                 and the series is declared when a side reaches the wins it needs. -->
+                            <Button Style="{StaticResource PrimaryButton}" Content="{svc:T Flow.AddPoint}" Margin="6,0,0,0"
+                                    MinWidth="44" Height="34" FontSize="14" FontWeight="Bold" Padding="8,0"
+                                    Command="{Binding AddPointCommand}" ToolTip="{svc:T Flow.AddPointTip}"
+                                    AutomationProperties.Name="{Binding AddPointName}"/>
                         </StackPanel>
                         <!-- During the draft the side is identified by its logo and name, read-only. -->
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Style="{StaticResource DraftOnly}">
@@ -390,8 +397,11 @@
                         </Button>
                         <TextBlock Text="{svc:T Flow.SeriesOver}" FontWeight="Bold" FontSize="10.5" Foreground="{StaticResource GoldBrush}"
                                    VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding NextMatchText}" Margin="10,0,0,0" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextBrush}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding SeriesResultText}" Margin="10,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextBrush}"/>
+                        <TextBlock Text="·" Margin="10,0" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
+                        <TextBlock Text="{Binding NextMatchText}" VerticalAlignment="Center"
+                                   Foreground="{StaticResource Muted2Brush}" TextTrimming="CharacterEllipsis"/>
                     </DockPanel>
                 </Border>
 
@@ -412,24 +422,6 @@
                                             Command="{Binding StepRoundCommand}" CommandParameter="1" ToolTip="{svc:T Control.NextRoundTip}"/>
                                     <TextBlock Text="{Binding RoundNote}" FontSize="10" Foreground="{StaticResource MutedBrush}"
                                                VerticalAlignment="Center" Margin="6,0,8,0"/>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Game over, one press per game. Coloured by side so the two
-                                 buttons cannot be confused with each other at a glance. -->
-                            <Border DockPanel.Dock="Right" Style="{StaticResource SegmentGroup}" Margin="0,0,10,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{svc:T Flow.GameOver}" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" Margin="8,0,6,0"/>
-                                    <Button Style="{StaticResource GhostButton}" Padding="10,0" MinHeight="24"
-                                            Command="{Binding FinishBlueCommand}" ToolTip="{svc:T Flow.WonTip}">
-                                        <TextBlock Text="{Binding BlueWonText}" Foreground="{StaticResource BlueBrush}" FontWeight="SemiBold"
-                                                   MaxWidth="170" TextTrimming="CharacterEllipsis"/>
-                                    </Button>
-                                    <Button Style="{StaticResource GhostButton}" Padding="10,0" MinHeight="24"
-                                            Command="{Binding FinishRedCommand}" ToolTip="{svc:T Flow.WonTip}">
-                                        <TextBlock Text="{Binding RedWonText}" Foreground="{StaticResource RedBrush}" FontWeight="SemiBold"
-                                                   MaxWidth="170" TextTrimming="CharacterEllipsis"/>
-                                    </Button>
                                 </StackPanel>
                             </Border>
 

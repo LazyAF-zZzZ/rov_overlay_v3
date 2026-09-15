@@ -378,7 +378,17 @@ export interface FinishGameResult {
   live: LiveInfo;
   round: number;
   seriesOver: boolean;
+  // ชื่อทีมที่ชนะซีรีส์ตามที่อยู่บนจอ null = ซีรีส์ยังไม่จบ
+  // ส่งกลับจากเซิร์ฟเวอร์ ไม่ให้หน้าแอปเดาจากชื่อที่ถืออยู่ ซึ่งอาจยังไม่ได้ state ล่าสุด
+  seriesWinner: string | null;
+  // คะแนนตามฝั่งบนจอหลังบวกแต้มแล้ว
+  score: { blue: number; red: number };
   nextMatch: ReadyMatch | null;
+}
+
+function scoreOnScreen(): { blue: number; red: number } {
+  const state = getState();
+  return { blue: state.teamBlue.score, red: state.teamRed.score };
 }
 
 export type FinishGameOutcome =
@@ -445,6 +455,9 @@ export function finishGame(winner: GameWinner): FinishGameOutcome {
       live: describeLive(),
       round: getState().round,
       seriesOver,
+      // แต้มสุดท้ายของซีรีส์มาจากฝั่งที่เพิ่งได้แต้มเสมอ ทีมนั้นจึงเป็นผู้ชนะซีรีส์
+      seriesWinner: seriesOver ? getState()[key].name : null,
+      score: scoreOnScreen(),
       nextMatch: seriesOver
         ? readyMatches({ tournamentId: after.tournamentId, exceptMatchId: after.id, limit: 1 })[0] ?? null
         : null
@@ -466,7 +479,12 @@ function finishQuickGame(key: 'teamBlue' | 'teamRed'): FinishGameOutcome {
   emitState();
   const stepped = stepRound(1);
   if (stepped.error !== undefined) return { error: stepped.error, code: 'round-limit' };
-  return { result: { live: emptyLive(), round: getState().round, seriesOver: false, nextMatch: null } };
+  return {
+    result: {
+      live: emptyLive(), round: getState().round, seriesOver: false,
+      seriesWinner: null, score: scoreOnScreen(), nextMatch: null
+    }
+  };
 }
 
 // เอาทีมจากทะเบียนมาใส่ฝั่งหนึ่งของ overlay โดยไม่ต้องมีทัวร์นาเมนต์

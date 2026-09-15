@@ -288,7 +288,14 @@ public sealed class SideViewModel : ObservableObject
 
         UploadLogoCommand = new AsyncRelayCommand(UploadLogoAsync);
         ClearLogoCommand = new AsyncRelayCommand(ClearLogoAsync);
+        // Busy while the server works, so a quick double press cannot count two games.
+        AddPointCommand = new AsyncRelayCommand(() => owner.FinishGameAsync(IsBlue ? "blue" : "red"));
     }
+
+    public ICommand AddPointCommand { get; }
+
+    // What screen readers and UI automation call the +1 button: "+1 PSG Esports".
+    public string AddPointName => Loc.F("Flow.AddPointName", ControlViewModel.SideName(this));
 
     public ControlViewModel Owner { get; }
     public string Key { get; }
@@ -307,6 +314,7 @@ public sealed class SideViewModel : ObservableObject
         set
         {
             if (!Set(ref _name, value ?? "")) return;
+            OnPropertyChanged(nameof(AddPointName));
             _nameSave.Run(() => Owner.Emit("updateTeamName", new { team = Key, name = Name }));
             FlashSaved();
         }
@@ -409,6 +417,7 @@ public sealed class SideViewModel : ObservableObject
         {
             _name = side.Name;
             OnPropertyChanged(nameof(Name));
+            OnPropertyChanged(nameof(AddPointName));
         }
         var score = side.Score.ToString();
         if (!isEditing(this) && score != _scoreText)

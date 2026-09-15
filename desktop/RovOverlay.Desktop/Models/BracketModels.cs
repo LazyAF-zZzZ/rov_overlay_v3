@@ -27,7 +27,9 @@ public sealed record ReadyMatchesReply(List<ReadyMatchInfo>? Matches);
 
 // A game finished from the Control Panel. NextMatch is set only when that game ended the
 // series, and is the next playable match in the same tournament.
-public sealed record FinishGameReply(bool Ok, LiveInfo Live, int Round, bool SeriesOver, ReadyMatchInfo? NextMatch);
+public sealed record FinishGameReply(bool Ok, LiveInfo Live, int Round, bool SeriesOver, string? SeriesWinner,
+    SideScores? Score, ReadyMatchInfo? NextMatch);
+public sealed record SideScores(int Blue, int Red);
 
 // One side of a recorded draft: who played, what they picked and banned, and whether
 // they won that game. Names are the frozen snapshot, not today's registry.

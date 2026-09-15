@@ -72,6 +72,8 @@ test('finishing a game records the point and the winner, keeps the draft, and pu
 
   assert.strictEqual(out.result.round, 2);
   assert.strictEqual(out.result.seriesOver, false);
+  assert.strictEqual(out.result.seriesWinner, null, 'one game of a Bo3 decides nothing');
+  assert.deepStrictEqual(out.result.score, { blue: 1, red: 0 });
   assert.strictEqual(out.result.nextMatch, null);
   assert.strictEqual(out.result.live.gameNo, 2, 'game 2 is on air');
 
@@ -102,6 +104,8 @@ test('the deciding game ends the series: no game 3, and the other semifinal is o
   assert.ok(out.result, out.error ?? 'second finish failed');
 
   assert.strictEqual(out.result.seriesOver, true);
+  assert.strictEqual(out.result.seriesWinner, liveState.getState().teamBlue.name, 'the side that scored the last point wins the series');
+  assert.deepStrictEqual(out.result.score, { blue: 2, red: 0 });
   assert.strictEqual(out.result.round, 2, 'still showing the last game played');
   assert.strictEqual(getStores().games.forMatch(first.id).length, 2, 'no empty game 3 row');
   assert.strictEqual(must(getStores().matches.get(first.id)).status, 'complete');

@@ -140,6 +140,18 @@ switch ($Action) {
         [RovShot]::Save([IntPtr]$dialog.Current.NativeWindowHandle, $Out)
         "captured dialog $Out"
     }
+    'has-text' {
+        # Any element in the main window whose name (the text a TextBlock shows) contains -Text.
+        $null = Wait-For {
+            $main = Get-MainWindow
+            if (-not $main) { return $null }
+            foreach ($hit in @($main.FindAll($Scope::Descendants, [System.Windows.Automation.Condition]::TrueCondition))) {
+                if ($hit.Current.Name -like "*$Text*") { return $hit }
+            }
+            return $null
+        } "text containing '$Text'"
+        "found text containing '$Text'"
+    }
     'has-value' {
         # A text field in the main window whose current text contains -Text.
         $editCondition = New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, [System.Windows.Automation.ControlType]::Edit)

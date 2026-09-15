@@ -66,8 +66,6 @@ public sealed class ControlViewModel : ObservableObject
         });
         ToggleSetupCommand = new RelayCommand(() => ShowSetup = !ShowSetup);
         ToggleSoundCommand = new RelayCommand(() => ShowSound = !ShowSound);
-        FinishBlueCommand = new AsyncRelayCommand(() => FinishGameAsync("blue"));
-        FinishRedCommand = new AsyncRelayCommand(() => FinishGameAsync("red"));
         PutNextOnAirCommand = new AsyncRelayCommand(PutNextOnAirAsync, () => _nextMatch is not null);
 
         services.StateUpdated += OnState;
@@ -104,8 +102,6 @@ public sealed class ControlViewModel : ObservableObject
     public ICommand SwapPickCommand { get; }
     public ICommand ToggleSetupCommand { get; }
     public ICommand ToggleSoundCommand { get; }
-    public ICommand FinishBlueCommand { get; }
-    public ICommand FinishRedCommand { get; }
     public ICommand PutNextOnAirCommand { get; }
 
     // What the view says is being typed in right now, so a push from the server never
@@ -196,34 +192,33 @@ public sealed class ControlViewModel : ObservableObject
 
     // ---- game over --------------------------------------------------------
 
-    public string BlueWonText => Loc.F("Flow.Won", SideName(Blue));
-    public string RedWonText => Loc.F("Flow.Won", SideName(Red));
-
     public bool SeriesOver { get => _seriesOver; private set => Set(ref _seriesOver, value); }
     public bool HasNextMatch => _nextMatch is not null;
     public string NextMatchText => _nextMatch is null
         ? Loc.T("Flow.NoNext")
         : Loc.F("Flow.Next", _nextMatch.BlueName, _nextMatch.RedName);
 
-    private static string SideName(SideViewModel side) =>
+    // "PSG Esports win the series 2–1": the winner's score first, whichever side they are on.
+    private string? _seriesResult;
+    public string? SeriesResultText { get => _seriesResult; private set => Set(ref _seriesResult, value); }
+
+    internal static string SideName(SideViewModel side) =>
         string.IsNullOrWhiteSpace(side.Name) ? Loc.T(side.IsBlue ? "Control.BlueTeam" : "Control.RedTeam") : side.Name;
 
+    // The +1 beside a team's score: that team won the game.
+    //
     // Ending a game used to be two separate actions with nothing on screen saying which
     // came first: add the point in the score box, then press the round arrow. Forget the
     // first and the game has no winner, so hero win rates quietly lose it; forget the
     // second and the next draft is written over the game just played. The server does
-    // both in the right order and refuses to count a game twice.
+    // both in the right order, refuses to count a game twice, and says when the point
+    // it just added won the series - so the winner is counted from the score, not chosen.
     //
-    // Confirmed first, because a wrong press mid-broadcast moves the board off the draft
-    // viewers are looking at. The round arrow brings it back, and the dialog says so.
-    private async Task FinishGameAsync(string winner)
+    // No confirmation: the user asked for one press. A wrong press is fixed with the round
+    // arrow and the score box, and the toast names the team so a slip is seen at once.
+    internal async Task FinishGameAsync(string winner)
     {
         var name = SideName(winner == "blue" ? Blue : Red);
-        var game = _state?.Round ?? 1;
-        if (!Dialogs.Confirm(Loc.T("Flow.FinishTitle"),
-                [Loc.F("Flow.FinishQ", name, game), Loc.F("Flow.FinishBody", name)],
-                Loc.F("Flow.Won", name)))
-            return;
 
         FinishGameReply reply;
         try
@@ -245,16 +240,21 @@ public sealed class ControlViewModel : ObservableObject
 
         if (reply.SeriesOver)
         {
+            var score = reply.Score ?? new SideScores(0, 0);
+            var high = Math.Max(score.Blue, score.Red);
+            var low = Math.Min(score.Blue, score.Red);
+            SeriesResultText = Loc.F("Flow.SeriesWon", reply.SeriesWinner ?? name, high, low);
+
             _seriesMatchId = reply.Live.MatchId;
             _nextMatch = reply.NextMatch;
             SeriesOver = true;
             OnPropertyChanged(nameof(HasNextMatch));
             OnPropertyChanged(nameof(NextMatchText));
-            Toasts.Info(Loc.T("Flow.SeriesDone"));
+            Toasts.Info(SeriesResultText);
         }
         else
         {
-            Toasts.Info(Loc.F("Flow.NextGame", reply.Round));
+            Toasts.Info(Loc.F("Flow.NextGame", name, reply.Round));
         }
     }
 
@@ -273,6 +273,7 @@ public sealed class ControlViewModel : ObservableObject
         if (!SeriesOver && _nextMatch is null) return;
         _seriesMatchId = null;
         _nextMatch = null;
+        SeriesResultText = null;
         SeriesOver = false;
         OnPropertyChanged(nameof(HasNextMatch));
         OnPropertyChanged(nameof(NextMatchText));
@@ -487,7 +488,7 @@ public sealed class ControlViewModel : ObservableObject
                  {
                      nameof(PhaseLabel), nameof(TimerText), nameof(IsUrgent), nameof(PhaseIndexText), nameof(IsRunning),
                      nameof(PauseResumeText), nameof(StatusText), nameof(RoundText), nameof(CanPrevRound), nameof(RoundNote),
-                     nameof(Is1080), nameof(Is1440), nameof(BannerOn), nameof(BlueWonText), nameof(RedWonText)
+                     nameof(Is1080), nameof(Is1440), nameof(BannerOn)
                  })
             OnPropertyChanged(name);
 
@@ -587,8 +588,7 @@ public sealed class ControlViewModel : ObservableObject
         foreach (var name in new[]
                  {
                      nameof(PhaseLabel), nameof(PhaseIndexText), nameof(StatusText), nameof(RoundNote),
-                     nameof(MatchSaveText), nameof(PauseResumeText), nameof(BlueWonText), nameof(RedWonText),
-                     nameof(NextMatchText)
+                     nameof(MatchSaveText), nameof(PauseResumeText), nameof(NextMatchText)
                  })
             OnPropertyChanged(name);
         _ = RefreshLiveAsync();

@@ -176,22 +176,25 @@ html[lang="th"] .gtable td,html[lang="th"] .gtable th{line-height:1.8;}
           <li>Drive the clock with <span class="ui">START</span>, then <span class="ui">PREV</span>
             <span class="ui">PAUSE</span>/<span class="ui">RESUME</span> (one button) <span class="ui">NEXT</span>.
             <span class="ui">RESET</span> sits at the far end of that row, away from <span class="ui">START</span>.</li>
-          <li><b>When a game ends, press <span class="ui">GAME OVER</span> &rarr; <i>team</i> won</b> at the top of
-            the draft panel. After one confirmation it gives that side the point, records who won the game,
-            keeps the draft with that game and puts the next game on the board. Pressed the wrong side?
-            <span class="ui">&lsaquo;</span> on ROUND brings the game back, and the score box takes the point off.</li>
+          <li><b>When a game ends, press <span class="ui">+1</span> beside the winning team's score.</b> One press
+            gives that side the point, records who won the game, keeps the draft with that game and puts the
+            next game on the board. When a team reaches the wins it needs (2 in a Bo3, 3 in a Bo5), the app
+            declares the series for them. Pressed the wrong side? <span class="ui">&lsaquo;</span> on ROUND
+            brings the game back, and the score box takes the point off. Typing in the score box only
+            corrects the number; it never moves the board.</li>
         </ol>
         <p><b>Team setup folds away by itself when the draft starts.</b> Names, logos, nicknames and
         lanes are done by then, so the picks get the room. The <span class="ui">Team setup</span>
         button above the two teams opens it again at any time. Sound levels are folded under
         <b>SOUND EFFECTS</b> at the bottom.</p>
         <p>In a tournament, when the game that decides the series is recorded, the panel shows
-        <b>SERIES OVER</b> with the next match that is ready to play and a
+        <b>SERIES OVER</b> with who won and the final score (for example <i>PSG Esports win the series
+        2&ndash;1</i>), the next match that is ready to play and a
         <span class="ui">Put on air</span> button, so the next match goes on air without a trip to
         the bracket. <span class="ui">HOME</span> shows the same thing from the other side: what is on
         air now, and the matches ready to play, with the tournament on air first.</p>
         <p><b>ROUND</b> at the right of the draft panel is which game of the series you are on.
-        <span class="ui">GAME OVER</span> moves it on for you; <span class="ui">&rsaquo;</span> does the
+        <span class="ui">+1</span> moves it on for you; <span class="ui">&rsaquo;</span> does the
         same without touching the score: the draft on the board is filed away as that round and the
         board starts clean. <span class="ui">&lsaquo;</span> goes back
         and puts the earlier draft on screen again, so a mis-click costs nothing. Those filed
@@ -219,20 +222,21 @@ html[lang="th"] .gtable td,html[lang="th"] .gtable th{line-height:1.8;}
           <li>คุมเวลาด้วย <span class="ui">START</span> แล้วแถวล่างคือ <span class="ui">PREV</span>
             <span class="ui">PAUSE</span>/<span class="ui">RESUME</span> (ปุ่มเดียวกัน) <span class="ui">NEXT</span>
             ปุ่ม <span class="ui">RESET</span> อยู่ท้ายแถว ห่างจาก <span class="ui">START</span></li>
-          <li><b>จบเกมแล้ว กด <span class="ui">จบเกม</span> &rarr; <i>ทีมที่</i> ชนะ</b> ที่หัวแผงดราฟต์
-            ยืนยันหนึ่งครั้ง แล้วโปรแกรมจะให้แต้มฝั่งนั้น บันทึกว่าใครชนะเกมนี้ เก็บดราฟต์ไว้กับเกมนี้
-            และขึ้นเกมถัดไปบนกระดานให้เลย กดผิดฝั่ง? กด <span class="ui">&lsaquo;</span> ที่ ROUND
-            เพื่อพาเกมกลับมา แล้วแก้แต้มในช่องคะแนน</li>
+          <li><b>จบเกมแล้ว กด <span class="ui">+1</span> ข้างคะแนนของทีมที่ชนะ</b>
+            กดครั้งเดียว โปรแกรมจะให้แต้มฝั่งนั้น บันทึกว่าใครชนะเกมนี้ เก็บดราฟต์ไว้กับเกมนี้
+            และขึ้นเกมถัดไปบนกระดานให้เลย เมื่อทีมไหนชนะครบตามที่ต้องการ (Bo3 = 2 เกม, Bo5 = 3 เกม)
+            โปรแกรมจะประกาศว่าทีมนั้นชนะซีรีส์ให้เอง กดผิดฝั่ง? กด <span class="ui">&lsaquo;</span> ที่ ROUND
+            เพื่อพาเกมกลับมา แล้วแก้แต้มในช่องคะแนน การพิมพ์ในช่องคะแนนแค่แก้ตัวเลข ไม่เลื่อนกระดาน</li>
         </ol>
         <p><b>ส่วนตั้งค่าทีมจะพับเก็บเองเมื่อเริ่มดราฟต์</b> ชื่อทีม โลโก้ ชื่อผู้เล่น และเลน
         ตั้งเสร็จไปแล้วตอนนั้น ช่องพิคจึงได้ที่เต็ม กดปุ่ม <span class="ui">ตั้งค่าทีม</span> เหนือสองทีม
         เพื่อเปิดกลับมาได้ทุกเมื่อ ส่วนระดับเสียงพับไว้ใต้ <b>เสียงเอฟเฟกต์</b> ด้านล่าง</p>
-        <p>ในทัวร์นาเมนต์ เมื่อบันทึกเกมที่ตัดสินซีรีส์ แผงจะขึ้นว่า <b>ซีรีส์จบแล้ว</b>
+        <p>ในทัวร์นาเมนต์ เมื่อบันทึกเกมที่ตัดสินซีรีส์ แผงจะขึ้นว่า <b>ซีรีส์จบแล้ว</b> พร้อมบอกว่าใครชนะและสกอร์ (เช่น <i>PSG Esports ชนะซีรีส์ 2&ndash;1</i>)
         พร้อมคู่ถัดไปที่พร้อมเล่นและปุ่ม <span class="ui">ขึ้นจอ</span> เอาคู่ถัดไปขึ้นจอได้เลย
         โดยไม่ต้องกลับไปที่สายการแข่ง <span class="ui">หน้าแรก</span> ก็แสดงเรื่องเดียวกันจากอีกฝั่ง
         คือคู่ที่กำลังออกอากาศ และคู่ที่พร้อมเล่น โดยรายการที่กำลังออกอากาศขึ้นก่อน</p>
         <p><b>ROUND</b> ที่มุมขวาของแผงดราฟต์ คือเกมที่เท่าไหร่ของซีรีส์
-        ปุ่ม <span class="ui">จบเกม</span> เดินรอบให้เอง ส่วน <span class="ui">&rsaquo;</span>
+        ปุ่ม <span class="ui">+1</span> เดินรอบให้เอง ส่วน <span class="ui">&rsaquo;</span>
         ทำแบบเดียวกันแต่ไม่แตะคะแนน ดราฟต์ที่อยู่บนกระดานจะถูกเก็บเป็นรอบนั้น
         แล้วกระดานเริ่มใหม่ กด <span class="ui">&lsaquo;</span> เพื่อถอยกลับ ดราฟต์ของรอบก่อนจะกลับขึ้นมา
         กดผิดจึงไม่เสียอะไร รอบที่เก็บไว้เหล่านี้คือสิ่งที่ซอร์ส <b>Previous picks &amp; bans</b>
