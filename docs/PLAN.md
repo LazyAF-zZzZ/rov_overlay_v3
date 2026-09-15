@@ -36,6 +36,20 @@ board, which all go through `orientationOf`, credit the right team exactly as th
 for a manual Switch Teams. Quick matches: `stepRound` swaps the two team objects on every step,
 and `restoreRound` places a filed draft by team name. Tested in `tests/side-swap.test.ts`.
 
+**On `main`, not yet released: full team statistics** (user's request, 2026-09-15). The team
+page has Profile / Statistics tabs; Statistics shows series and games records with win rates,
+the last five series, side records, heroes picked (games, pick rate, win rate), bans made,
+bans against, record vs each opponent and each player's hero pool, all filterable to one
+tournament (`GET /api/teams/:id/stats[?tournamentId=]`, `store/team-stats.ts`, same counting
+rules as analytics: locked drafts only, sides from the frozen copy, win rates from decided
+games). **Migration step 6** adds `games.sides_swapped` and a `game_players` table, written by
+`captureDraft` with every draft, because neither the side a team actually played on screen nor
+who sat in each row was recorded anywhere. **Both count only from 3.0.13 on**; earlier games
+show as "side unknown" and have no player pool, never guessed. Backups carry both fields
+(optional, so older backup files still restore; `BACKUP_VERSION` unchanged). Tested in
+`tests/team-stats.test.ts` and `tests/backup.test.ts`. The snapshot switch `--then stats`
+opens a team's Statistics tab.
+
 **3.0.12 (2026-09-15; clicked through for real, including -1 disabled at 0):**
 
 - **-1 beside each score** (`POST /api/live-match/undo`, `undoGame`): the exact undo of +1.

@@ -337,7 +337,9 @@ public sealed class ShellViewModel : ObservableObject
                 else if (ThenOnStart == "drafts") Open(new DraftHistoryViewModel(_services, this, id));
                 break;
             case "team":
-                Open(new TeamProfileViewModel(_services, this, id));
+                var team = new TeamProfileViewModel(_services, this, id);
+                Open(team);
+                if (ThenOnStart == "stats") team.Tab = "stats";
                 break;
         }
     }

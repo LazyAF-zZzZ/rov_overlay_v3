@@ -117,6 +117,10 @@ export interface BackupGame {
   startedAt: number;
   updatedAt: number;
   slots: { side: string; kind: string; idx: number; hero: string }[];
+  // ไม่บังคับ: ไฟล์สำรองรุ่นก่อนหน้าไม่มีสองช่องนี้ และยังต้องกู้ได้ตามปกติ
+  // ไม่ขึ้น BACKUP_VERSION เพราะไฟล์เก่ายังอ่านด้วยกฎใหม่ได้ครบ
+  sidesSwapped?: boolean | null;
+  players?: { side: string; idx: number; name: string }[];
 }
 
 export interface BackupData {
@@ -336,7 +340,16 @@ function readGame(value: unknown): BackupGame | null {
         idx: clampNumber(s.idx, 0, 4),
         hero: sanitizeText(s.hero, 40)
       };
-    }).filter((s) => s.hero !== '')
+    }).filter((s) => s.hero !== ''),
+    sidesSwapped: g.sidesSwapped === true ? true : g.sidesSwapped === false ? false : null,
+    players: asArray(g.players, 10).map((raw) => {
+      const p = asRecord(raw);
+      return {
+        side: p.side === 'red' ? 'red' : 'blue',
+        idx: clampNumber(p.idx, 0, 4),
+        name: sanitizeText(p.name, 24)
+      };
+    }).filter((p) => p.name !== '')
   };
 }
 

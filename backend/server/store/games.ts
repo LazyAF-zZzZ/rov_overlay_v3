@@ -29,7 +29,16 @@ export interface Game {
   redName: string;
   draftLocked: boolean;
   winner: 'blue' | 'red' | null;
+  // จอสลับฝั่งกับสำเนาแช่แข็งตอนดราฟต์ไหม null = ไม่รู้ (เกมที่เล่นก่อนมีคอลัมน์นี้)
+  sidesSwapped: boolean | null;
   slots: GameSlot[];
+}
+
+// ผู้เล่นในแถว idx ตอนดราฟต์ ฝั่งตามสำเนาแช่แข็ง เหมือน GameSlot
+export interface GamePlayer {
+  side: 'blue' | 'red';
+  idx: number;
+  name: string;
 }
 
 interface GameRow {
@@ -37,6 +46,28 @@ interface GameRow {
   blue_team_id: string | null; red_team_id: string | null;
   blue_name: string; red_name: string;
   draft_locked: number; winner: string | null;
+  sides_swapped: number | null;
+}
+
+interface PlayerRow { side: string; idx: number; name: string }
+
+// ชื่อสำรองที่ sanitizeTeam เติมให้แถวว่าง ไม่ใช่ผู้เล่นจริง ไม่เก็บ
+// ไม่งั้นสถิติรายผู้เล่นจะมี "Player 3" ที่รวมคนละคนจากคนละทีมเข้าด้วยกัน
+const PLACEHOLDER_PLAYER = /^Player \d+$/;
+
+// ผู้เล่นบนจอ แปลงเป็นฝั่งตามสำเนาแช่แข็ง ด้วยกติกาเดียวกับ stateToSlots
+function stateToPlayers(state: GameState, swapped: boolean): GamePlayer[] {
+  const players: GamePlayer[] = [];
+  ([['blue', 'teamBlue'], ['red', 'teamRed']] as const).forEach(([displaySide, team]) => {
+    const side: 'blue' | 'red' = swapped
+      ? (displaySide === 'blue' ? 'red' : 'blue')
+      : displaySide;
+    state[team].players.forEach((name, idx) => {
+      const clean = (name || '').trim();
+      if (clean && !PLACEHOLDER_PLAYER.test(clean)) players.push({ side, idx, name: clean });
+    });
+  });
+  return players;
 }
 
 interface SlotRow { side: string; kind: string; idx: number; hero: string }
@@ -81,6 +112,7 @@ export interface GameStore {
   captureDraft(gameId: string, state: GameState): Game | null;
   setWinner(gameId: string, winner: 'blue' | 'red' | null): Game | null;
   frozenName(teamId: string): string;
+  playersFor(gameId: string): GamePlayer[];
 }
 
 export function createGameStore(db: DatabaseSync): GameStore {
@@ -98,6 +130,10 @@ export function createGameStore(db: DatabaseSync): GameStore {
     insertSlot: db.prepare('INSERT INTO game_slots (game_id, side, kind, idx, hero) VALUES (?, ?, ?, ?, ?)'),
     setLocked: db.prepare('UPDATE games SET draft_locked = ?, updated_at = ? WHERE id = ?'),
     setWinner: db.prepare('UPDATE games SET winner = ?, updated_at = ? WHERE id = ?'),
+    setSides: db.prepare('UPDATE games SET sides_swapped = ? WHERE id = ?'),
+    clearPlayers: db.prepare('DELETE FROM game_players WHERE game_id = ?'),
+    insertPlayer: db.prepare('INSERT INTO game_players (game_id, side, idx, name) VALUES (?, ?, ?, ?)'),
+    playersFor: db.prepare('SELECT side, idx, name FROM game_players WHERE game_id = ? ORDER BY side, idx'),
 
     // freeze() ต้องอ่านชื่อทีมเอง ไฟล์นี้จึงแตะตาราง teams ตรงๆ หนึ่งที่
     // ทางเลือกคือให้คนเรียกส่งชื่อมาด้วย แต่คนเรียกคือ matches.ts ซึ่งก็ต้องไปอ่านเองอยู่ดี
@@ -137,6 +173,7 @@ export function createGameStore(db: DatabaseSync): GameStore {
       redName: row.red_name,
       draftLocked: row.draft_locked === 1,
       winner: (row.winner as 'blue' | 'red' | null) ?? null,
+      sidesSwapped: row.sides_swapped === null || row.sides_swapped === undefined ? null : row.sides_swapped === 1,
       slots
     };
   }
@@ -236,6 +273,13 @@ export function createGameStore(db: DatabaseSync): GameStore {
       try {
         q.clearSlots.run(gameId);
         slots.forEach((s) => q.insertSlot.run(gameId, s.side, s.kind, s.idx, s.hero));
+
+        // ฝั่งที่ลงเล่นจริงกับผู้เล่นในแต่ละแถว สำหรับสถิติรายทีม (ดูขั้นที่ 6 ใน migrations.ts)
+        // เขียนพร้อมดราฟต์เสมอ เพราะรู้แน่ๆ ตรงนี้เท่านั้นว่าจอสลับฝั่งอยู่หรือไม่
+        const swapped = orientation === 'swapped';
+        q.setSides.run(swapped ? 1 : 0, gameId);
+        q.clearPlayers.run(gameId);
+        stateToPlayers(state, swapped).forEach((p) => q.insertPlayer.run(gameId, p.side, p.idx, p.name));
         // ล็อกเมื่อครบ และไม่ปลดล็อกเองถ้าคนลบ pick ออกทีหลัง
         // ปลดล็อกอัตโนมัติจะทำให้เกมหลุดออกจากสถิติแบบเงียบๆ
         if (isDraftComplete(state) && row.draft_locked !== 1) {
@@ -254,6 +298,14 @@ export function createGameStore(db: DatabaseSync): GameStore {
       if (!q.byId.get(gameId)) return null;
       q.setWinner.run(winner, Date.now(), gameId);
       return store.get(gameId);
+    },
+
+    playersFor(gameId) {
+      return (q.playersFor.all(gameId) as unknown as PlayerRow[]).map((p) => ({
+        side: p.side as 'blue' | 'red',
+        idx: p.idx,
+        name: p.name
+      }));
     },
 
     // ชื่อที่ทีมนี้เคยลงเล่นภายใต้ ใช้ตอนที่ทะเบียนไม่มีมันแล้ว

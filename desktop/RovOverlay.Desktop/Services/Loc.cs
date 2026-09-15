@@ -36,6 +36,8 @@ public sealed partial class Loc : INotifyPropertyChanged
         foreach (var (key, text) in M7Th) Th[key] = text;
         foreach (var (key, text) in FlowEn) En[key] = text;
         foreach (var (key, text) in FlowTh) Th[key] = text;
+        foreach (var (key, text) in TeamStatsEn) En[key] = text;
+        foreach (var (key, text) in TeamStatsTh) Th[key] = text;
     }
 
     private string _language = "th";

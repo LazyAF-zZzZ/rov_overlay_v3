@@ -30,6 +30,7 @@ public sealed class TeamProfileViewModel : TeamFace, IClosablePage
     private TeamHistory? _data;
     private bool _notFound;
     private string _errorText = "";
+    private string _tab = "profile";
 
     public TeamProfileViewModel(AppServices services, ShellViewModel shell, string id) : base(services)
     {
@@ -50,6 +51,7 @@ public sealed class TeamProfileViewModel : TeamFace, IClosablePage
             },
             delete: DeleteAsync);
         BackCommand = new RelayCommand(shell.Back);
+        Stats = new TeamStatsPanel(services, shell, id);
         RevertCommand = new RelayCommand(() =>
         {
             if (_data is null) return;
@@ -63,6 +65,24 @@ public sealed class TeamProfileViewModel : TeamFace, IClosablePage
     }
 
     public TeamEditor Editor { get; }
+
+    // The Statistics tab, and which tab is showing ("profile" or "stats").
+    public TeamStatsPanel Stats { get; }
+
+    public string Tab
+    {
+        get => _tab;
+        set
+        {
+            if (!Set(ref _tab, value ?? "profile")) return;
+            OnPropertyChanged(nameof(IsProfileTab));
+            OnPropertyChanged(nameof(IsStatsTab));
+            if (IsStatsTab) _ = Stats.EnsureLoadedAsync();
+        }
+    }
+
+    public bool IsProfileTab => Tab != "stats";
+    public bool IsStatsTab => Tab == "stats";
     public ICommand BackCommand { get; }
     public ICommand RevertCommand { get; }
     public ObservableCollection<ProfileTournament> Tournaments { get; } = new();
@@ -144,6 +164,8 @@ public sealed class TeamProfileViewModel : TeamFace, IClosablePage
                 Loc.F("Team.Seed", t.Seed),
                 new RelayCommand(() => _shell.Open(new TournamentViewModel(Services, _shell, id)))));
         }
+
+        Stats.SetTournaments(_data.Tournaments ?? []);
 
         History.Clear();
         var heading = "";
@@ -237,6 +259,10 @@ public sealed class TeamProfileViewModel : TeamFace, IClosablePage
         var mine = change.TeamId is null || change.TeamId == _id;
         if ((change.Topic == "teams" && mine) || change.Topic is "matches" or "roster")
             _ = LoadAsync(forceEditor: false);
+
+        // Statistics follow results and drafts too, once the tab has been opened.
+        if (Stats.IsLoaded && change.Topic is "matches" or "games" or "roster" or "teams")
+            _ = Stats.LoadAsync();
     }
 
     private void OnLanguageChanged() => Build();
@@ -245,5 +271,6 @@ public sealed class TeamProfileViewModel : TeamFace, IClosablePage
     {
         Services.DataChanged -= OnDataChanged;
         Loc.Instance.Changed -= OnLanguageChanged;
+        Stats.Detach();
     }
 }

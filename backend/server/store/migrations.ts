@@ -179,5 +179,26 @@ export const MIGRATIONS: readonly string[] = [
   // จะถูกปัดเป็นค่าว่างตอนอ่าน (sanitizePosition) ไม่ได้ถูกลบทิ้งจากฐาน
   `
   ALTER TABLE team_players RENAME COLUMN role TO position;
+  `,
+
+  // 6 - ฝั่งที่ลงเล่นจริง และผู้เล่นในแต่ละแถว สำหรับสถิติรายทีม
+  //
+  // สำเนาแช่แข็งนับฝั่งแบบทีม A = น้ำเงินเสมอ ส่วนการสลับฝั่งทุกเกมทำแค่บนจอ
+  // ฝั่งที่ทีมลงเล่นจริงจึงไม่เคยถูกบันทึกไว้ที่ไหน สถิติ "ชนะฝั่งน้ำเงิน/แดง" คิดย้อนหลังไม่ได้
+  // sides_swapped: 1 = จอสลับกับสำเนาแช่แข็ง, 0 = ไม่สลับ, NULL = ไม่รู้ (เกมที่เล่นก่อนมีคอลัมน์นี้)
+  //
+  // game_players: ชื่อผู้เล่นในแต่ละแถวตอนดราฟต์ แถว idx เดียวกับช่องพิค idx
+  // เก็บตามฝั่งของสำเนาแช่แข็งเหมือน game_slots จะได้ join กันได้ตรงๆ
+  // ทะเบียนทีมเก็บแค่รายชื่อ "ตอนนี้" ผู้เล่นที่ย้ายทีมไปแล้วจะหายจากสถิติถ้าไม่เก็บที่นี่
+  `
+  ALTER TABLE games ADD COLUMN sides_swapped INTEGER;
+
+  CREATE TABLE game_players (
+    game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+    side    TEXT NOT NULL,          -- 'blue' | 'red' ตามสำเนาแช่แข็ง ไม่ใช่ตามจอ
+    idx     INTEGER NOT NULL,
+    name    TEXT NOT NULL,
+    PRIMARY KEY (game_id, side, idx)
+  );
   `
 ];

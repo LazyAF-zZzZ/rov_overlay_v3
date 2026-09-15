@@ -114,11 +114,15 @@ export function createBackupStore(db: DatabaseSync): BackupStore {
     insertGame: db.prepare(
       `INSERT INTO games
         (id, match_id, game_no, blue_team_id, red_team_id, blue_name, red_name,
-         draft_locked, winner, started_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         draft_locked, winner, started_at, updated_at, sides_swapped)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ),
     insertSlot: db.prepare(
       `INSERT INTO game_slots (game_id, side, kind, idx, hero) VALUES (?, ?, ?, ?, ?)`
+    ),
+    // ไม่ใช่ insertPlayer: ชื่อนั้นเป็นของ team_players (รายชื่อในทะเบียน) อยู่แล้ว
+    insertGamePlayer: db.prepare(
+      `INSERT INTO game_players (game_id, side, idx, name) VALUES (?, ?, ?, ?)`
     ),
     teamIds: db.prepare('SELECT id FROM teams'),
     tournamentIds: db.prepare('SELECT id FROM tournaments'),
@@ -127,6 +131,7 @@ export function createBackupStore(db: DatabaseSync): BackupStore {
     hasMatch: db.prepare('SELECT 1 AS n FROM matches WHERE id = ?'),
     hasGame: db.prepare('SELECT 1 AS n FROM games WHERE id = ?'),
     wipe: [
+      'DELETE FROM game_players',
       'DELETE FROM game_slots',
       'DELETE FROM games',
       'DELETE FROM matches',
@@ -223,6 +228,13 @@ export function createBackupStore(db: DatabaseSync): BackupStore {
       slotsByGame.set(String(r.game_id), list);
     });
 
+    const playersByGame = new Map<string, NonNullable<BackupGame['players']>>();
+    all('SELECT * FROM game_players').forEach((r) => {
+      const list = playersByGame.get(String(r.game_id)) || [];
+      list.push({ side: String(r.side), idx: Number(r.idx), name: String(r.name) });
+      playersByGame.set(String(r.game_id), list);
+    });
+
     const games: BackupGame[] = all('SELECT * FROM games ORDER BY started_at').map((r) => ({
       id: String(r.id),
       matchId: String(r.match_id),
@@ -235,7 +247,10 @@ export function createBackupStore(db: DatabaseSync): BackupStore {
       winner: r.winner === null ? null : String(r.winner),
       startedAt: Number(r.started_at),
       updatedAt: Number(r.updated_at),
-      slots: slotsByGame.get(String(r.id)) || []
+      slots: slotsByGame.get(String(r.id)) || [],
+      // ไม่ส่งออกสองช่องนี้ = กู้คืนแล้วสถิติฝั่งกับรายผู้เล่นหายเงียบๆ
+      sidesSwapped: r.sides_swapped === null || r.sides_swapped === undefined ? null : Number(r.sides_swapped) === 1,
+      players: playersByGame.get(String(r.id)) || []
     }));
 
     // ภาพ: อ่านเฉพาะของทีมที่มีอยู่จริง ไม่ได้กวาดทั้งโฟลเดอร์
@@ -380,13 +395,19 @@ export function createBackupStore(db: DatabaseSync): BackupStore {
           q.insertGame.run(
             g.id, g.matchId, g.gameNo, g.blueTeamId, g.redTeamId,
             g.blueName, g.redName, g.draftLocked ? 1 : 0, g.winner,
-            g.startedAt, g.updatedAt
+            g.startedAt, g.updatedAt,
+            g.sidesSwapped === true ? 1 : g.sidesSwapped === false ? 0 : null
           );
           // ช่องซ้ำกันในไฟล์จะชน PRIMARY KEY ข้ามไปทีละช่อง ไม่ล้มทั้งการกู้
           g.slots.forEach((s) => {
             try {
               q.insertSlot.run(g.id, s.side, s.kind, s.idx, s.hero);
             } catch { /* ช่องซ้ำในไฟล์ อันแรกชนะ */ }
+          });
+          (g.players || []).forEach((p) => {
+            try {
+              q.insertGamePlayer.run(g.id, p.side, p.idx, p.name);
+            } catch { /* แถวซ้ำในไฟล์ อันแรกชนะ */ }
           });
           report.gamesAdded += 1;
         });

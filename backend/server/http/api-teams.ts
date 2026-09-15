@@ -80,6 +80,18 @@ export function teamRoutes(): Router {
     res.json({ team, ...history.forTeam(req.params.id) });
   });
 
+  // สถิติเต็มของทีม อ่านอย่างเดียว ?tournamentId= จำกัดทุกตัวเลขให้อยู่ในรายการนั้น
+  router.get('/api/teams/:id/stats', (req, res) => {
+    const { teams, teamStats } = getStores();
+    if (!teams.get(req.params.id)) {
+      res.status(404).json({ error: 'Team not found' });
+      return;
+    }
+    const raw = (req.query as { tournamentId?: unknown }).tournamentId;
+    const tournamentId = typeof raw === 'string' && raw ? raw : null;
+    res.json({ stats: teamStats.forTeam(req.params.id, tournamentId) });
+  });
+
   router.put('/api/teams/:id', requireControl, (req, res) => {
     const result = getStores().teams.update(req.params.id, req.body);
     if (result.error !== undefined) {

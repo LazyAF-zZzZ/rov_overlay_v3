@@ -318,6 +318,45 @@ If you need keys that keep working while you are in OBS or the game, switch on *
 
 ---
 
+## Team statistics / สถิติของทีม
+
+**EN**
+
+Open a team (from **TEAMS**, or by clicking a team name anywhere) and switch to the
+**Statistics** tab. Everything on it can be narrowed to one tournament with the dropdown at
+the top; it shows all tournaments by default.
+
+- **Series** and **games** won–lost, with win rates, and the **last 5 series** as W and L
+- **On blue side / On red side**: won–lost on each side of the screen
+- **Heroes picked**: how many games, the pick rate and the win rate with each hero
+- **Banned by this team** and **banned against this team**
+- **Record vs each opponent**: series and games against every team faced, and the last meeting
+- **Player hero pools**: the heroes each player picked, and how often they won with them
+
+Rates are out of the games whose draft was finished; win rates only count games with a
+recorded winner (+1 records it). **Side records and player hero pools count from version
+3.0.13 on.** Earlier games did not record which side a team actually played on screen or who
+sat in which row, so they are left out of those two rather than guessed. Player pools use the
+player names on the Control Panel at the time of the draft.
+
+**TH**
+
+เปิดหน้าทีม (จาก **ทีม** หรือกดชื่อทีมที่ไหนก็ได้) แล้วเลือกแท็บ **สถิติ** ทุกอย่างในแท็บนี้
+เลือกให้ดูเฉพาะทัวร์นาเมนต์เดียวได้จากช่องด้านบน ปกติจะแสดงทุกทัวร์นาเมนต์
+
+- **ซีรีส์** และ **เกม** ชนะ–แพ้ พร้อมอัตราชนะ และ **ซีรีส์ 5 คู่ล่าสุด** เป็น ช กับ พ
+- **ฝั่งน้ำเงิน / ฝั่งแดง**: ชนะ–แพ้ ของแต่ละฝั่งบนจอ
+- **ฮีโร่ที่เลือก**: กี่เกม อัตราการเลือก และอัตราชนะของฮีโร่แต่ละตัว
+- **ฮีโร่ที่ทีมนี้แบน** และ **ฮีโร่ที่โดนแบนใส่**
+- **สถิติกับคู่แข่งแต่ละทีม**: ซีรีส์และเกมกับทุกทีมที่เคยเจอ และนัดล่าสุด
+- **ฮีโร่ของผู้เล่นแต่ละคน**: ฮีโร่ที่ผู้เล่นแต่ละคนเลือก และชนะบ่อยแค่ไหน
+
+อัตราคิดจากเกมที่ดราฟต์ครบ ส่วนอัตราชนะนับเฉพาะเกมที่รู้ผลแพ้ชนะ (ปุ่ม +1 เป็นตัวบันทึก)
+**สถิติฝั่งและฮีโร่ของผู้เล่นแต่ละคน นับตั้งแต่เวอร์ชัน 3.0.13** เกมก่อนหน้านั้นไม่ได้บันทึกว่าทีมเล่นฝั่งไหนบนจอจริง
+หรือใครนั่งแถวไหน จึงไม่ถูกนับในสองส่วนนี้ แทนที่จะเดาเอา สถิติผู้เล่นใช้ชื่อผู้เล่นในหน้าคุมงานตอนที่ดราฟต์
+
+---
+
 ## Pick / ban history / ประวัติพิค-แบน
 
 **EN**

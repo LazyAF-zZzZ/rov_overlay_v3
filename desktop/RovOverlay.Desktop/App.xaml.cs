@@ -167,7 +167,8 @@ public partial class App : Application
 // Command-line switches, all optional:
 //   --page <Home|Control|Teams|...|Settings>   open on that screen
 //   --open <tournament:ID|team:ID>             then open that tournament or team on top
-//   --then <bracket|drafts>                    and open that page of the tournament above it
+//   --then <bracket|drafts|stats>              and open that page of the tournament above it,
+//                                              or a team's Statistics tab (stats)
 //   --lang <th|en>                             language for this run only (not saved)
 //   --snapshot <file.png>                      render the window to a PNG and exit
 //   --snapshot-delay <ms>                      wait before the snapshot (default 2500)

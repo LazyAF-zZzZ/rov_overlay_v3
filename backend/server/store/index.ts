@@ -31,6 +31,8 @@ import type { MatchupStore } from './matchup';
 import { createMatchupStore } from './matchup';
 import type { DraftsStore } from './drafts';
 import { createDraftsStore } from './drafts';
+import type { TeamStatsStore } from './team-stats';
+import { createTeamStatsStore } from './team-stats';
 
 export interface Stores {
   db: DatabaseSync;
@@ -45,6 +47,7 @@ export interface Stores {
   standings: StandingsStore;
   matchup: MatchupStore;
   drafts: DraftsStore;
+  teamStats: TeamStatsStore;
 }
 
 let stores: Stores | null = null;
@@ -68,7 +71,8 @@ export function getStores(): Stores {
       backup: createBackupStore(db),
       standings: createStandingsStore(db),
       matchup: createMatchupStore(db),
-      drafts: createDraftsStore(db)
+      drafts: createDraftsStore(db),
+      teamStats: createTeamStatsStore(db)
     };
   }
   return stores;

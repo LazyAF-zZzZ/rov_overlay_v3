@@ -261,3 +261,60 @@ test('a restore that fails partway leaves the database untouched', () => {
   assert.strictEqual(target.teams.list().length, 1);
   target.db.close();
 });
+
+// ฝั่งที่ลงเล่นจริงกับผู้เล่นในแต่ละแถว เป็นข้อมูลที่สถิติรายทีมใช้ และเก็บได้แค่ตอนดราฟต์
+// กู้คืนแล้วหายเมื่อไหร่ คือหายตลอดไป เพราะไม่มีที่ไหนให้คิดย้อนหลังได้อีก
+test('the side played and the players in each row survive a backup and restore', () => {
+  const source = build();
+  const made = populate(source);
+
+  // ดราฟต์เดิมเล่นบนจอที่สลับฝั่ง: EA ขึ้นน้ำเงิน FW ขึ้นแดง พร้อมชื่อผู้เล่นจริง
+  source.games.captureDraft(made.gameId, {
+    ...defaultState,
+    teamBlue: {
+      ...defaultState.teamBlue,
+      name: 'EA',
+      picks: heroesData.heroes.slice(5, 10),
+      bans: heroesData.heroes.slice(24, 28),
+      players: ['EA-1', 'EA-2', 'EA-3', 'EA-4', 'EA-5']
+    },
+    teamRed: {
+      ...defaultState.teamRed,
+      name: 'FW',
+      picks: heroesData.heroes.slice(0, 5),
+      bans: heroesData.heroes.slice(20, 24),
+      players: ['FW-1', 'FW-2', 'FW-3', 'FW-4', 'FW-5']
+    }
+  });
+  assert.strictEqual(must(source.games.get(made.gameId)).sidesSwapped, true);
+  const players = (s: ReturnType<typeof build>) =>
+    s.games.playersFor(made.gameId).map((p) => `${p.side}:${p.idx}:${p.name}`).sort();
+  const before = players(source);
+  assert.strictEqual(before.length, 10);
+  assert.ok(before.includes('blue:0:FW-1'), 'FW is recorded on its frozen side, not the side it was shown on');
+
+  const file = source.backup.exportAll('x');
+  source.db.close();
+
+  const target = build();
+  target.backup.restore(must(readBackup(JSON.parse(JSON.stringify(file))).file), 'merge');
+  assert.strictEqual(must(target.games.get(made.gameId)).sidesSwapped, true, 'the side played survives');
+  assert.deepStrictEqual(players(target), before, 'and so does every player in every row');
+  target.db.close();
+});
+
+// ไฟล์สำรองที่ทำก่อนมีสองช่องนี้ ต้องยังกู้ได้ และต้องไม่เดาฝั่งให้
+test('a backup made before sides and players were recorded still restores, with the side unknown', () => {
+  const source = build();
+  const made = populate(source);
+  const raw = JSON.parse(JSON.stringify(source.backup.exportAll('x'))) as { data: { games: Record<string, unknown>[] } };
+  source.db.close();
+  raw.data.games.forEach((g) => { delete g.sidesSwapped; delete g.players; });
+
+  const target = build();
+  const report = target.backup.restore(must(readBackup(raw).file), 'merge');
+  assert.ok(report.gamesAdded >= 1);
+  assert.strictEqual(must(target.games.get(made.gameId)).sidesSwapped, null, 'unknown, not guessed');
+  assert.deepStrictEqual(target.games.playersFor(made.gameId), []);
+  target.db.close();
+});
