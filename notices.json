@@ -1,17 +1,33 @@
 [
   {
-    "id": "update-3-0-8",
+    "id": "update-3-0-11",
     "level": "info",
     "title": {
-      "th": "อัปเดต 3.0.8 พร้อมแล้ว",
-      "en": "Update 3.0.8 is ready"
+      "th": "อัปเดต 3.0.11 พร้อมแล้ว",
+      "en": "Update 3.0.11 is ready"
     },
     "body": {
-      "th": "จบเกมด้วยปุ่มเดียว: กด จบเกม → ทีมที่ชนะ แล้วโปรแกรมให้แต้ม บันทึกผู้ชนะ เก็บดราฟต์ และขึ้นเกมถัดไปให้เอง พอจบซีรีส์ก็เอาคู่ถัดไปขึ้นจอได้ทันที หน้าคุมงานพับส่วนตั้งค่าทีมเก็บเองตอนเริ่มดราฟต์ และหน้าแรกบอกว่ากำลังออกอากาศคู่ไหนกับคู่ไหนพร้อมเล่น แอปจะโหลดอัปเดตให้เองแล้วติดตั้งตอนคุณปิดโปรแกรม ไม่ต้องโหลดไฟล์เอง",
-      "en": "End a game with one button: press GAME OVER → the team that won, and the app adds the point, records the winner, keeps the draft and puts the next game up. When a series ends, the next match goes on air from the same panel. Team setup folds away when the draft starts, and Home shows what is on air and what is ready to play. The app downloads the update on its own and puts it in when you close it - nothing to download by hand."
+      "th": "สองทีมสลับฝั่งกันเองทุกเกม แต้ม ดราฟต์ และสถิติยังตามทีมเดิม (ปิดได้ที่ติ๊ก สลับฝั่งทุกเกม ข้าง ROUND) และจบเกมด้วยปุ่ม +1 ข้างคะแนนของทีมที่ชนะ โปรแกรมประกาศผู้ชนะซีรีส์จากคะแนนให้เอง อัปเดตนี้ไม่ติดตั้งเอง: เมื่อโหลดเสร็จจะมีหน้าต่างถาม หรือกดเลขเวอร์ชันที่แถบด้านบน แล้วกด อัปเดตเลย ตอนที่ไม่ได้ออกอากาศ",
+      "en": "The teams now swap sides every game, and each team keeps its own score, draft and statistics (untick Swap sides each game beside ROUND to turn it off). A game ends with the +1 beside the winning team's score, and the app declares the series winner from the score. This update does not install by itself: once it has downloaded a window asks, or press the version number in the title bar, then Update now, when you are not on air."
     },
-    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.8",
-    "maxVersion": "3.0.7",
+    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.11",
+    "minVersion": "3.0.9",
+    "maxVersion": "3.0.10",
+    "expires": "2026-10-15T00:00:00Z"
+  },
+  {
+    "id": "update-3-0-11-older",
+    "level": "info",
+    "title": {
+      "th": "อัปเดต 3.0.11 พร้อมแล้ว",
+      "en": "Update 3.0.11 is ready"
+    },
+    "body": {
+      "th": "สองทีมสลับฝั่งกันเองทุกเกม แต้ม ดราฟต์ และสถิติยังตามทีมเดิม จบเกมด้วยปุ่ม +1 ข้างคะแนนของทีมที่ชนะ หน้าคุมงานพับส่วนตั้งค่าทีมเก็บเองตอนเริ่มดราฟต์ และหน้าแรกบอกว่ากำลังออกอากาศคู่ไหน แอปจะโหลดอัปเดตให้เองแล้วติดตั้งตอนคุณปิดโปรแกรม หลังจากนี้ อัปเดตครั้งต่อไปจะไม่ติดตั้งเองอีก ต้องกด อัปเดตเลย ก่อน",
+      "en": "The teams now swap sides every game, and each team keeps its own score, draft and statistics. A game ends with the +1 beside the winning team's score, team setup folds away when the draft starts, and Home shows what is on air. The app downloads this update on its own and puts it in when you close it. From then on, updates no longer install by themselves: you press Update now."
+    },
+    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.0.11",
+    "maxVersion": "3.0.8",
     "expires": "2026-10-15T00:00:00Z"
   }
 ]
