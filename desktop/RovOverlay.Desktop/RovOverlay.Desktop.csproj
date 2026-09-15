@@ -12,7 +12,7 @@
          from App.xaml, and this is what picks ours over it. -->
     <StartupObject>RovOverlay.Desktop.Program</StartupObject>
     <Product>ROV Overlay Tool</Product>
-    <Version>3.0.11</Version>
+    <Version>3.0.12</Version>
     <ApplicationIcon>..\..\backend\public\images\app-icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>

@@ -1,6 +1,6 @@
 {
   "name": "rov-overlay-backend",
-  "version": "3.0.11",
+  "version": "3.0.12",
   "description": "Backend for ROV Overlay Tool v3: HTTP API, Socket.IO and the OBS overlays. The operator UI is the WPF app in ../desktop.",
   "scripts": {
     "build": "tsc -p tsconfig.json",
