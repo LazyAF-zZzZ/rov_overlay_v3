@@ -1,33 +1,33 @@
 [
   {
-    "id": "update-3-1-0",
+    "id": "update-3-1-1",
     "level": "info",
     "title": {
-      "th": "อัปเดต 3.1.0 พร้อมแล้ว",
-      "en": "Update 3.1.0 is ready"
+      "th": "อัปเดต 3.1.1 พร้อมแล้ว",
+      "en": "Update 3.1.1 is ready"
     },
     "body": {
-      "th": "คีย์ลัดใช้ได้ทุกที่แม้อยู่ใน OBS หรือในเกม และเปิดไว้ตั้งแต่แรก จบเกมได้จาก OBS ด้วย Ctrl + Alt + 1 / 2 (+1 น้ำเงิน / แดง) ถอนแต้มด้วย Q / W เปลี่ยนรอบด้วย A / S ทุกปุ่มอยู่ใต้มือซ้ายที่กด Ctrl + Alt ค้างไว้ ดูครบได้ที่หน้าคีย์ลัด อัปเดตนี้ไม่ติดตั้งเอง: เมื่อโหลดเสร็จจะมีหน้าต่างถาม หรือกดเลขเวอร์ชันที่แถบด้านบน แล้วกด อัปเดตเลย ตอนที่ไม่ได้ออกอากาศ",
-      "en": "Hotkeys now work everywhere, even in OBS or the game, and are on from the start. End a game from OBS with Ctrl + Alt + 1 / 2 (+1 blue / red), take a point back with Q / W, change round with A / S: every key sits under the left hand holding Ctrl + Alt. See them all on the Hotkeys page. This update does not install by itself: once it has downloaded a window asks, or press the version number in the title bar, then Update now, when you are not on air."
+      "th": "มีกราฟิกใหม่ Team card สำหรับขึ้นจอก่อนเริ่มคู่: ผลงานของทีม ผลตอนเล่นแต่ละฝั่ง ฮีโร่ที่หยิบบ่อยพร้อมอัตราชนะ ฮีโร่ที่โดนแบนใส่ และฮีโร่ของผู้เล่นแต่ละคน ก๊อป URL ได้ที่รายการ OBS browser sources แก้ไข: Head to head กับ Team picks & bans เคยขึ้นสีฝั่งกลับกับ overlay หลักในเกมที่สลับฝั่ง และตารางคะแนน Standings อ่านง่ายขึ้นมากเมื่อทีมเยอะ อัปเดตนี้ไม่ติดตั้งเอง: เมื่อโหลดเสร็จจะมีหน้าต่างถาม หรือกดเลขเวอร์ชันที่แถบด้านบน แล้วกด อัปเดตเลย ตอนที่ไม่ได้ออกอากาศ",
+      "en": "A new Team card graphic for the break before a match: the team's record, how they do on each side, most picked heroes with win rates, heroes banned against them, and each player's favourite heroes. Copy its URL from the OBS browser sources list. Fixed: Head to head and Team picks & bans showed the side colours backwards in swapped games, and Standings is far easier to read with a lot of teams. This update does not install by itself: once it has downloaded a window asks, or press the version number in the title bar, then Update now, when you are not on air."
     },
-    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.1.0",
+    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.1.1",
     "minVersion": "3.0.9",
-    "maxVersion": "3.0.13",
-    "expires": "2026-10-15T00:00:00Z"
+    "maxVersion": "3.1.0",
+    "expires": "2026-10-16T00:00:00Z"
   },
   {
-    "id": "update-3-1-0-older",
+    "id": "update-3-1-1-older",
     "level": "info",
     "title": {
-      "th": "อัปเดต 3.1.0 พร้อมแล้ว",
-      "en": "Update 3.1.0 is ready"
+      "th": "อัปเดต 3.1.1 พร้อมแล้ว",
+      "en": "Update 3.1.1 is ready"
     },
     "body": {
-      "th": "คีย์ลัดใช้ได้ทุกที่แม้อยู่ใน OBS หรือในเกม และจบเกมได้ด้วย Ctrl + Alt + 1 / 2 หน้าของแต่ละทีมมีแท็บสถิติ สองทีมสลับฝั่งกันเองทุกเกม และจบเกมด้วยปุ่ม +1 / −1 ข้างคะแนน แอปจะโหลดอัปเดตให้เองแล้วติดตั้งตอนคุณปิดโปรแกรม หลังจากนี้ อัปเดตครั้งต่อไปจะไม่ติดตั้งเองอีก ต้องกด อัปเดตเลย ก่อน",
-      "en": "Hotkeys now work everywhere, even in OBS or the game, and end a game with Ctrl + Alt + 1 / 2. Every team page has a Statistics tab, the teams swap sides every game, and games end with +1 / −1 beside the score. The app downloads this update on its own and puts it in when you close it. From then on, updates no longer install by themselves: you press Update now."
+      "th": "มีกราฟิกใหม่ Team card ขึ้นจอก่อนเริ่มคู่ คีย์ลัดใช้ได้ทุกที่แม้อยู่ใน OBS หรือในเกม และจบเกมได้ด้วย Ctrl + Alt + 1 / 2 หน้าของแต่ละทีมมีแท็บสถิติ และสองทีมสลับฝั่งกันเองทุกเกม แอปจะโหลดอัปเดตให้เองแล้วติดตั้งตอนคุณปิดโปรแกรม หลังจากนี้ อัปเดตครั้งต่อไปจะไม่ติดตั้งเองอีก ต้องกด อัปเดตเลย ก่อน",
+      "en": "A new Team card graphic for the break before a match. Hotkeys now work everywhere, even in OBS or the game, and end a game with Ctrl + Alt + 1 / 2. Every team page has a Statistics tab, and the teams swap sides every game. The app downloads this update on its own and puts it in when you close it. From then on, updates no longer install by themselves: you press Update now."
     },
-    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.1.0",
+    "url": "https://github.com/LazyAF-zZzZ/rov_overlay_v3/releases/tag/v3.1.1",
     "maxVersion": "3.0.8",
-    "expires": "2026-10-15T00:00:00Z"
+    "expires": "2026-10-16T00:00:00Z"
   }
 ]

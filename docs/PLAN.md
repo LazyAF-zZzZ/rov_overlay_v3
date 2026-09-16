@@ -129,6 +129,10 @@ opens a team's Statistics tab.
   still count what was played), and `recordSeriesResult` announces `games` whenever the series
   winner changes so Analytics refreshes.
 
+**Notices for 3.1.1** (2026-09-16, both expire 2026-10-16) replaced the 3.1.0 pair with the
+same split: `update-3-1-1` (3.0.9–3.1.0, press Update now) and `update-3-1-1-older`
+(3.0.8 and older, goes in on close).
+
 **Notices for 3.1.0** (2026-09-15, both expire 2026-10-15) replaced the 3.0.13 pair with the
 same split: `update-3-1-0` (3.0.9–3.0.13, press Update now) and `update-3-1-0-older`
 (3.0.8 and older, goes in on close).
