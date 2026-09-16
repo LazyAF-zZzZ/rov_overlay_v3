@@ -133,10 +133,6 @@ public sealed record RestoreReport(
 
 // ---- Importing a v2 installation ------------------------------------------
 
-public sealed record V2Source(string Root, string Label, string DbPath, string? MediaDir);
-public sealed record V2Candidates(List<V2Source>? Sources);
-public sealed record ImportPreview(V2Source Source, BackupSummary Summary, AlreadyHere AlreadyHere);
-public sealed record ImportReply(bool Ok, V2Source Source, BackupSummary Summary, RestoreReport Report);
 public sealed record RestoreReply(bool Ok, RestoreReport Report);
 
 public sealed record OkReply(bool Ok);

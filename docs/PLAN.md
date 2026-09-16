@@ -36,6 +36,15 @@ board, which all go through `orientationOf`, credit the right team exactly as th
 for a manual Switch Teams. Quick matches: `stepRound` swaps the two team objects on every step,
 and `restoreRound` places a filed draft by team name. Tested in `tests/side-swap.test.ts`.
 
+**3.1.2: Settings lost two sections** (user's request, 2026-09-16): "Your
+data" (the data and media folder paths with Open folder buttons) and "Bring your v2 data across"
+(the v2 importer's only UI). Both were judged unnecessary. **The v2 importer's server side stays**
+(`http://api-import.ts`, `domain/import-v2.ts`, `tests/import-v2.test.ts`) - only the screen is gone,
+so restoring the box is a XAML + view-model change, not a rebuild. Anyone moving from v2 now saves a
+backup there and restores it here, which both guides say instead of the old import steps; the guide
+still lists the folder paths under "Where your files are". `Loc.M6.cs` is deleted and the
+`Settings.Data*` / `Settings.OpenFolder` keys with it.
+
 **3.1.1: team card graphic** (user's request, 2026-09-15).
 `/overlay-team-card` shows one team for the break before a match: logo and name, five tiles
 (series, games, on blue, on red, last five series), most picked heroes with win rates, heroes

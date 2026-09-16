@@ -843,54 +843,44 @@ html[lang="th"] .gtable td,html[lang="th"] .gtable th{line-height:1.8;}
     </div>
     <div class="panel"><div class="panel-body guide-body">
       <div data-lang="en">
-        <p>If you used <b>ROV Overlay Tool v2</b>, everything in it can be brought across.
-        You do not have to type your teams in again.</p>
+        <p>If you used <b>ROV Overlay Tool v2</b>, bring everything across with a backup file.
+        v2 writes the same file this app reads, so nothing has to be typed in again.</p>
         <ol>
-          <li>Go to <span class="ui">SETTINGS</span> and scroll to
-          <b>BRING YOUR V2 DATA ACROSS</b>.</li>
-          <li>The app looks for v2 by itself. If it found it, the folder is already filled
-          in — if not, press <span class="ui">Browse…</span> and point at it. The v2 folder,
-          its <code>data</code> folder, or the <code>tournament.db</code> file itself all
-          work.</li>
-          <li>Press <span class="ui">Import</span>. It first shows what the folder holds —
-          how many teams, tournaments, matches, recorded drafts and logos — and asks before
-          writing anything.</li>
+          <li>In <b>v2</b>, save a backup from its Settings page and keep the <code>.json</code> file.</li>
+          <li>In this app, go to <span class="ui">SETTINGS</span>, scroll to
+          <b>BACKUP AND RESTORE</b>, and press <span class="ui">Restore</span>.</li>
+          <li>Pick that file. It first shows what the file holds — teams, tournaments, matches
+          and recorded drafts — and asks before writing anything.</li>
         </ol>
-        <p><b>What comes across:</b> teams and their players, team logos, tournaments,
-        brackets, every match and every recorded draft, and your background images.</p>
-        <p><b>What does not:</b> the board as you left it (current picks and bans, the
-        score), your colours from the Design page, sound levels and hotkeys. Those are quick
-        to set again and are meant to be per-machine.</p>
+        <p><b>What comes across:</b> teams and their players, tournaments, brackets, every match
+        and every recorded draft.</p>
+        <p><b>What does not:</b> team logos and background images, the board as you left it
+        (current picks and bans, the score), your colours from the Design page, sound levels and
+        hotkeys. Those are quick to set again and are meant to be per-machine.</p>
         <ul>
-          <li><b>Your v2 is only read, never changed.</b> Nothing in its folder is written
-          to or moved, and v2 keeps working exactly as it did.</li>
-          <li><b>Importing twice is safe.</b> Anything already here is kept and duplicates
-          are skipped, so a second import changes nothing.</li>
+          <li><b>Restoring twice is safe.</b> Anything already here is kept and duplicates are
+          skipped, so a second restore changes nothing.</li>
+          <li><b>Your v2 is never touched.</b> This app reads the file you saved and nothing else.</li>
         </ul>
-        <p class="hint">Old v2 installations work too, including ones from before v2
-        renamed player roles.</p>
       </div>
       <div data-lang="th" hidden>
-        <p>ถ้าคุณเคยใช้ <b>ROV Overlay Tool เวอร์ชัน 2</b> ย้ายของทั้งหมดมาได้เลย ไม่ต้องพิมพ์ทีมใหม่</p>
+        <p>ถ้าคุณเคยใช้ <b>ROV Overlay Tool เวอร์ชัน 2</b> ย้ายของมาได้ด้วยไฟล์สำรองข้อมูล
+        เวอร์ชัน 2 บันทึกไฟล์แบบเดียวกับที่แอปนี้อ่านได้ จึงไม่ต้องพิมพ์ใหม่</p>
         <ol>
-          <li>ไปหน้า <span class="ui">ตั้งค่า</span> เลื่อนลงไปที่ <b>ย้ายข้อมูลจากเวอร์ชัน 2</b></li>
-          <li>โปรแกรมจะหาเวอร์ชัน 2 ให้เอง ถ้าเจอ ช่องโฟลเดอร์จะถูกเติมไว้แล้ว ถ้าไม่เจอ ให้กด
-          <span class="ui">เลือกโฟลเดอร์…</span> แล้วชี้ไปที่โฟลเดอร์นั้น จะชี้ที่โฟลเดอร์ของเวอร์ชัน 2
-          ที่โฟลเดอร์ <code>data</code> ข้างใน หรือที่ไฟล์ <code>tournament.db</code> ตรง ๆ ก็ได้ทั้งหมด</li>
-          <li>กด <span class="ui">นำเข้า</span> โปรแกรมจะแสดงให้ดูก่อนว่าในโฟลเดอร์มีอะไร กี่ทีม
-          กี่ทัวร์นาเมนต์ กี่คู่แข่ง ดราฟต์กี่ชุด โลโก้กี่รูป แล้วค่อยถามยืนยันก่อนเขียนอะไรลงเครื่อง</li>
+          <li>ที่ <b>เวอร์ชัน 2</b> กดสำรองข้อมูลจากหน้าตั้งค่าของเวอร์ชัน 2 แล้วเก็บไฟล์ <code>.json</code> ไว้</li>
+          <li>ที่แอปนี้ ไปหน้า <span class="ui">ตั้งค่า</span> เลื่อนลงไปที่ <b>สำรองและกู้คืนข้อมูล</b>
+          แล้วกด <span class="ui">กู้คืน</span></li>
+          <li>เลือกไฟล์นั้น โปรแกรมจะแสดงให้ดูก่อนว่าในไฟล์มีอะไร ทีม ทัวร์นาเมนต์ คู่แข่ง
+          และดราฟต์ที่บันทึกไว้ แล้วค่อยถามยืนยันก่อนเขียนอะไรลงเครื่อง</li>
         </ol>
-        <p><b>ของที่ย้ายมา</b> ทีมและผู้เล่น โลโก้ทีม ทัวร์นาเมนต์ สายการแข่ง คู่แข่งทุกคู่
-        ดราฟต์ที่บันทึกไว้ทุกชุด และภาพพื้นหลัง</p>
-        <p><b>ของที่ไม่ย้าย</b> กระดานที่ค้างอยู่ (พิคแบนและสกอร์ปัจจุบัน) สีจากหน้า Design ระดับเสียง
-        และคีย์ลัด พวกนี้ตั้งใหม่ไม่กี่นาที และตั้งใจให้เป็นของแต่ละเครื่องอยู่แล้ว</p>
+        <p><b>ของที่ย้ายมา</b> ทีมและผู้เล่น ทัวร์นาเมนต์ สายการแข่ง คู่แข่งทุกคู่ และดราฟต์ที่บันทึกไว้ทุกชุด</p>
+        <p><b>ของที่ไม่ย้าย</b> โลโก้ทีมและภาพพื้นหลัง กระดานที่ค้างอยู่ (พิคแบนและสกอร์ปัจจุบัน)
+        สีจากหน้า Design ระดับเสียง และคีย์ลัด พวกนี้ตั้งใหม่ไม่กี่นาที และตั้งใจให้เป็นของแต่ละเครื่องอยู่แล้ว</p>
         <ul>
-          <li><b>เวอร์ชัน 2 ถูกอ่านอย่างเดียว ไม่ถูกแก้</b> ไม่มีการเขียนหรือย้ายไฟล์ในโฟลเดอร์นั้น
-          และเวอร์ชัน 2 ยังใช้งานได้เหมือนเดิมทุกอย่าง</li>
-          <li><b>นำเข้าซ้ำได้ ไม่เสียหาย</b> ของที่มีอยู่แล้วจะไม่ถูกแตะ รายการที่ซ้ำจะถูกข้าม
-          นำเข้าอีกรอบจึงไม่เปลี่ยนอะไร</li>
+          <li><b>กู้คืนซ้ำได้ ไม่เสียหาย</b> ของที่มีอยู่แล้วจะไม่ถูกแตะ รายการที่ซ้ำจะถูกข้าม
+          กู้คืนอีกรอบจึงไม่เปลี่ยนอะไร</li>
+          <li><b>ไม่ไปยุ่งกับเวอร์ชัน 2</b> แอปนี้อ่านแค่ไฟล์ที่คุณบันทึกไว้เท่านั้น</li>
         </ul>
-        <p class="hint">เวอร์ชัน 2 รุ่นเก่าก็นำเข้าได้ รวมถึงรุ่นก่อนที่เวอร์ชัน 2 จะเปลี่ยนชื่อตำแหน่งผู้เล่น</p>
       </div>
     </div></div>
   </div>

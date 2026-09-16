@@ -30,8 +30,6 @@ public sealed partial class Loc : INotifyPropertyChanged
         foreach (var (key, text) in M4Th) Th[key] = text;
         foreach (var (key, text) in M5En) En[key] = text;
         foreach (var (key, text) in M5Th) Th[key] = text;
-        foreach (var (key, text) in M6En) En[key] = text;
-        foreach (var (key, text) in M6Th) Th[key] = text;
         foreach (var (key, text) in M7En) En[key] = text;
         foreach (var (key, text) in M7Th) Th[key] = text;
         foreach (var (key, text) in FlowEn) En[key] = text;
@@ -149,11 +147,6 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["Legacy.Body"] = "This screen hasn't moved into the new app yet. The web version still has every feature and runs on the same server, so anything you change there shows up here straight away.",
 
         ["Settings.Language"] = "LANGUAGE",
-        ["Settings.Data"] = "YOUR DATA",
-        ["Settings.DataHint"] = "Teams, tournaments and every recorded draft. Kept apart from v2, whose data this app never touches.",
-        ["Settings.DataFolder"] = "Data folder",
-        ["Settings.MediaFolder"] = "Uploaded images",
-        ["Settings.OpenFolder"] = "Open folder",
         ["Settings.Server"] = "SERVER",
         ["Settings.Address"] = "Address",
         ["Settings.Mode"] = "Mode",
@@ -258,11 +251,6 @@ public sealed partial class Loc : INotifyPropertyChanged
         ["Legacy.Body"] = "หน้านี้ยังไม่ได้ย้ายมาอยู่ในแอปใหม่ ใช้เวอร์ชันเว็บไปก่อนได้ ฟังก์ชันครบเหมือนเดิมและใช้เซิร์ฟเวอร์ตัวเดียวกัน แก้อะไรที่นั่นก็เห็นที่นี่ทันที",
 
         ["Settings.Language"] = "ภาษา",
-        ["Settings.Data"] = "ข้อมูลของคุณ",
-        ["Settings.DataHint"] = "ทีม ทัวร์นาเมนต์ และดราฟต์ทั้งหมด เก็บแยกจากเวอร์ชัน 2 แอปนี้ไม่ไปแตะข้อมูลของเวอร์ชันเก่า",
-        ["Settings.DataFolder"] = "โฟลเดอร์ข้อมูล",
-        ["Settings.MediaFolder"] = "รูปที่อัปโหลด",
-        ["Settings.OpenFolder"] = "เปิดโฟลเดอร์",
         ["Settings.Server"] = "เซิร์ฟเวอร์",
         ["Settings.Address"] = "ที่อยู่",
         ["Settings.Mode"] = "สถานะ",

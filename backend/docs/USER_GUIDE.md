@@ -581,56 +581,42 @@ Worth doing after the draw, and again at the end of each event day. The file is 
 
 **EN**
 
-If you used **ROV Overlay Tool v2**, everything in it can be brought across. You do not
-have to type your teams in again.
+If you used **ROV Overlay Tool v2**, bring everything across with a backup file. v2 writes the
+same file this app reads, so nothing has to be typed in again.
 
-1. Go to **SETTINGS**, scroll to **BRING YOUR V2 DATA ACROSS**
-2. The app looks for v2 by itself. If it found it, the folder is already filled in — if
-   not, press **Browse…** and point at it. The v2 folder, its `data` folder, or the
-   `tournament.db` file itself all work
-3. Press **Import**. It first shows what the folder holds — how many teams, tournaments,
-   matches, recorded drafts and logos — and asks before writing anything
+1. In **v2**, save a backup (its Settings page) and keep the `.json` file
+2. In this app, go to **SETTINGS**, scroll to **BACKUP AND RESTORE**, and press **Restore**
+3. Pick that file. It first shows what the file holds — teams, tournaments, matches and
+   recorded drafts — and asks before writing anything
 
-What comes across: teams and their players, team logos, tournaments, brackets, every
-match and every recorded draft, and your background images.
+What comes across: teams and their players, tournaments, brackets, every match and every
+recorded draft.
 
-What does not: the board as you left it (current picks and bans, the score), your colours
-from the Design page, sound levels and hotkeys. Those are quick to set again and are
-meant to be per-machine.
+What does not: team logos and background images, the board as you left it (current picks and
+bans, the score), your colours from the Design page, sound levels and hotkeys. Those are quick
+to set again and are meant to be per-machine.
 
-Two things worth knowing:
-
-- **Your v2 is only read, never changed.** Nothing in its folder is written to or moved,
-  and v2 keeps working exactly as it did
-- **Importing twice is safe.** Anything already here is kept and duplicates are skipped,
-  so a second import changes nothing
-
-Old v2 installations work too, including ones from before v2 renamed player roles.
+- **Restoring twice is safe.** Anything already here is kept and duplicates are skipped, so a
+  second restore changes nothing
+- **Your v2 is never touched.** This app reads the file you saved and nothing else
 
 **TH**
 
-ถ้าคุณเคยใช้ **ROV Overlay Tool เวอร์ชัน 2** ย้ายของทั้งหมดมาได้เลย ไม่ต้องพิมพ์ทีมใหม่
+ถ้าคุณเคยใช้ **ROV Overlay Tool เวอร์ชัน 2** ย้ายของมาได้ด้วยไฟล์สำรองข้อมูล เวอร์ชัน 2 บันทึกไฟล์แบบเดียวกับ
+ที่แอปนี้อ่านได้ จึงไม่ต้องพิมพ์ใหม่
 
-1. ไปหน้า **ตั้งค่า** เลื่อนลงไปที่ **ย้ายข้อมูลจากเวอร์ชัน 2**
-2. โปรแกรมจะหาเวอร์ชัน 2 ให้เอง ถ้าเจอ ช่องโฟลเดอร์จะถูกเติมไว้แล้ว ถ้าไม่เจอ ให้กด
-   **เลือกโฟลเดอร์…** แล้วชี้ไปที่โฟลเดอร์นั้น จะชี้ที่โฟลเดอร์ของเวอร์ชัน 2 ที่โฟลเดอร์ `data`
-   ข้างใน หรือที่ไฟล์ `tournament.db` ตรง ๆ ก็ได้ทั้งหมด
-3. กด **นำเข้า** โปรแกรมจะแสดงให้ดูก่อนว่าในโฟลเดอร์มีอะไร กี่ทีม กี่ทัวร์นาเมนต์ กี่คู่แข่ง
-   ดราฟต์กี่ชุด โลโก้กี่รูป แล้วค่อยถามยืนยันก่อนเขียนอะไรลงเครื่อง
+1. ที่ **เวอร์ชัน 2** กดสำรองข้อมูล (หน้าตั้งค่าของเวอร์ชัน 2) แล้วเก็บไฟล์ `.json` ไว้
+2. ที่แอปนี้ ไปหน้า **ตั้งค่า** เลื่อนลงไปที่ **สำรองและกู้คืนข้อมูล** แล้วกด **กู้คืน**
+3. เลือกไฟล์นั้น โปรแกรมจะแสดงให้ดูก่อนว่าในไฟล์มีอะไร ทีม ทัวร์นาเมนต์ คู่แข่ง และดราฟต์ที่บันทึกไว้
+   แล้วค่อยถามยืนยันก่อนเขียนอะไรลงเครื่อง
 
-**ของที่ย้ายมา** ทีมและผู้เล่น โลโก้ทีม ทัวร์นาเมนต์ สายการแข่ง คู่แข่งทุกคู่ ดราฟต์ที่บันทึกไว้ทุกชุด
-และภาพพื้นหลัง
+**ของที่ย้ายมา** ทีมและผู้เล่น ทัวร์นาเมนต์ สายการแข่ง คู่แข่งทุกคู่ และดราฟต์ที่บันทึกไว้ทุกชุด
 
-**ของที่ไม่ย้าย** กระดานที่ค้างอยู่ (พิคแบนและสกอร์ปัจจุบัน) สีจากหน้า Design ระดับเสียง และคีย์ลัด
-พวกนี้ตั้งใหม่ไม่กี่นาที และตั้งใจให้เป็นของแต่ละเครื่องอยู่แล้ว
+**ของที่ไม่ย้าย** โลโก้ทีมและภาพพื้นหลัง กระดานที่ค้างอยู่ (พิคแบนและสกอร์ปัจจุบัน) สีจากหน้า Design
+ระดับเสียง และคีย์ลัด พวกนี้ตั้งใหม่ไม่กี่นาที และตั้งใจให้เป็นของแต่ละเครื่องอยู่แล้ว
 
-สองอย่างที่ควรรู้
-
-- **เวอร์ชัน 2 ถูกอ่านอย่างเดียว ไม่ถูกแก้** ไม่มีการเขียนหรือย้ายไฟล์ในโฟลเดอร์นั้น
-  และเวอร์ชัน 2 ยังใช้งานได้เหมือนเดิมทุกอย่าง
-- **นำเข้าซ้ำได้ ไม่เสียหาย** ของที่มีอยู่แล้วจะไม่ถูกแตะ รายการที่ซ้ำจะถูกข้าม นำเข้าอีกรอบจึงไม่เปลี่ยนอะไร
-
-เวอร์ชัน 2 รุ่นเก่าก็นำเข้าได้ รวมถึงรุ่นก่อนที่เวอร์ชัน 2 จะเปลี่ยนชื่อตำแหน่งผู้เล่น
+- **กู้คืนซ้ำได้ ไม่เสียหาย** ของที่มีอยู่แล้วจะไม่ถูกแตะ รายการที่ซ้ำจะถูกข้าม กู้คืนอีกรอบจึงไม่เปลี่ยนอะไร
+- **ไม่ไปยุ่งกับเวอร์ชัน 2** แอปนี้อ่านแค่ไฟล์ที่คุณบันทึกไว้เท่านั้น
 
 ---
 

@@ -27,33 +27,6 @@
                 </StackPanel>
             </Border>
 
-            <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Settings.Data}" Margin="0,24,0,8"/>
-            <Border Style="{StaticResource Card}" Padding="16,12">
-                <StackPanel>
-                    <TextBlock Style="{StaticResource MutedText}" Text="{svc:T Settings.DataHint}" Margin="0,0,0,10"/>
-                    <Grid Margin="0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Style="{StaticResource KeyText}" Text="{svc:T Settings.DataFolder}"/>
-                        <TextBlock Grid.Column="1" Style="{StaticResource ValueText}" Text="{Binding DataDir}" ToolTip="{Binding DataDir}"/>
-                        <Button Grid.Column="2" Content="{svc:T Settings.OpenFolder}" Command="{Binding OpenDataFolderCommand}" Margin="10,0,0,0"/>
-                    </Grid>
-                    <Grid Margin="0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Style="{StaticResource KeyText}" Text="{svc:T Settings.MediaFolder}"/>
-                        <TextBlock Grid.Column="1" Style="{StaticResource ValueText}" Text="{Binding MediaDir}" ToolTip="{Binding MediaDir}"/>
-                        <Button Grid.Column="2" Content="{svc:T Settings.OpenFolder}" Command="{Binding OpenMediaFolderCommand}" Margin="10,0,0,0"/>
-                    </Grid>
-                </StackPanel>
-            </Border>
-
             <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Settings.Backup}" Margin="0,24,0,8"/>
             <Border Style="{StaticResource Card}" Padding="16,12">
                 <StackPanel>
@@ -67,23 +40,6 @@
                         </Button>
                         <Button Content="{svc:T Backup.RestoreButton}" Command="{Binding RestoreCommand}" Margin="8,0,0,0"/>
                     </StackPanel>
-                </StackPanel>
-            </Border>
-
-            <TextBlock Style="{StaticResource SectionTitle}" Text="{svc:T Import.Section}" Margin="0,24,0,8"/>
-            <Border Style="{StaticResource Card}" Padding="16,12">
-                <StackPanel>
-                    <TextBlock Style="{StaticResource MutedText}" Text="{svc:T Import.Hint}" Margin="0,0,0,10"/>
-                    <DockPanel>
-                        <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="{svc:T Import.Import}"
-                                Command="{Binding ImportCommand}" Margin="8,0,0,0" MinWidth="110"/>
-                        <Button DockPanel.Dock="Right" Content="{svc:T Import.Browse}" Command="{Binding BrowseImportCommand}"
-                                Margin="8,0,0,0"/>
-                        <TextBox Text="{Binding ImportPath, UpdateSourceTrigger=PropertyChanged}"
-                                 FontFamily="{StaticResource MonoFont}" FontSize="11.5" Tag="{svc:T Import.PathHint}"/>
-                    </DockPanel>
-                    <TextBlock Text="{Binding ImportFound}" FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="0,8,0,0"
-                               TextWrapping="Wrap" Visibility="{Binding ImportFound, Converter={StaticResource NullToVis}}"/>
                 </StackPanel>
             </Border>
 
